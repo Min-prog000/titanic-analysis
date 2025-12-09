@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Migrate project dirs
 
+## [0.4.0] - 2025-12-09
+
+### Related
+
+- [#11 Add CONTRIBUTING.md](https://github.com/Min-prog000/titanic-analysis/issues/11)
+
+### Added
+
+- Add CONTRIBUTING.md
+
 ## [0.3.0] - 2025-12-08
 
 ### Related

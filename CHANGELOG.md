@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Migrate project dirs
 
+## [0.6.0] - 2025-12-11
+
+### Related
+
+- [#13 Update .gitignore](https://github.com/Min-prog000/titanic-analysis/issues/13)
+
+### Update
+
+- Add .python-version to .gitignore
+- Add uv.lock and .vscode to .gitignore
+
+## [0.5.0] - 2025-12-10
+
+### Related
+
+- [#8 Create uv project](https://github.com/Min-prog000/titanic-analysis/issues/8)
+
+### Added
+
+- Create uv project using `uv init`
+
 ## [0.4.0] - 2025-12-09
 
 ### Related

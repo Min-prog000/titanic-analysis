@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-kaggle-titanic = "kaggle_titanic.main:main"
+titanic-analysis = "titanic-analysis.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.3,<0.10.0"]
@@ -92,7 +92,7 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.uv.sources]
-kaggle-titanic = { workspace = true }
+titanic-analysis = { workspace = true }
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

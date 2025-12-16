@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Migrate project dirs
 
+## [0.8.0] - 2025-12-15
+
+### Related
+
+- [#17 Migrate the verified files and directories to the target repository](https://github.com/Min-prog000/titanic-analysis/issues/17)
+
+### Update
+
+- Add Ruff pyproject.toml
+
 ## [0.7.0] - 2025-12-11
 
 ### Related

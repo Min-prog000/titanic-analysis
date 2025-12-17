@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Migrate project dirs
 
+## [0.10.0] - 2025-12-18
+
+### Related
+
+- [#20 Migrate src](https://github.com/Min-prog000/titanic-analysis/issues/20)
+
+### Update
+
+- Add dependencies to pyproject.toml
+  - pyyaml
+  - pydantic
+
 ## [0.9.0] - 2025-12-16
 
 ### Related

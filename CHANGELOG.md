@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Migrate project dirs
 
+## [1.0.0] - 2025-12-18
+
+### Related
+
+- [#20 Migrate src](https://github.com/Min-prog000/titanic-analysis/issues/20)
+
+### Added
+
+- Introduced custom package structure under `src/titanic_analysis`:
+  - **domain**: core business logic and entities
+  - **framework**: application framework and external interfaces
+  - **infrastructure**: data access and system-level implementations
+  - **usecase**: application-specific use cases and workflows
+
+### Changed
+
+- Update main.py
+- Revised `README.md` with Kaggle dataset usage instructions
+
 ## [0.10.0] - 2025-12-18
 
 ### Related

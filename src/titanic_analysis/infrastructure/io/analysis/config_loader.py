@@ -19,6 +19,4 @@ def load_config(config_path: Path) -> AnalysisDTO:
     with config_path.open() as file:
         config = yaml.safe_load(file)
 
-    config_dto = AnalysisDTO(**config)
-
-    return config_dto
+    return AnalysisDTO(**config)

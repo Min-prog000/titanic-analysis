@@ -1,0 +1,4 @@
+option:
+  display:
+    max_rows: 1000
+    max_columns: 100

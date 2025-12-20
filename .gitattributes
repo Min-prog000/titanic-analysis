@@ -1,0 +1,33 @@
+# ============================================
+# Jupyter Notebook: Strip output on commit
+# ============================================
+*.ipynb filter=nbstripout
+
+# ============================================
+# Text file normalization
+# - Ensure consistent line endings (LF)
+# ============================================
+* text=auto eol=lf
+
+# ============================================
+# Documentation formats
+# ============================================
+*.md text
+*.rst text
+
+# ============================================
+# Code files (explicitly treated as text)
+# ============================================
+*.py text
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.csv text
+*.tsv text
+
+# ============================================
+# Ignore diff for large data files (optional)
+# ============================================
+*.csv -diff
+*.tsv -diff

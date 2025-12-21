@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- Migrate project dirs
+- Post-Migration Cleanup
+
+## [1.3.0] - 2025-12-21
+
+### Related
+
+- [#30 Update README.md](https://github.com/Min-prog000/titanic-analysis/issues/30)
+- [#31 Add requirements.txt](https://github.com/Min-prog000/titanic-analysis/issues/31)
+- [#32 Update CHANGELOG.md](https://github.com/Min-prog000/titanic-analysis/issues/32)
+
+### Added
+
+- Update README.md
+- Add requirements.txt
+- Update CHANGELOG.md
+
+### Changed
+
+- Fix codes because of verifying successful execution of `main.py` and `main_notebook.ipynb`.
+
+## [1.2.0] - 2025-12-21
+
+### Related
+
+- [#25 Verify ANALYSIS mode execution via command-line input](https://github.com/Min-prog000/titanic-analysis/issues/25)
+- [#26 Verify successful execution of all notebook cells](https://github.com/Min-prog000/titanic-analysis/issues/26)
+
+### Changed
+
+- Fix codes because of verifying successful execution of `main.py` and `main_notebook.ipynb`.
+
+## [1.1.0] - 2025-12-20
+
+### Related
+
+- [#21 Copy jupyter notebook](https://github.com/Min-prog000/titanic-analysis/issues/21)
+
+### Added
+
+- Migrated `main.ipynb` from private repository
+
+### Changed
+
+- Rename `main.ipynb` to `main_notebook.ipynb`
 
 ## [1.0.0] - 2025-12-18
 

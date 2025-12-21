@@ -4,26 +4,25 @@ from pathlib import Path
 
 from titanic_analysis.domain.dataset.dataset import Dataset, TestDataset, TrainDataset
 from titanic_analysis.infrastructure.io.analysis.config_loader import load_config
-from titanic_analysis.usecase.analysis.analyzer import (
-    DatasetAnalyzer,
-)
-from titanic_analysis.usecase.analysis.constants import (
+from titanic_analysis.infrastructure.io.analysis.constants import (
     CONFIG_PATH,
     PATH_TEST,
     PATH_TRAIN,
+)
+from titanic_analysis.usecase.analysis.analyzer import (
+    DatasetAnalyzer,
 )
 from titanic_analysis.usecase.analysis.utils import set_display_options
 
 __all__ = ["analyze"]
 
 
-def prepare_display(config_file_name: str) -> None:
+def prepare_display(config_path: Path) -> None:
     """表示の準備をする
 
     Args:
-        config_file_name (str): configファイルの文字列パス
+        config_path (Path): configファイルの文字列パス
     """
-    config_path = Path(config_file_name)
     config_dto = load_config(config_path)
 
     set_display_options(
@@ -43,16 +42,16 @@ def describe_dataset(dataset: Dataset) -> None:
 
 
 def analyze(
-    config_file_name: str = CONFIG_PATH,
+    config_file_name: Path = CONFIG_PATH,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
     r"""データセットを解析する
 
     Args:
-        config_file_name (str):
+        config_file_name (Path):
             configファイルのパス
-            デフォルトは'titanic_analysis\\infrastructure\\io\\analysis\\config\\analysis\\base.yaml'
+            デフォルトは'titanic_analysis\\infrastructure\\io\\analysis\\base.yaml'
         train_dataset_path (str):
             訓練用データのパス
             デフォルトは'data\\titanic\\train.csv'

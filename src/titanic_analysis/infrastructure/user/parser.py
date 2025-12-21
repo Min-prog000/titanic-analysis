@@ -2,6 +2,8 @@
 
 import argparse
 
+from titanic_analysis.infrastructure.user.constants import ANALYSIS
+
 
 def generate_parser() -> argparse.ArgumentParser:
     """コマンドライン引数パーサーを生成する関数
@@ -16,8 +18,8 @@ def generate_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mode",
         type=int,
-        default=0,
-        help="Type of the execution mode (default: 0, meaning inference mode).",
+        default=ANALYSIS,
+        help="Type of the execution mode (default: 0, meaning analysis mode).",
     )
 
     return parser

@@ -4,19 +4,30 @@
 ![uv_badge](https://img.shields.io/badge/uv-0.8.9-g?logo=uv&logoColor=white)
 ![uv_badge](https://img.shields.io/badge/ruff-0.12.8-g?logo=ruff&logoColor=white)
 
+## Outline
+
+- [1. Overview](#1-overview)
+- [2. Layout](#2-layout)
+- [3. Install](#3-install)
+- [4. Usage](#4-usage)
+- [5. Contributing](#5-contributing)
+- [6. Dataset](#6-dataset)
+- [7. License](#7-license)
+- [8. Changelog](#8-changelog)
+
 ## [1. Overview](#1-overview)
 
 This repository is created for titanic dataset analysis and development AI model.
 
 ### Goal
 
-- Accuracy: More than **90** percentages
-- Achievement methods: One of **Logistic regression**, **Random forest**, **Gradient boosting**, and **Multi-perceptron**.
+- Target accuracy: **90% or higher**
+- Candidate models: **Logistic regression**, **Random forest**, **Gradient boosting**, and **Multi-Layer Perceptron**.
 
 ### Features
 
-- Now in development
-- Choose execution mode with arguments parser
+- Currently under development
+- Support multiple execution mode via arguments parsing
 
 ## [2. Layout](#2-layout)
 
@@ -43,9 +54,57 @@ titanic-analysis/
 
 ## [3. Install](#3-install)
 
-- Project management - uv
-- Python version - 3.13.6
-- Linter / Formatter - Ruff
+- Python: 3.13.6
+- Project management: uv
+- Linter / Formatter: Ruff
+
+### [3.1 Install uv]
+
+In windows PowerShell:
+
+```shell
+PS> powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+In macOS/Linux:
+
+```shell
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Details of install provided in [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+### [3.2 Initialize uv project]
+
+In your folder cloned this repository:
+
+```shell
+uv init
+```
+
+### [3.3 Create `.venv`]
+
+In root folder of initialized project:
+
+```shell
+uv venv .venv
+```
+
+### [3.4 Activate virtual environment]
+
+In root folder, activate virtual environment with `.venv\Scripts\activate.bat`.
+
+In Windows:
+
+```shell
+.venv\Scripts\activate
+```
+
+In macOS/Linux:
+
+```shell
+source .venv/bin/activate
+```
 
 ## [4. Usage](#4-usage)
 
@@ -59,7 +118,9 @@ uv run titanic-analysis
 uv run titanic-analysis -m 0
 ```
 
-- Sample 2 - Training (Future available)
+- Sample 2 - Training
+
+(Coming soon)
 
 ## [5. Contributing](#5-contributing)
 
@@ -79,4 +140,4 @@ This project is licensed under the Apache License 2.0
 
 ## [8. CHANGELOG](#8-changelog)
 
-Update history: [CHANGELOG.md](https://github.com/Min-prog000/titanic-analysis/blob/main/CHANGELOG.md)
+See update history in: [CHANGELOG.md](https://github.com/Min-prog000/titanic-analysis/blob/main/CHANGELOG.md)

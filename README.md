@@ -17,14 +17,14 @@
 
 ## [1. Overview](#1-overview)
 
-This repository is created for titanic dataset analysis and development AI model.
+This repository is dedicated to analyzing the Titanic dataset and developing AI models based on it.
 
-### Goal
+### 1.1 Goal
 
 - Target accuracy: **90% or higher**
 - Candidate models: **Logistic regression**, **Random forest**, **Gradient boosting**, and **Multi-Layer Perceptron**.
 
-### Features
+### 1.2 Features
 
 - Currently under development
 - Support multiple execution mode via arguments parsing
@@ -58,51 +58,51 @@ titanic-analysis/
 - Project management: uv
 - Linter / Formatter: Ruff
 
-### [3.1 Install uv]
+### 3.1 Install uv
 
-In windows PowerShell:
+On Windows PowerShell:
 
 ```shell
-PS> powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-In macOS/Linux:
+On macOS/Linux:
 
-```shell
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Details of install provided in [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
+For more details, see the official guide: [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-### [3.2 Initialize uv project]
+### 3.2 Initialize uv project
 
-In your folder cloned this repository:
+In the folder where you cloned this repository, run:
 
 ```shell
 uv init
 ```
 
-### [3.3 Create `.venv`]
+### 3.3 Create `.venv`
 
-In root folder of initialized project:
+In the root folder of the initialized project, run:
 
 ```shell
 uv venv .venv
 ```
 
-### [3.4 Activate virtual environment]
+### 3.4 Activate virtual environment
 
-In root folder, activate virtual environment with `.venv\Scripts\activate.bat`.
+In the root folder, activate the virtual environment using `.venv\Scripts\activate.bat`.
 
-In Windows:
+On Windows:
 
 ```shell
 .venv\Scripts\activate
 ```
 
-In macOS/Linux:
+On macOS/Linux:
 
-```shell
+```bash
 source .venv/bin/activate
 ```
 
@@ -124,8 +124,9 @@ uv run titanic-analysis -m 0
 
 ## [5. Contributing](#5-contributing)
 
-Welcome presentation to improvement codes and structure.
-See `CONTRIBUTING.md` about PR or commit (reviewer is the owner basically)
+We welcome contributions that improve the code and project structure.  
+For details on pull requests and commits, please refer to `CONTRIBUTING.md`  
+(the project owner is typically the reviewer).
 
 ## [6. Dataset](#6-dataset)
 

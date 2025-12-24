@@ -57,6 +57,7 @@ titanic-analysis/
 - Python: 3.13.6
 - Project management: uv
 - Linter / Formatter: Ruff
+- Build system: uv-build
 
 ### 3.1 Install uv
 
@@ -74,15 +75,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 For more details, see the official guide: [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-### 3.2 Initialize uv project
-
-In the folder where you cloned this repository, run:
-
-```shell
-uv init
-```
-
-### 3.3 Create `.venv`
+### 3.2 Create `.venv`
 
 In the root folder of the initialized project, run:
 
@@ -90,7 +83,7 @@ In the root folder of the initialized project, run:
 uv venv .venv
 ```
 
-### 3.4 Activate virtual environment
+### 3.3 Activate virtual environment
 
 In the root folder, activate the virtual environment using `.venv\Scripts\activate.bat`.
 
@@ -104,6 +97,14 @@ On macOS/Linux:
 
 ```bash
 source .venv/bin/activate
+```
+
+### 3.4 Install packages with `requirements.txt`
+
+In the virtual environment, run command:
+
+```shell
+uv pip install -r requirements.txt
 ```
 
 ## [4. Usage](#4-usage)

@@ -1,0 +1,59 @@
+name: Common Issue
+description: A general-purpose issue template for tasks, bugs, and improvements.
+title: "[Issue] "
+labels: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the purpose of this issue and what needs to be accomplished.
+      placeholder: Write a brief summary...
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: Explain why this issue is necessary, including any relevant context.
+      placeholder: Why is this needed?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: tasks
+    attributes:
+      label: Tasks
+      description: List the tasks required to complete this issue.
+      options:
+        - label: Task 1
+        - label: Task 2
+        - label: Task 3
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define the conditions that must be met for this issue to be considered complete.
+      placeholder: List clear, testable criteria...
+    validations:
+      required: true
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: Related Issues
+      description: (Optional) List related issues or pull requests.
+      placeholder: e.g., #123, #456
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: (Optional) Additional information or considerations.
+      placeholder: Additional notes...
+    validations:
+      required: false

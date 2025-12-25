@@ -8,10 +8,10 @@
 
 - [1. Overview](#1-overview)
 - [2. Layout](#2-layout)
-- [3. Install](#3-install)
-- [4. Usage](#4-usage)
-- [5. Contributing](#5-contributing)
-- [6. Dataset](#6-dataset)
+- [3. Dataset](#3-dataset)
+- [4. Install](#4-install)
+- [5. Usage](#5-usage)
+- [6. Contributing](#6-contributing)
 - [7. License](#7-license)
 - [8. Changelog](#8-changelog)
 
@@ -52,14 +52,46 @@ titanic-analysis/
   └── requirements.txt
 ```
 
-## [3. Install](#3-install)
+## [3. Dataset](#3-dataset)
+
+This project uses the Titanic dataset provided by Kaggle for the
+[Titanic: Machine Learning from Disaster](https://www.kaggle.com/competitions/titanic/data) competition.
+The dataset is subject to Kaggle's competition rules and is not redistributed within this repository.
+Please download it directly from Kaggle.
+
+```text
+titanic-analysis/
+  ├── data/  # <- Please add train.csv and test.csv in this position
+  │     └── titanic/
+  │             ├── train.csv
+  │             └── test.csv
+  ├── notebook/
+  │     └── main_notebook.ipynb
+  ├── src/
+  │     └── titanic_analysis/
+  │             ├── domain/
+  │             ├── framework/
+  │             ├── infrastructure/
+  │             ├── usecase/
+  │             └── main.py
+  ├── .gitattributes
+  ├── .gitignore
+  ├── CHANGELOG.md
+  ├── CONTRIBUTING.md
+  ├── LICENSE
+  ├── pyproject.toml
+  ├── README.md
+  └── requirements.txt
+```
+
+## [4. Install](#4-install)
 
 - Python: 3.13.6
 - Project management: uv
 - Linter / Formatter: Ruff
 - Build system: uv-build
 
-### 3.1 Install uv
+### 4.1 Install uv
 
 On Windows PowerShell:
 
@@ -75,7 +107,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 For more details, see the official guide: [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-### 3.2 Create `.venv`
+### 4.2 Create `.venv`
 
 In the root folder of the initialized project, run:
 
@@ -83,7 +115,7 @@ In the root folder of the initialized project, run:
 uv venv .venv
 ```
 
-### 3.3 Activate virtual environment
+### 4.3 Activate virtual environment
 
 In the root folder, activate the virtual environment using `.venv\Scripts\activate.bat`.
 
@@ -99,7 +131,7 @@ On macOS/Linux:
 source .venv/bin/activate
 ```
 
-### 3.4 Install packages with `requirements.txt`
+### 4.4 Install packages with `requirements.txt`
 
 In the virtual environment, run command:
 
@@ -107,7 +139,7 @@ In the virtual environment, run command:
 uv pip install -r requirements.txt
 ```
 
-## [4. Usage](#4-usage)
+## [5. Usage](#5-usage)
 
 ### CLI
 
@@ -123,18 +155,11 @@ uv run titanic-analysis -m 0
 
 (Coming soon)
 
-## [5. Contributing](#5-contributing)
+## [6. Contributing](#6-contributing)
 
 We welcome contributions that improve the code and project structure.  
 For details on pull requests and commits, please refer to `CONTRIBUTING.md`  
 (the project owner is typically the reviewer).
-
-## [6. Dataset](#6-dataset)
-
-This project uses the Titanic dataset provided by Kaggle for the
-[Titanic: Machine Learning from Disaster](https://www.kaggle.com/c/titanic-dataset/data) competition.
-The dataset is subject to Kaggle's competition rules and is not redistributed
-within this repository. Please download it directly from Kaggle.
 
 ## [7. License](#7-license)
 

@@ -21,15 +21,18 @@ body:
     validations:
       required: false
 
-  - type: checkboxes
+  - type: textarea
     id: tasks
     attributes:
       label: Tasks
-      description: List the tasks required to complete this issue.
-      options:
-        - label: Task 1
-        - label: Task 2
-        - label: Task 3
+      description: List the required tasks in bullet points. You may add as many lines as needed.
+      placeholder: |
+        - Task 1
+        - Task 2
+        - Task 3
+    validations:
+      required: false
+
 
   - type: textarea
     id: acceptance_criteria

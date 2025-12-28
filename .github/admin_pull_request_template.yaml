@@ -1,0 +1,42 @@
+name: Admin Pull Request
+description: A pull request template for admin.
+title: "[Title]"
+labels: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the purpose of this pull request and what needs to be accomplished.
+      placeholder: Write a brief summary...
+    validations:
+      required: true
+
+  - type: textarea
+    id: related_issues
+    attributes:
+      label: Related Issues
+      description: Explain why this pull request is necessary, including any relevant context.
+      placeholder: |
+        - e.g., #1, #2
+    validations:
+      required: false
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: Changes
+      description: Detailed changes comparing with `main` branch
+      placeholder: Write with bullet points...
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: (Optional) Additional information or considerations.
+      placeholder: Additional notes...
+    validations:
+      required: false

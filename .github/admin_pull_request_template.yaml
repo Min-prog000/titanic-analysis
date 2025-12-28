@@ -1,5 +1,5 @@
 name: Admin Pull Request
-description: A pull request template intended for repository administrators.
+description: A pull request template for repository administrators, suitable for all types of changes including AI development and configuration updates.
 title: "Admin: <Enter Title>"
 labels: []
 body:
@@ -9,6 +9,43 @@ body:
       label: Summary
       description: Provide a concise explanation of the purpose and scope of this pull request.
       placeholder: Write a brief summary...
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: Changes
+      description: Describe the key changes introduced in this pull request. Use bullet points for clarity.
+      placeholder: |
+        - Updated ...
+        - Added ...
+        - Removed ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Describe any potential impact on workflows, systems, or other components. (AI models, configs, CI/CD, templates, etc.)
+      placeholder: |
+        - Affects model training/inference
+        - Affects configuration files
+        - Affects CI/CD pipelines
+        - No significant impact
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Explain how you verified the changes. Include steps or results if applicable.
+      placeholder: |
+        - Verified by ...
+        - Tested using ...
+        - No verification needed
     validations:
       required: true
 
@@ -24,22 +61,20 @@ body:
       required: false
 
   - type: textarea
-    id: changes
-    attributes:
-      label: Changes
-      description: Describe the key changes introduced in this pull request. Use bullet points for clarity.
-      placeholder: |
-        - Updated ...
-        - Added ...
-        - Removed ...
-    validations:
-      required: true
-
-  - type: textarea
     id: notes
     attributes:
       label: Notes
-      description: Optional. Add any additional information, considerations, or context for reviewers.
+      description: Optional. Add any additional information or context for reviewers.
       placeholder: Additional notes...
     validations:
       required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Confirm the following before submitting.
+      options:
+        - label: I have verified the changes locally or through appropriate methods.
+        - label: No breaking changes are introduced (or they are clearly documented above).
+        - label: Documentation updates are included if necessary.

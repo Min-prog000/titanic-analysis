@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 -
 
-## [1.3.0] - 2025-12-21
+## [1.2.1] - 2025-12-21
 
 ### Related
 
@@ -33,13 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Update README.md
 - Add requirements.txt
-- Update CHANGELOG.md
 
 ### Changed
 
 - Fix codes because of verifying successful execution of `main.py` and `main_notebook.ipynb`.
+- Update README.md
+- Update CHANGELOG.md
 
 ## [1.2.0] - 2025-12-21
 

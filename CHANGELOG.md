@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [#20 Migrate src](https://github.com/Min-prog000/titanic-analysis/issues/20)
 
-### Update
+### Changed
 
 - Add dependencies to pyproject.toml
   - pyyaml
@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [#20 Migrate src](https://github.com/Min-prog000/titanic-analysis/issues/20)
 
-### Update
+### Changed
 
 - Move main.py to src/titanic_analysis
 
@@ -113,7 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [#17 Migrate the verified files and directories to the target repository](https://github.com/Min-prog000/titanic-analysis/issues/17)
 
-### Update
+### Changed
 
 - Add Ruff pyproject.toml
 
@@ -123,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [#10 Add dependencies](https://github.com/Min-prog000/titanic-analysis/issues/10)
 
-### Update
+### Changed
 
 - Add dependencies to pyproject.toml
 
@@ -133,7 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [#13 Update .gitignore](https://github.com/Min-prog000/titanic-analysis/issues/13)
 
-### Update
+### Changed
 
 - Add .python-version to .gitignore
 - Add uv.lock and .vscode to .gitignore

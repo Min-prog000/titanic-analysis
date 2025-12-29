@@ -19,7 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 -
 
+### Model
+
+-
+
+### Dataset
+
+-
+
+### API
+
+-
+
 ### Removed
+
+-
+
+### Duplicated
 
 -
 

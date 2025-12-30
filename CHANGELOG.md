@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Initial project setup with README.md and LICENSE
+- Initial repository setup with `.gitignore`, `README.md` and `LICENSE`
 - Added `CHANGELOG.md` ([#6](https://github.com/Min-prog000/titanic-analysis/pull/6), fixes [#5](https://github.com/Min-prog000/titanic-analysis/issues/5))
 - Added `CONTRIBUTING.md` ([#12](https://github.com/Min-prog000/titanic-analysis/pull/12), fixes [#11](https://github.com/Min-prog000/titanic-analysis/issues/11))
 - Setup `uv` project ([#14](https://github.com/Min-prog000/titanic-analysis/pull/14), fixes [#7](https://github.com/Min-prog000/titanic-analysis/issues/7))

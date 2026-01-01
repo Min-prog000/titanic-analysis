@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Migrated `main.ipynb` from private repository ([#24](https://github.com/Min-prog000/titanic-analysis/pull/24), fixes [#21](https://github.com/Min-prog000/titanic-analysis/issues/21))
 - Added `requirements.txt` ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#31](https://github.com/Min-prog000/titanic-analysis/issues/31))
 
 ### Changed
@@ -42,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Duplicated
 
 (None)
+
+## [0.2.0] - 2026-01-01
+
+### Added
+
+- Migrated `main.ipynb` from private repository ([#24](https://github.com/Min-prog000/titanic-analysis/pull/24), fixes [#21](https://github.com/Min-prog000/titanic-analysis/issues/21))
 
 ## [0.1.0] - 2025-12-31
 

@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Fix codes because of verifying successful execution of `main.py` ([#27](https://github.com/Min-prog000/titanic-analysis/pull/27), fixes [#25](https://github.com/Min-prog000/titanic-analysis/issues/25))
 - Fix codes because of verifying successful execution of `main_notebook.ipynb` ([#29](https://github.com/Min-prog000/titanic-analysis/pull/29), fixes [#26](https://github.com/Min-prog000/titanic-analysis/issues/26))
 
 ### Model
@@ -41,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Duplicated
 
 (None)
+
+## [0.2.1] - 2026-01-01
+
+### Fixed
+
+- Fix codes because of verifying successful execution of `main.py` ([#27](https://github.com/Min-prog000/titanic-analysis/pull/27), fixes [#25](https://github.com/Min-prog000/titanic-analysis/issues/25))
 
 ## [0.2.0] - 2026-01-01
 

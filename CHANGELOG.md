@@ -9,12 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Added `requirements.txt` ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#31](https://github.com/Min-prog000/titanic-analysis/issues/31))
+(None)
 
 ### Changed
 
-- Updated `README.md` to revise outlines and dataset URL, and add execution and installation instructions ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#30](https://github.com/Min-prog000/titanic-analysis/issues/30))
-- Updated `CHANGELOG.md` to log previous update point ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#32](https://github.com/Min-prog000/titanic-analysis/issues/32))
+(None)
 
 ### Fixed
 
@@ -76,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - **framework**: application framework and external interfaces
   - **infrastructure**: data access and system-level implementations
   - **usecase**: application-specific use cases and workflows
+- Added `requirements.txt` ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#31](https://github.com/Min-prog000/titanic-analysis/issues/31))
 
 ### Changed
 
@@ -95,3 +95,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Updated `pyproject.toml` to add dependencies ([#23](https://github.com/Min-prog000/titanic-analysis/pull/23), fixes [#20](https://github.com/Min-prog000/titanic-analysis/issues/20))
   - `pyyaml`
   - `pydantic`
+- Updated `README.md` to revise outlines and dataset URL, and add execution and installation instructions ([#33](https://github.com/Min-prog000/titanic-analysis/pull/33), fixes [#30](https://github.com/Min-prog000/titanic-analysis/issues/30))

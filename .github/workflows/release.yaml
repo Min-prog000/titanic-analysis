@@ -1,0 +1,21 @@
+name: Create Release Automatically
+
+on:
+  push:
+    tags:
+      - "v*"   # v1.0.0 のようなタグが push されたときに実行
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true   # 自動リリースノート生成
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3,7 +3,10 @@ name: Create Release Automatically
 on:
   push:
     tags:
-      - "v*"   # v1.0.0 のようなタグが push されたときに実行
+      - "v[0-9]+.[0-9]+.[0-9]+"   # v1.0.0 のようなタグが push されたときに実行
+
+permissions:
+  contents: write   # Release 作成に必要な最小限
 
 jobs:
   create-release:
@@ -12,6 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Run tests
+        run: npm test
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

@@ -2,63 +2,63 @@
 
 ## Overview
 
-このリリースの概要を簡潔に記載します。
+Provide a concise summary of this release.
 
 ## New Features
 
-- 新規機能の追加内容を記載します。
+- Describe newly added features.
 
 ## Improvements / Enhancements
 
-- 既存機能の改善点を記載します。
+- Describe improvements to existing features.
 
 ## Model Updates
 
-### モデルバージョン
+### Model Version
 
-- 例: v2.1 → v2.2
+- Example: v2.1 → v2.2
 
-### 変更内容
+### Changes
 
-- モデル構造の変更
-- ハイパーパラメータ調整
-- 推論速度の改善
-- 精度向上ポイント
+- Changes to model architecture  
+- Hyperparameter adjustments  
+- Inference speed improvements  
+- Accuracy improvement points  
 
-### 評価結果
+### Evaluation Results
 
-- 精度（Accuracy / F1 / BLEU など）
-- ベンチマーク比較
-- 回帰テスト結果
+- Accuracy (Accuracy / F1 / BLEU, etc.)  
+- Benchmark comparisons  
+- Regression test results  
 
 ## Dataset Updates
 
-- データセットの追加・更新内容
-- 前処理の変更
-- データ品質改善
-- データ量の増減
+- Additions or updates to datasets  
+- Changes in preprocessing  
+- Data quality improvements  
+- Increase or decrease in data volume  
 
 ## API / Interface Changes
 
-- API 仕様変更
-- 入出力フォーマット変更
-- 非推奨（Deprecated）項目
-- 互換性に関する注意点
+- API specification changes  
+- Input/output format changes  
+- Deprecated items  
+- Notes on compatibility  
 
 ## Bug Fixes
 
-- 修正した不具合の一覧
+- List of fixed issues  
 
 ## Breaking Changes
 
-- 後方互換性が失われる変更
-- 移行手順（Migration Guide）
+- Changes that break backward compatibility  
+- Migration guide  
 
 ## Documentation
 
-- ドキュメント更新内容
-- 新規追加されたガイドやサンプル
+- Documentation updates  
+- Newly added guides or samples  
 
 ## Notes
 
-- その他の注意事項や補足情報
+- Other notes or supplementary information  

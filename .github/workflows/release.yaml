@@ -1,0 +1,27 @@
+name: Create Release Automatically
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"   # v1.0.0 のようなタグが push されたときに実行
+
+permissions:
+  contents: write   # Release 作成に必要な最小権限
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: npm test
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_template.md   # 自動リリースノート生成
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

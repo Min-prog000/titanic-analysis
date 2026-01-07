@@ -27,7 +27,7 @@ Provide a concise summary of this release.
 
 ### Evaluation Results
 
-- Accuracy (Accuracy / F1 / BLEU, etc.)  
+- Accuracy (Accuracy / F1, etc.)  
 - Benchmark comparisons  
 - Regression test results  
 
@@ -61,4 +61,4 @@ Provide a concise summary of this release.
 
 ## Notes
 
-- Other notes or supplementary information  
+- Other notes or supplementary information

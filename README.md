@@ -139,6 +139,10 @@ In the virtual environment, run command:
 uv pip install -r requirements.txt
 ```
 
+### 4.5 Set execution environment for `main_notebook.ipynb`
+
+Open `main_notebook.ipynb`, set `titanic-analysis` to kernel.
+
 ## [5. Usage](#5-usage)
 
 ### CLI
@@ -154,6 +158,26 @@ uv run titanic-analysis -m 0
 - Sample 2 - Training
 
 (Coming soon)
+
+### Jupyter Notebook
+
+- Sample 0 - Preparation
+
+Run from `Libraries Importing` to `Classes`.
+
+- Sample 1 - Analysis
+
+Run the cells under **Data analysis** to explore and preprocess the dataset.
+
+- Sample 2 - Training and inference
+
+Proceed to **Learning** to train the machine learning models.
+Run `Data preparation` and `Getting column names`.
+
+Executable methods:
+
+- Logistic regression
+- Random forest
 
 ## [6. Contributing](#6-contributing)
 

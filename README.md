@@ -161,11 +161,18 @@ uv run titanic-analysis -m 0
 
 ### Jupyter Notebook
 
-1. Execute from `Libraries Importing` to `Classes`.
-2. Run the cells under **Data analysis** to explore and preprocess the dataset.
-3. Proceed to **Learning** to train the machine learning models.
-  
-`Data preparation` and `Getting column names`
+- Sample 0 - Preparation
+
+Run from `Libraries Importing` to `Classes`.
+
+- Sample 1 - Analysis
+
+Run the cells under **Data analysis** to explore and preprocess the dataset.
+
+- Sample 2 - Training and inference
+
+Proceed to **Learning** to train the machine learning models.
+Run `Data preparation` and `Getting column names`.
 
 Executable methods:
 

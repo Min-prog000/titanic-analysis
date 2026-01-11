@@ -34,7 +34,7 @@ This repository is dedicated to analyzing the Titanic dataset and developing AI 
 ```text
 titanic-analysis/
   ├── notebook/
-  │     └ main_notebook.ipynb
+  │     └── main_notebook.ipynb
   ├── src/
   │     └── titanic_analysis/
   │             ├── domain/

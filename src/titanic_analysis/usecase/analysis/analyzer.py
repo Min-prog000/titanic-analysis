@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from titanic_analysis.domain.dataset.dataset import Dataset
-from titanic_analysis.infrastructure.io.io_utils import DisplayUtility
+from titanic_analysis.infrastructure.io.utils import DisplayUtility
 
 if TYPE_CHECKING:
     import pandas as pd

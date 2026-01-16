@@ -1,9 +1,13 @@
 [project]
 name = "titanic-analysis"
 dynamic = ["version"]
-description = "Add your description here"
+description = "Titanic dataset analysis repository"
 readme = "README.md"
+license = { file = "LICENSE"}
+authors = [{ name = "Minplu"}]
+keywords = ["titanic", "analysis"]
 requires-python = ">=3.13"
+urls = { repository = "https://github.com/Min-prog000/titanic-analysis" }
 dependencies = [
     "ipykernel>=7.1.0",
     "nbstripout>=0.8.2",
@@ -53,7 +57,7 @@ exclude = [
 
 line-length = 88
 indent-width = 4
-target-version = "py38"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["ALL"]

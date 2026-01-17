@@ -2,6 +2,10 @@
 
 from pathlib import Path
 
+from titanic_analysis.application.analysis.analyzer import (
+    DatasetAnalyzer,
+)
+from titanic_analysis.application.analysis.utils import set_display_options
 from titanic_analysis.domain.dataset.dataset import Dataset, TestDataset, TrainDataset
 from titanic_analysis.infrastructure.io.analysis.config_loader import load_config
 from titanic_analysis.infrastructure.io.analysis.constants import (
@@ -9,10 +13,6 @@ from titanic_analysis.infrastructure.io.analysis.constants import (
     PATH_TEST,
     PATH_TRAIN,
 )
-from titanic_analysis.usecase.analysis.analyzer import (
-    DatasetAnalyzer,
-)
-from titanic_analysis.usecase.analysis.utils import set_display_options
 
 __all__ = ["analyze"]
 

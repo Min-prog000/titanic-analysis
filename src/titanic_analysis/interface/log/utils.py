@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 
-from titanic_analysis.framework.log.constants import PATH_LOG
+from titanic_analysis.interface.log.constants import PATH_LOG
 
 
 def generate_log_file_path(folder_path: str = PATH_LOG) -> str:

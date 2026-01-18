@@ -1,10 +1,10 @@
 """Main module for the titanic dataset analysis codes."""
 
-from titanic_analysis.framework.log.logger import TitanicLogger
-from titanic_analysis.framework.log.utils import generate_log_file_path
+from titanic_analysis.application.analysis.service import analyze
 from titanic_analysis.infrastructure.user.constants import ANALYSIS, TRAINING
 from titanic_analysis.infrastructure.user.parser import generate_parser
-from titanic_analysis.usecase.analysis.service import analyze
+from titanic_analysis.interface.log.logger import TitanicLogger
+from titanic_analysis.interface.log.utils import generate_log_file_path
 
 
 def main() -> None:

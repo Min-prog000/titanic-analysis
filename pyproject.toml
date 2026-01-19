@@ -1,6 +1,6 @@
 [project]
 name = "titanic-analysis"
-dynamic = ["version"]
+version = "0.2.2"
 description = "Titanic dataset analysis repository"
 readme = "README.md"
 license = { file = "LICENSE"}

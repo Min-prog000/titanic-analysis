@@ -1,6 +1,5 @@
 [project]
 name = "titanic-analysis"
-# version = "0.2.2"
 dynamic = ["version"]
 description = "Titanic dataset analysis repository"
 readme = "README.md"
@@ -21,9 +20,6 @@ dependencies = [
 
 [project.scripts]
 titanic-analysis = "titanic_analysis.main:main"
-
-[tool.setuptools_scm]
-write_to = "src/titanic_analysis/version.py"
 
 [build-system]
 requires = ["setuptools>=61.0", "setuptools-scm"]
@@ -64,6 +60,14 @@ line-length = 88
 indent-width = 4
 target-version = "py313"
 
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = ["T201", "D400", "D415"]
@@ -73,16 +77,11 @@ unfixable = []
 
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
-docstring-code-format = true
-docstring-code-line-length = "dynamic"
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.setuptools_scm]
+write_to = "src/titanic_analysis/version.py"
 
 [tool.uv.sources]
 titanic-analysis = { workspace = true }
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"

@@ -1,10 +1,11 @@
 [project]
 name = "titanic-analysis"
-version = "0.2.2"
+# version = "0.2.2"
+dynamic = ["version"]
 description = "Titanic dataset analysis repository"
 readme = "README.md"
-license = { file = "LICENSE"}
-authors = [{ name = "Minplu"}]
+license = { file = "LICENSE" }
+authors = [{ name = "Minplu" }]
 keywords = ["titanic", "analysis"]
 requires-python = ">=3.13"
 urls = { repository = "https://github.com/Min-prog000/titanic-analysis" }
@@ -21,9 +22,12 @@ dependencies = [
 [project.scripts]
 titanic-analysis = "titanic_analysis.main:main"
 
+[tool.setuptools_scm]
+write_to = "src/titanic_analysis/version.py"
+
 [build-system]
-requires = ["uv_build>=0.9.3,<0.10.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=61.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 exclude = [
@@ -53,6 +57,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
+    "version.py",
 ]
 
 line-length = 88
@@ -75,10 +80,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
-
-[tool.uv-build]
-version-source = "titanic_analysis.version:__version__"
-package-dir = "src"
 
 [tool.uv.sources]
 titanic-analysis = { workspace = true }

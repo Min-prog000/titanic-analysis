@@ -1,6 +1,6 @@
 """Main module for the titanic dataset analysis codes."""
 
-from titanic_analysis.application.analysis.service import analyze
+from titanic_analysis.application.service import analyze, run_training_pipeline
 from titanic_analysis.infrastructure.user.constants import ANALYSIS, TRAINING
 from titanic_analysis.infrastructure.user.parser import generate_parser
 from titanic_analysis.interface.log.logger import TitanicLogger
@@ -26,7 +26,7 @@ def main() -> None:
     if mode == ANALYSIS:
         analyze()
     elif mode == TRAINING:
-        pass
+        run_training_pipeline()
     else:
         logger.warning("Invalid mode inputted.")
 

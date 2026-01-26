@@ -16,6 +16,7 @@ def generate_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "-m",
         "--mode",
         type=int,
         default=ANALYSIS,

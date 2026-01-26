@@ -26,7 +26,7 @@ def main() -> None:
     if mode == ANALYSIS:
         analyze()
     elif mode == TRAINING:
-        run_training_pipeline()
+        run_training_pipeline(logger)
     else:
         logger.warning("Invalid mode inputted.")
 

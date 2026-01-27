@@ -133,7 +133,8 @@ def run_training_pipeline(
     scaler = MinMaxScaler()
 
     # モデル生成
-    logreg = LogisticRegression(random_state=0)
+    weight = {0: 1.0, 1: 1.5}
+    logreg = LogisticRegression(random_state=0, class_weight=weight)
     # パイプライン生成
     pipe = make_pipeline(scaler, logreg)
 
@@ -157,8 +158,8 @@ def run_training_pipeline(
     logger.info(result_search_df_rounded)
 
     # グリッドサーチのベストスコア表示
-    best_score = search.best_score_
-    logger.info("Grid search best score: %s", best_score)
+    logger.info("Grid search best score: %s", search.best_score_)
+    logger.info("Hyper parameters: %s", search.best_params_)
 
     # 最高精度のモデルによる推論
     model: LogisticRegression = search.best_estimator_.named_steps["logisticregression"]

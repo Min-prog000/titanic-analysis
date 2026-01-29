@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from titanic_analysis.domain.dataset.dataset import Dataset
+from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
 from titanic_analysis.infrastructure.io.analysis.config_loader import load_config
 from titanic_analysis.infrastructure.logic.analysis.analyzer import DatasetAnalyzer
 from titanic_analysis.infrastructure.logic.analysis.utils import set_display_options

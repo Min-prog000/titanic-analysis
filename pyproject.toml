@@ -10,12 +10,16 @@ requires-python = ">=3.13"
 urls = { repository = "https://github.com/Min-prog000/titanic-analysis" }
 dependencies = [
     "ipykernel>=7.1.0",
+    "lightning>=2.6.0",
     "nbstripout>=0.8.2",
     "numpy>=2.3.5",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.8.0",
+    "tensorboard>=2.20.0",
+    "torch>=2.10.0",
+    "torchvision>=0.25.0",
 ]
 
 [project.scripts]

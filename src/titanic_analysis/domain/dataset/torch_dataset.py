@@ -1,6 +1,6 @@
-import pandas as pd
+import numpy as np
+import torch
 from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
 
 
 class TitanicTorchDataset(Dataset):
@@ -12,25 +12,17 @@ class TitanicTorchDataset(Dataset):
 
     def __init__(
         self,
-        data: pd.DataFrame,
-        labels: pd.DataFrame,
-        transform: None | ToTensor = None,
-        target_transform: None | ToTensor = None,
+        data: np.ndarray,
+        labels: np.ndarray,
     ) -> None:
         """コンストラクタ
 
         Args:
-            data (Tensor): 訓練データ
-            labels (Tensor): ラベル
-            transform (None | Tensor, optional):
-                訓練データの方変換方法. Defaults to None.
-            target_transform (None | Tensor, optional):
-                ラベルの型変換方法. Defaults to None.
+            data (DataFrame): 訓練データ
+            labels (Series): ラベル
         """
         self.data = data
         self.labels = labels
-        self.transform = transform
-        self.target_transform = target_transform
 
     def __len__(self) -> int:
         """データサイズを取得するため
@@ -40,7 +32,7 @@ class TitanicTorchDataset(Dataset):
         """
         return len(self.labels)
 
-    def __getitem__(self, idx: int) -> dict:
+    def __getitem__(self, idx: int) -> tuple:
         """特定のデータを取得する
 
         Args:
@@ -49,12 +41,7 @@ class TitanicTorchDataset(Dataset):
         Returns:
             dict: 訓練データとラベルの辞書
         """
-        data = self.data[idx]
-        label = self.labels[idx]
+        data = torch.tensor(self.data[idx], dtype=torch.float32)
+        label = torch.tensor([self.labels[idx]], dtype=torch.float32)
 
-        if self.transform:
-            data = self.transform(data)
-        if self.target_transform:
-            label = self.target_transform(label)
-
-        return {"data": data, "label": label}
+        return data, label

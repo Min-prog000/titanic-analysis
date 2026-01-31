@@ -3,3 +3,7 @@
 # csvファイル保存用手法名
 LOGISTIC_REGRESSION = "logreg"
 RANDOM_FOREST = "rf"
+
+# データセットのパス
+PATH_TRAIN = "data\\titanic\\train.csv"
+PATH_TEST = "data\\titanic\\test.csv"

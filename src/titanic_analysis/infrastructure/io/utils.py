@@ -20,21 +20,6 @@ class DisplayUtility:
         print(f"-------------------- {title} --------------------")
 
 
-class FolderUtility:
-    """フォルダ・ファイル用ユーティリティークラス"""
-
-    @staticmethod
-    def make_folder_if_not_exist(save_folder_name: Path) -> None:
-        """同名のフォルダがなければ作成する
-
-        Args:
-            save_folder_name (str): フォルダパス
-
-        """
-        if not save_folder_name.exists():
-            save_folder_name.mkdir()
-
-
 class CsvUtility:
     """提出用CSVファイルのユーティリティークラス"""
 
@@ -56,7 +41,7 @@ class CsvUtility:
         save_folder_path = Path(save_folder_name)
 
         # 保存先フォルダの作成
-        FolderUtility.make_folder_if_not_exist(save_folder_path)
+        save_folder_path.mkdir(parents=True, exist_ok=True)
 
         # 保存ファイル名の接尾辞（日付と日時）
         save_file_name = cls._generate_save_file_name(
@@ -83,7 +68,7 @@ class CsvUtility:
         postfix_save_folder_name = train_datetime.strftime("%Y%m%d")
 
         # 保存先フォルダ名
-        return f"submission_{postfix_save_folder_name}"
+        return f"output/{postfix_save_folder_name}"
 
     @classmethod
     def _generate_save_file_name(

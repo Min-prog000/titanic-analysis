@@ -44,6 +44,7 @@ class TitanicLogger:
         logging.basicConfig(level=DEBUG)
         self._logger = getLogger(self.logger_name)
         self._logger.handlers.clear()
+        self._logger.propagate = False
 
         self._add_stream_handler()
 

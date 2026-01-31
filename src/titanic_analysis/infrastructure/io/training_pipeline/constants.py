@@ -4,5 +4,5 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
 
-# 分析用configファイル（analysis/base.yaml）のパス
+# 訓練用configファイル（training_pipeline/base.yaml）のパス
 CONFIG_PATH = BASE_DIR / "base.yaml"

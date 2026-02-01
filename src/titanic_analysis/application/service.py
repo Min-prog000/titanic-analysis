@@ -204,9 +204,7 @@ def train_loop(
         for batch, (x, y) in enumerate(pbar):
             # 予測と損失の計算
             pred = model(x)
-            # print(pred)
             loss: Tensor = loss_fn(pred, y)
-            # print(loss)
 
             # バックプロパゲーション
             optimizer.zero_grad()
@@ -228,14 +226,8 @@ def test_loop(
     with tqdm(dataset) as pbar:
         for x in pbar:
             proba = model(x)
-
-            # print(f"proba: {proba}")
-
             threshold = 0.5
             pred = int(proba >= threshold)
-
-            # print(f"pred: {pred}")
-
             pred_list.append(pred)
         print(len(pred_list))
 
@@ -305,7 +297,7 @@ def run_torch_training_pipeline(
 
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=64,
+        batch_size=128,
         shuffle=True,
     )
 
@@ -314,7 +306,7 @@ def run_torch_training_pipeline(
     loss_fn = nn.BCEWithLogitsLoss()
 
     optimizer = optim.Adam(model.parameters())
-    epochs = 10
+    epochs = 100
     for epoch in range(epochs):
         model = train_loop(train_dataloader, model, loss_fn, optimizer, epochs, epoch)
 

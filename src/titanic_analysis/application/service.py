@@ -190,7 +190,7 @@ def run_training_pipeline(
 def train_loop(
     dataloader: DataLoader,
     model: NeuralNetwork,
-    loss_fn: nn.BCEWithLogitsLoss,
+    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss,
     optimizer: optim.Adam | optim.SGD,
     epochs: int,
     epoch: int,
@@ -204,6 +204,10 @@ def train_loop(
         for batch, (x, y) in enumerate(pbar):
             # 予測と損失の計算
             pred = model(x)
+
+            # pred_tensor_class = model(x)
+            # pred = torch.argmax(pred_tensor_class, dim=1).unsqueeze(dim=1)
+
             loss: Tensor = loss_fn(pred, y)
 
             # バックプロパゲーション
@@ -226,8 +230,14 @@ def test_loop(
     with tqdm(dataset) as pbar:
         for x in pbar:
             proba = model(x)
+
+            # BCEWithLogitsLoss
             threshold = 0.5
             pred = int(proba >= threshold)
+
+            # BCELoss
+            # pred = int(torch.argmax(proba))
+
             pred_list.append(pred)
         print(len(pred_list))
 
@@ -303,10 +313,16 @@ def run_torch_training_pipeline(
 
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
+
+    # 1出力
     loss_fn = nn.BCEWithLogitsLoss()
 
+    # 2出力
+    # weight = torch.tensor([0.5, 1.0])
+    # loss_fn = nn.BCELoss(weight=weight)
+
     optimizer = optim.Adam(model.parameters())
-    epochs = 100
+    epochs = 50
     for epoch in range(epochs):
         model = train_loop(train_dataloader, model, loss_fn, optimizer, epochs, epoch)
 

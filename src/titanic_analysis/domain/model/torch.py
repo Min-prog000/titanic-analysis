@@ -14,6 +14,7 @@ class NeuralNetwork(nn.Module):
             nn.Linear(in_features=16, out_features=8),
             nn.ReLU(),
             nn.Linear(in_features=8, out_features=1),
+            # nn.Linear(in_features=8, out_features=2),
             nn.Sigmoid(),
         )
 

@@ -195,29 +195,57 @@ def train_loop(
     epochs: int,
     epoch: int,
 ) -> NeuralNetwork:
-    size = len(dataloader)
+    epoch_accuracy = 0
+    epoch_loss = 0
+    total_count = 0
 
     model.train()
+    batch_size = len(dataloader)
 
     with tqdm(dataloader) as pbar:
         pbar.set_description(f"[Epoch {epoch + 1}/{epochs}]")
-        for batch, (x, y) in enumerate(pbar):
+        for batch in pbar:
+            data, labels = get_data_with_type_annotation(batch)
+            batch_size = labels.shape[0]
             # 予測と損失の計算
-            pred = model(x)
+            proba: Tensor = model(data)
+            # threshold = 0.5
+            # print((proba >= threshold).long())
+            # print(type((proba >= threshold).long()))
+            # pred = (proba >= threshold).float()
 
             # pred_tensor_class = model(x)
             # pred = torch.argmax(pred_tensor_class, dim=1).unsqueeze(dim=1)
 
-            loss: Tensor = loss_fn(pred, y)
+            loss: Tensor = loss_fn(proba, labels)
 
             # バックプロパゲーション
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            pbar.set_postfix({"loss": loss.item()})
+            # print(proba)
+            # print(labels)
+
+            threshold = 0.5
+            pred = (proba >= threshold).float()
+
+            correct = (pred == labels).sum().item()
+            # print(correct)
+            accuracy = correct / batch_size
+            # print(accuracy)
+
+            total_count += batch_size
+
+            pbar.set_postfix({"accuracy": accuracy, "loss": loss.item()})
 
     return model
+
+
+def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
+    data: Tensor = batch[0]
+    labels: Tensor = batch[1]
+    return data, labels
 
 
 @torch.no_grad()
@@ -322,7 +350,7 @@ def run_torch_training_pipeline(
     # loss_fn = nn.BCELoss(weight=weight)
 
     optimizer = optim.Adam(model.parameters())
-    epochs = 50
+    epochs = 100
     for epoch in range(epochs):
         model = train_loop(train_dataloader, model, loss_fn, optimizer, epochs, epoch)
 

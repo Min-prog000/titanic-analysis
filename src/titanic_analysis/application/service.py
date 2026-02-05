@@ -3,6 +3,7 @@
 from logging import Logger
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 import torch
@@ -14,6 +15,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from titanic_analysis.application.exception.exception import FalseComponentError
@@ -194,9 +196,10 @@ def train_loop(
     optimizer: optim.Adam | optim.SGD,
     epochs: int,
     epoch: int,
-) -> NeuralNetwork:
+) -> tuple[float, float, int, NeuralNetwork]:
     epoch_accuracy = 0
     epoch_loss = 0
+    epoch_correct = 0
     total_count = 0
 
     model.train()
@@ -209,10 +212,6 @@ def train_loop(
             batch_size = labels.shape[0]
             # 予測と損失の計算
             proba: Tensor = model(data)
-            # threshold = 0.5
-            # print((proba >= threshold).long())
-            # print(type((proba >= threshold).long()))
-            # pred = (proba >= threshold).float()
 
             # pred_tensor_class = model(x)
             # pred = torch.argmax(pred_tensor_class, dim=1).unsqueeze(dim=1)
@@ -224,22 +223,27 @@ def train_loop(
             loss.backward()
             optimizer.step()
 
-            # print(proba)
-            # print(labels)
-
             threshold = 0.5
             pred = (proba >= threshold).float()
 
-            correct = (pred == labels).sum().item()
-            # print(correct)
-            accuracy = correct / batch_size
-            # print(accuracy)
+            batch_correct = int((pred == labels).sum().item())
+            batch_accuracy = batch_correct / batch_size
 
+            epoch_correct += batch_correct
             total_count += batch_size
+            epoch_accuracy = epoch_correct / total_count
+            epoch_loss += loss.item()
 
-            pbar.set_postfix({"accuracy": accuracy, "loss": loss.item()})
+            pbar_postfix = {
+                "batch_acc": batch_accuracy,
+                "batch_loss": loss.item(),
+                "epoch_acc": epoch_accuracy,
+                "epoch_loss": epoch_loss,
+            }
 
-    return model
+            pbar.set_postfix(pbar_postfix)
+
+    return epoch_accuracy, epoch_loss, epoch_correct, model
 
 
 def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
@@ -250,24 +254,23 @@ def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
 
 @torch.no_grad()
 def test_loop(
-    dataset: Tensor,
+    x_train_tensor: Tensor,
     model: NeuralNetwork,
 ) -> list[int]:
     pred_list = []
 
-    with tqdm(dataset) as pbar:
-        for x in pbar:
-            proba = model(x)
+    model.eval()
+    for x in x_train_tensor:
+        proba = model(x)
 
-            # BCEWithLogitsLoss
-            threshold = 0.5
-            pred = int(proba >= threshold)
+        # BCEWithLogitsLoss
+        threshold = 0.5
+        pred = int(proba >= threshold)
 
-            # BCELoss
-            # pred = int(torch.argmax(proba))
+        # BCELoss
+        # pred = int(torch.argmax(proba))
 
-            pred_list.append(pred)
-        print(len(pred_list))
+        pred_list.append(pred)
 
     return pred_list
 
@@ -349,10 +352,44 @@ def run_torch_training_pipeline(
     # weight = torch.tensor([0.5, 1.0])
     # loss_fn = nn.BCELoss(weight=weight)
 
+    accuracy_list = []
+    loss_list = []
+    correct_list = []
+
     optimizer = optim.Adam(model.parameters())
     epochs = 100
     for epoch in range(epochs):
-        model = train_loop(train_dataloader, model, loss_fn, optimizer, epochs, epoch)
+        epoch_accuracy, epoch_loss, epoch_correct, model = train_loop(
+            train_dataloader,
+            model,
+            loss_fn,
+            optimizer,
+            epochs,
+            epoch,
+        )
+        accuracy_list.append(epoch_accuracy)
+        loss_list.append(epoch_loss)
+        correct_list.append(epoch_correct)
+
+    # TensorBoard のログ出力先
+    log_dir = "tensorboard_log/"
+
+    # ケース番号
+    case_id_path = Path("id/case.joblib")
+    if case_id_path.exists():
+        case_id = joblib.load(case_id_path)
+    else:
+        case_id_path.parent.mkdir(exist_ok=True)
+        case_id = 1
+
+    # ラベル名
+    main_tags = ["accuracy", "loss", "correct"]
+    value_tag = f"case_{case_id}"
+    histories = [accuracy_list, loss_list, correct_list]
+
+    # 例として 100 ステップ分のデータを記録
+    for i in range(len(main_tags)):
+        write_scalar_graph(log_dir, histories[i], main_tags[i], value_tag)
 
     test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
 
@@ -368,3 +405,19 @@ def run_torch_training_pipeline(
         },
     )
     CsvUtility.output_csv(pred_df, "torch_neuralnetwork")
+
+    joblib.dump(case_id + 1, case_id_path)
+
+
+def write_scalar_graph(
+    log_dir: str,
+    plot_list: list,
+    main_tag: str,
+    value_tag: str,
+) -> None:
+    writer = SummaryWriter(log_dir=log_dir)
+    for step in range(len(plot_list)):
+        # add_scalars を使うと、1 つのグラフに複数線が色分けされて表示される
+        writer.add_scalars(main_tag, {value_tag: plot_list[step]}, step)
+
+    writer.close()

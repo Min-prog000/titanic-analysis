@@ -372,7 +372,11 @@ def run_torch_training_pipeline(
         correct_list.append(epoch_correct)
 
     # TensorBoard のログ出力先
-    log_dir = "tensorboard_log/"
+    # 変更前
+    root_log_dir = "./tensorboard_log"
+
+    # 変更後
+    root_log_dir = Path("./tensorboard_log")
 
     # ケース番号
     case_id_path = Path("id/case.joblib")
@@ -389,6 +393,7 @@ def run_torch_training_pipeline(
 
     # 例として 100 ステップ分のデータを記録
     for i in range(len(main_tags)):
+        log_dir = root_log_dir.joinpath(main_tags[i])
         write_scalar_graph(log_dir, histories[i], main_tags[i], value_tag)
 
     test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
@@ -410,7 +415,7 @@ def run_torch_training_pipeline(
 
 
 def write_scalar_graph(
-    log_dir: str,
+    log_dir: Path,
     plot_list: list,
     main_tag: str,
     value_tag: str,

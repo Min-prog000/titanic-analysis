@@ -192,7 +192,7 @@ def run_training_pipeline(
 def train_loop(
     dataloader: DataLoader,
     model: NeuralNetwork,
-    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss,
+    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss | nn.CrossEntropyLoss,
     optimizer: optim.Adam | optim.SGD,
     epochs: int,
     epoch: int,
@@ -211,20 +211,21 @@ def train_loop(
             data, labels = get_data_with_type_annotation(batch)
             batch_size = labels.shape[0]
             # 予測と損失の計算
-            proba: Tensor = model(data)
+            outputs: Tensor = model(data)
+            print(outputs)
+            labels = labels.squeeze(1).long()
 
-            # pred_tensor_class = model(x)
-            # pred = torch.argmax(pred_tensor_class, dim=1).unsqueeze(dim=1)
-
-            loss: Tensor = loss_fn(proba, labels)
+            loss: Tensor = loss_fn(outputs, labels)
 
             # バックプロパゲーション
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            threshold = 0.5
-            pred = (proba >= threshold).float()
+            # threshold = 0.5
+            # pred = (outputs >= threshold).float()
+
+            pred = torch.argmax(outputs, dim=1).unsqueeze(dim=1)
 
             batch_correct = int((pred == labels).sum().item())
             batch_accuracy = batch_correct / batch_size
@@ -261,14 +262,14 @@ def test_loop(
 
     model.eval()
     for x in x_train_tensor:
-        proba = model(x)
+        outputs = model(x)
 
         # BCEWithLogitsLoss
-        threshold = 0.5
-        pred = int(proba >= threshold)
+        # threshold = 0.5
+        # pred = int(proba >= threshold)
 
         # BCELoss
-        # pred = int(torch.argmax(proba))
+        pred = int(torch.argmax(outputs))
 
         pred_list.append(pred)
 
@@ -346,11 +347,12 @@ def run_torch_training_pipeline(
     model = NeuralNetwork(feature_size)
 
     # 1出力
-    loss_fn = nn.BCEWithLogitsLoss()
+    # loss_fn = nn.BCEWithLogitsLoss()
 
     # 2出力
-    # weight = torch.tensor([0.5, 1.0])
+    weight = torch.tensor([0.5, 1.0])
     # loss_fn = nn.BCELoss(weight=weight)
+    loss_fn = nn.CrossEntropyLoss(weight=weight)
 
     accuracy_list = []
     loss_list = []
@@ -410,6 +412,22 @@ def run_torch_training_pipeline(
         },
     )
     CsvUtility.output_csv(pred_df, "torch_neuralnetwork")
+
+    input_tensor = torch.rand((1, 1, feature_size), dtype=torch.float32)
+
+    onnx_dir_path = Path(f"model/onnx/case_{case_id}")
+    onnx_dir_path.mkdir(parents=True, exist_ok=True)
+
+    onnx_file_name = Path(f"case_{case_id}.onnx")
+    onnx_file_path = onnx_dir_path.joinpath(onnx_file_name)
+    torch.onnx.export(
+        model,  # model to export
+        (input_tensor,),  # inputs of the model,
+        onnx_file_path,  # filename of the ONNX model
+        input_names=["input"],  # Rename inputs for the ONNX model
+        dynamo=True,  # True or False to select the exporter to use
+        verbose=False,
+    )
 
     joblib.dump(case_id + 1, case_id_path)
 

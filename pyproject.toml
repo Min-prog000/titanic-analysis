@@ -13,6 +13,7 @@ dependencies = [
     "lightning>=2.6.0",
     "nbstripout>=0.8.2",
     "numpy>=2.3.5",
+    "onnxscript>=0.6.0",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",

@@ -9,18 +9,18 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(in_features=16, out_features=32),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.1),
             nn.Linear(in_features=32, out_features=16),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.1),
             nn.Linear(in_features=16, out_features=8),
             nn.ReLU(),
-            nn.Linear(in_features=8, out_features=1),
-            # nn.Linear(in_features=8, out_features=2),
-            nn.Sigmoid(),
+            # nn.Linear(in_features=8, out_features=1),
+            nn.Linear(in_features=8, out_features=2),
+            # nn.Sigmoid(),
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        logits = self.linear_relu_stack(x)
+        outputs: Tensor = self.linear_relu_stack(x)
 
-        return logits  # noqa: RET504
+        return outputs

@@ -23,4 +23,12 @@ def generate_parser() -> argparse.ArgumentParser:
         help="Type of the execution mode (default: 0, meaning analysis mode).",
     )
 
+    parser.add_argument(
+        "-mp",
+        "--model_path",
+        type=str,
+        default=None,
+        help="Model path (ONNX)",
+    )
+
     return parser

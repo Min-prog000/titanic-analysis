@@ -5,6 +5,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import onnxruntime as ort
 import pandas as pd
 import torch
 from sklearn.compose import ColumnTransformer
@@ -350,7 +351,7 @@ def run_torch_training_pipeline(
     # loss_fn = nn.BCEWithLogitsLoss()
 
     # 2出力
-    weight = torch.tensor([0.5, 1.0])
+    weight = torch.tensor([0.9, 1.0])
     # loss_fn = nn.BCELoss(weight=weight)
     loss_fn = nn.CrossEntropyLoss(weight=weight)
 
@@ -374,9 +375,6 @@ def run_torch_training_pipeline(
         correct_list.append(epoch_correct)
 
     # TensorBoard のログ出力先
-    # 変更前
-    root_log_dir = "./tensorboard_log"
-
     # 変更後
     root_log_dir = Path("./tensorboard_log")
 
@@ -390,7 +388,7 @@ def run_torch_training_pipeline(
 
     # ラベル名
     main_tags = ["accuracy", "loss", "correct"]
-    value_tag = f"case_{case_id}"
+    value_tag = f"case{case_id}"
     histories = [accuracy_list, loss_list, correct_list]
 
     # 例として 100 ステップ分のデータを記録
@@ -415,17 +413,18 @@ def run_torch_training_pipeline(
 
     input_tensor = torch.rand((1, 1, feature_size), dtype=torch.float32)
 
-    onnx_dir_path = Path(f"model/onnx/case_{case_id}")
+    onnx_dir_path = Path(f"model/onnx/case{case_id}")
     onnx_dir_path.mkdir(parents=True, exist_ok=True)
 
-    onnx_file_name = Path(f"case_{case_id}.onnx")
+    onnx_file_name = Path(f"case{case_id}.onnx")
     onnx_file_path = onnx_dir_path.joinpath(onnx_file_name)
     torch.onnx.export(
-        model,  # model to export
-        (input_tensor,),  # inputs of the model,
-        onnx_file_path,  # filename of the ONNX model
-        input_names=["input"],  # Rename inputs for the ONNX model
-        dynamo=True,  # True or False to select the exporter to use
+        model,
+        (input_tensor,),
+        onnx_file_path,
+        input_names=["input"],
+        output_names=["output"],
+        dynamo=True,
         verbose=False,
     )
 
@@ -444,3 +443,93 @@ def write_scalar_graph(
         writer.add_scalars(main_tag, {value_tag: plot_list[step]}, step)
 
     writer.close()
+
+
+def infer(
+    logger: Logger,
+    model_path: str,
+    train_dataset_path: str = PATH_TRAIN,
+    test_dataset_path: str = PATH_TEST,
+) -> None:
+    train_data = pd.read_csv(train_dataset_path)
+    test_data = pd.read_csv(test_dataset_path)
+
+    # 抽出後の列名（共通）
+    selected_columns = [
+        "Pclass",
+        "Sex",
+        "Age",
+        "SibSp",
+        "Parch",
+        "Fare",
+        "Embarked",
+    ]
+    logger.debug(selected_columns)
+
+    train_data_filtered = train_data.loc[:, selected_columns]
+    logger.debug(train_data_filtered.columns)
+
+    train_data_mean = train_data_filtered.mean(numeric_only=True)
+    train_fill_values_round = round(train_data_mean)
+    train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
+    logger.debug(train_data_preprocessed.columns)
+
+    test_data_filtered = test_data.loc[:, selected_columns]
+    logger.debug(test_data_filtered.columns)
+
+    test_data_mean = test_data_filtered.mean(numeric_only=True)
+    test_fill_values_round = round(test_data_mean)
+    test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
+    logger.debug(test_data_preprocessed.columns)
+
+    numeric_features = ["Age", "Fare", "SibSp", "Parch"]
+    categorical_columns = ["Pclass", "Sex", "Embarked"]
+
+    logger.debug(numeric_features)
+    logger.debug(categorical_columns)
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", StandardScaler(), numeric_features),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
+        ],
+    )
+
+    pipeline = Pipeline(steps=[("preprocess", preprocessor)])
+
+    train_data_preprocessed = pipeline.fit_transform(train_data_preprocessed)
+    test_data_preprocessed = pipeline.transform(test_data_preprocessed)
+
+    logger.debug(test_data_preprocessed.shape)
+
+    # データセット
+    test_dataset = np.array(test_data_preprocessed, dtype=np.float32)
+
+    session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+    input_name: str = session.get_inputs()[0].name
+    output_name: str = session.get_outputs()[0].name
+
+    for onnx_input in session.get_inputs():
+        print(onnx_input.name, onnx_input.shape, onnx_input.type)
+
+    logger.debug(test_dataset.shape)
+
+    output_list = []
+
+    for test_data in test_dataset:
+        input_data = np.expand_dims(test_data, axis=(0, 1))
+        output = session.run(
+            output_names=[output_name],
+            input_feed={input_name: input_data},
+            run_options=None,
+        )
+        output_list.append(output)
+
+    output_df = pd.DataFrame(output_list)
+    logger.debug(output_df.shape)
+
+    output_df_folder_path = Path(f"output/onnx_infernce/{Path(model_path).name}")
+    output_df_folder_path.mkdir(parents=True, exist_ok=True)
+    output_df_file_name = Path(f"{Path(model_path).name}_output.csv")
+    output_df_file_path = output_df_folder_path.joinpath(output_df_file_name)
+    output_df.to_csv(output_df_file_path)

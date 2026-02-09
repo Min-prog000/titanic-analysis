@@ -1,5 +1,6 @@
 """データセットの分析を行うモジュール"""
 
+import logging
 from logging import Logger
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from torchinfo import summary
 from tqdm import tqdm
 
 from titanic_analysis.application.exception.exception import FalseComponentError
@@ -214,7 +216,7 @@ def train_loop(
             # 予測と損失の計算
             outputs: Tensor = model(data)
             print(outputs)
-            labels = labels.squeeze(1).long()
+            # labels = labels.squeeze(1).long()
 
             loss: Tensor = loss_fn(outputs, labels)
 
@@ -223,10 +225,10 @@ def train_loop(
             loss.backward()
             optimizer.step()
 
-            # threshold = 0.5
-            # pred = (outputs >= threshold).float()
+            threshold = 0.5
+            pred = (outputs >= threshold).float()
 
-            pred = torch.argmax(outputs, dim=1).unsqueeze(dim=1)
+            # pred = torch.argmax(outputs, dim=1).unsqueeze(dim=1)
 
             batch_correct = int((pred == labels).sum().item())
             batch_accuracy = batch_correct / batch_size
@@ -266,11 +268,15 @@ def test_loop(
         outputs = model(x)
 
         # BCEWithLogitsLoss
-        # threshold = 0.5
-        # pred = int(proba >= threshold)
+        threshold = 0.5
+        pred = int(outputs >= threshold)
 
         # BCELoss
-        pred = int(torch.argmax(outputs))
+        # threshold = 0.5
+        # pred = int(outputs >= threshold)
+
+        # CrossEntropyLoss
+        # pred = int(torch.argmax(outputs))
 
         pred_list.append(pred)
 
@@ -313,12 +319,12 @@ def run_torch_training_pipeline(
     logger.debug(test_data_preprocessed.columns)
 
     numeric_features = ["Age", "Fare", "SibSp", "Parch"]
-    categorical_columns = ["Pclass", "Sex", "Embarked"]
+    categorical_features = ["Pclass", "Sex", "Embarked"]
 
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
         ],
     )
 
@@ -347,13 +353,15 @@ def run_torch_training_pipeline(
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
 
+    logger.info(summary(model, (13,)))
+
     # 1出力
-    # loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.BCEWithLogitsLoss()
+    # loss_fn = nn.BCELoss()
 
     # 2出力
-    weight = torch.tensor([0.9, 1.0])
-    # loss_fn = nn.BCELoss(weight=weight)
-    loss_fn = nn.CrossEntropyLoss(weight=weight)
+    # weight = torch.tensor([0.9, 1.0])
+    # loss_fn = nn.CrossEntropyLoss(weight=weight)
 
     accuracy_list = []
     loss_list = []
@@ -418,6 +426,10 @@ def run_torch_training_pipeline(
 
     onnx_file_name = Path(f"case{case_id}.onnx")
     onnx_file_path = onnx_dir_path.joinpath(onnx_file_name)
+
+    logging.getLogger("onnxscript").setLevel(logging.CRITICAL)
+    logging.getLogger("onnx_ir").setLevel(logging.CRITICAL)
+
     torch.onnx.export(
         model,
         (input_tensor,),
@@ -425,7 +437,6 @@ def run_torch_training_pipeline(
         input_names=["input"],
         output_names=["output"],
         dynamo=True,
-        verbose=False,
     )
 
     joblib.dump(case_id + 1, case_id_path)
@@ -483,15 +494,15 @@ def infer(
     logger.debug(test_data_preprocessed.columns)
 
     numeric_features = ["Age", "Fare", "SibSp", "Parch"]
-    categorical_columns = ["Pclass", "Sex", "Embarked"]
+    categorical_features = ["Pclass", "Sex", "Embarked"]
 
     logger.debug(numeric_features)
-    logger.debug(categorical_columns)
+    logger.debug(categorical_features)
 
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
         ],
     )
 
@@ -528,8 +539,9 @@ def infer(
     output_df = pd.DataFrame(output_list)
     logger.debug(output_df.shape)
 
-    output_df_folder_path = Path(f"output/onnx_infernce/{Path(model_path).name}")
+    model_file_name = Path(model_path).stem
+    output_df_folder_path = Path(f"output/onnx_infernce/{model_file_name}")
     output_df_folder_path.mkdir(parents=True, exist_ok=True)
-    output_df_file_name = Path(f"{Path(model_path).name}_output.csv")
+    output_df_file_name = Path(f"{model_file_name}_output.csv")
     output_df_file_path = output_df_folder_path.joinpath(output_df_file_name)
     output_df.to_csv(output_df_file_path)

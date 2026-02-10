@@ -215,7 +215,7 @@ def train_loop(
             batch_size = labels.shape[0]
             # 予測と損失の計算
             outputs: Tensor = model(data)
-            print(outputs)
+            # print(outputs)
             # labels = labels.squeeze(1).long()
 
             loss: Tensor = loss_fn(outputs, labels)
@@ -333,11 +333,12 @@ def run_torch_training_pipeline(
     train_data_preprocessed = pipeline.fit_transform(train_data_preprocessed)
     test_data_preprocessed = pipeline.transform(test_data_preprocessed)
 
-    logger.debug(train_data_preprocessed.shape)
-    logger.debug(test_data_preprocessed.shape)
+    logger.debug("Train data shape: %s", train_data_preprocessed.shape)
+    logger.debug("Test data shape: %s", test_data_preprocessed.shape)
+
+    logger.debug("Column names: %s", preprocessor.get_feature_names_out())
 
     # データセット
-    logger.debug(type(train_data["Survived"][0]))
     train_labels = np.array(train_data["Survived"])
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
@@ -353,7 +354,7 @@ def run_torch_training_pipeline(
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
 
-    logger.info(summary(model, (13,)))
+    logger.info(summary(model, (train_data_preprocessed.shape[1],)))
 
     # 1出力
     loss_fn = nn.BCEWithLogitsLoss()

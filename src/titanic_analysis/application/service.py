@@ -306,9 +306,23 @@ def run_torch_training_pipeline(
 
     train_data_filtered = train_data.loc[:, selected_columns]
     logger.debug(train_data_filtered.columns)
+
     train_data_mean = train_data_filtered.mean(numeric_only=True)
     train_fill_values_round = round(train_data_mean)
     train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
+
+    embarked_groupby = train_data_preprocessed.groupby("Embarked", dropna=False)
+    # "S" is the most numerous category
+    embarked_groupby_size = embarked_groupby.size()
+    mode_embarked_index = embarked_groupby_size.idxmax()
+    train_data_preprocessed["Embarked"] = train_data_preprocessed["Embarked"].fillna(
+        mode_embarked_index,
+    )
+    embarked_groupby_after = train_data_preprocessed.groupby(
+        "Embarked",
+        dropna=False,
+    ).sum()
+    logger.debug(embarked_groupby_after)
     logger.debug(train_data_preprocessed.columns)
 
     test_data_filtered = test_data.loc[:, selected_columns]

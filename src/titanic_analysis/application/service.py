@@ -382,7 +382,8 @@ def run_torch_training_pipeline(
     loss_list = []
     correct_list = []
 
-    optimizer = optim.Adam(model.parameters())
+    lr = 0.01
+    optimizer = optim.Adam(model.parameters(), lr)
     epochs = 100
     for epoch in range(epochs):
         epoch_accuracy, epoch_loss, epoch_correct, model = train_loop(

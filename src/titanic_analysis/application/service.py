@@ -52,6 +52,7 @@ __all__ = ["analyze", "run_training_pipeline"]
 
 
 def analyze(
+    logger: Logger,
     config_file_name: Path = ANALYSIS_CONFIG_PATH,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
@@ -382,7 +383,7 @@ def run_torch_training_pipeline(
     loss_list = []
     correct_list = []
 
-    lr = 0.01
+    lr = 0.0001
     optimizer = optim.Adam(model.parameters(), lr)
     epochs = 100
     for epoch in range(epochs):

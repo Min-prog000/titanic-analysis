@@ -35,7 +35,7 @@ def main() -> None:
     logger.info("Execution mode: %s", mode)
 
     if mode == ANALYSIS:
-        analyze()
+        analyze(logger)
     elif mode == TRAINING_SKLEARN:
         run_training_pipeline(logger)
     elif mode == TRAINING_PYTORCH:

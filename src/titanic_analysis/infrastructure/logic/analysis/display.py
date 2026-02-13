@@ -26,5 +26,6 @@ def describe_dataset(dataset: Dataset) -> None:
     Args:
         dataset (Dataset): データセットのインスタンス
     """
-    DatasetAnalyzer.display_summary(dataset)
-    DatasetAnalyzer.display_categorized_columns(dataset.x)
+    dataset_analyzer = DatasetAnalyzer()
+    dataset_analyzer.display_summary(dataset)
+    dataset_analyzer.display_categorized_columns(dataset.x)

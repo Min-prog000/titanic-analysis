@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
 from titanic_analysis.infrastructure.io.utils import DisplayUtility
+from titanic_analysis.interface.log.logger import TitanicLogger
+from titanic_analysis.interface.log.utils import generate_log_file_path
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -18,8 +20,7 @@ class DatasetAnalyzer[T: Dataset]:
 
     __all__: ClassVar[list[str]] = ["display_summary", "display_categorized_columns"]
 
-    @classmethod
-    def display_summary(cls, dataset: T) -> None:
+    def display_summary(self, dataset: T) -> None:
         """データフレームの概要を出力する
 
         出力内容
@@ -34,13 +35,15 @@ class DatasetAnalyzer[T: Dataset]:
             dataset (Generic[T]): 出力対象のデータフレーム
 
         """
-        cls._display_data(dataset.x)
-        cls._display_statistics(dataset.x)
-        cls._display_is_nan(dataset.x)
-        cls._display_nan_sum(dataset.x)
+        self.log_file_path = generate_log_file_path()
+        self.titanic_logger = TitanicLogger(__name__, log_file_name=self.log_file_path)
+        self.logger = self.titanic_logger.logger
+        self._display_data(dataset.x)
+        self._display_statistics(dataset.x)
+        self._display_is_nan(dataset.x)
+        self._display_nan_sum(dataset.x)
 
-    @classmethod
-    def _display_data(cls, features: pd.DataFrame) -> None:
+    def _display_data(self, features: pd.DataFrame) -> None:
         """データフレームのデータを表示する
 
         Args:
@@ -48,10 +51,9 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Data")
-        print(features)
+        self.logger.info(features)
 
-    @classmethod
-    def _display_statistics(cls, features: pd.DataFrame) -> None:
+    def _display_statistics(self, features: pd.DataFrame) -> None:
         """データフレームの各列の統計量を表示する
 
         Args:
@@ -59,10 +61,9 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Statistics")
-        print(features.describe())
+        self.logger.info(features.describe())
 
-    @classmethod
-    def _display_is_nan(cls, features: pd.DataFrame) -> None:
+    def _display_is_nan(self, features: pd.DataFrame) -> None:
         """データフレームのデータのうち欠損値のみTrue、それ以外をFalseで表示する
 
         Args:
@@ -70,10 +71,9 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Is NaN")
-        print(features.isna())
+        self.logger.info(features.isna())
 
-    @classmethod
-    def _display_nan_sum(cls, features: pd.DataFrame) -> None:
+    def _display_nan_sum(self, features: pd.DataFrame) -> None:
         """データフレームの各列の欠損値の合計を表示する
 
         Args:
@@ -81,10 +81,9 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Sum of NaN")
-        print(cls._calculate_nan_sum(features))
+        self.logger.info(self._calculate_nan_sum(features))
 
-    @classmethod
-    def _calculate_nan_sum(cls, features: pd.DataFrame) -> pd.Series:
+    def _calculate_nan_sum(self, features: pd.DataFrame) -> pd.Series:
         """データフレームの各列の欠損値の合計を計算する
 
         Args:
@@ -96,8 +95,7 @@ class DatasetAnalyzer[T: Dataset]:
         """
         return features.isna().sum()
 
-    @classmethod
-    def display_categorized_columns(cls, features: pd.DataFrame) -> None:
+    def display_categorized_columns(self, features: pd.DataFrame) -> None:
         """データフレームの各列のユニークなデータとその数をdisplayメソッドで表示する
 
         Args:
@@ -106,11 +104,10 @@ class DatasetAnalyzer[T: Dataset]:
         """
         columns = features.columns
         for column in columns:
-            df_categorized = cls._categorize(features=features, column=column)
-            print(df_categorized)
+            df_categorized = self._categorize(features=features, column=column)
+            self.logger.info(df_categorized)
 
-    @classmethod
-    def _categorize(cls, features: pd.DataFrame, column: str) -> pd.Series:
+    def _categorize(self, features: pd.DataFrame, column: str) -> pd.Series:
         """データフレームの列をユニークなデータごとにグルーピングする
 
         Args:

@@ -88,3 +88,12 @@ class TitanicLogger:
 
         """
         return self._logger
+
+    @logger.setter
+    def logger(self, logger_name: str) -> None:
+        """ロガーの名前を設定するためのセッター
+
+        Args:
+            logger_name (str): ロガーの名前
+        """
+        self._logger = getLogger(logger_name)

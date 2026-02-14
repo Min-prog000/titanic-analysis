@@ -13,7 +13,8 @@ def generate_log_file_path(folder_path: str = PATH_LOG) -> str:
     """
     jst = timezone(timedelta(hours=+9), "JST")
     datetime_now = datetime.now(jst)
+
     log_date = datetime_now.strftime("%Y%m%d")
-    log_datetime = f"{datetime.now(jst):%Y%m%d%H%M%S}"
+    log_datetime = datetime_now.strftime("%Y%m%d%H%M%S")
 
     return rf"{folder_path}\{log_date}\log_{log_datetime}.log"

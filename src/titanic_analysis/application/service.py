@@ -52,6 +52,7 @@ __all__ = ["analyze", "run_training_pipeline"]
 
 
 def analyze(
+    logger: Logger,
     config_file_name: Path = ANALYSIS_CONFIG_PATH,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
@@ -74,7 +75,7 @@ def analyze(
     dataset_list = [TrainDataset(train_dataset_path), TestDataset(test_dataset_path)]
 
     for dataset in dataset_list:
-        describe_dataset(dataset)
+        describe_dataset(dataset, logger)
 
 
 def run_training_pipeline(

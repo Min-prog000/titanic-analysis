@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from logging import Logger
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
 from titanic_analysis.infrastructure.io.utils import DisplayUtility
-from titanic_analysis.interface.log.logger import TitanicLogger
-from titanic_analysis.interface.log.utils import generate_log_file_path
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -19,6 +18,9 @@ class DatasetAnalyzer[T: Dataset]:
     """データセット確認用ユーティリティークラス"""
 
     __all__: ClassVar[list[str]] = ["display_summary", "display_categorized_columns"]
+
+    def __init__(self, logger: Logger) -> None:
+        self.logger = logger
 
     def display_summary(self, dataset: T) -> None:
         """データフレームの概要を出力する
@@ -35,9 +37,6 @@ class DatasetAnalyzer[T: Dataset]:
             dataset (Generic[T]): 出力対象のデータフレーム
 
         """
-        self.log_file_path = generate_log_file_path()
-        self.titanic_logger = TitanicLogger(__name__, log_file_name=self.log_file_path)
-        self.logger = self.titanic_logger.logger
         self._display_data(dataset.x)
         self._display_statistics(dataset.x)
         self._display_is_nan(dataset.x)
@@ -51,7 +50,7 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Data")
-        self.logger.info(features)
+        self.logger.info("\n%s", features)
 
     def _display_statistics(self, features: pd.DataFrame) -> None:
         """データフレームの各列の統計量を表示する
@@ -61,7 +60,7 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Statistics")
-        self.logger.info(features.describe())
+        self.logger.info("\n%s", features.describe())
 
     def _display_is_nan(self, features: pd.DataFrame) -> None:
         """データフレームのデータのうち欠損値のみTrue、それ以外をFalseで表示する
@@ -71,7 +70,7 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Is NaN")
-        self.logger.info(features.isna())
+        self.logger.info("\n%s", features.isna())
 
     def _display_nan_sum(self, features: pd.DataFrame) -> None:
         """データフレームの各列の欠損値の合計を表示する
@@ -81,7 +80,7 @@ class DatasetAnalyzer[T: Dataset]:
 
         """
         DisplayUtility.output_divider("Sum of NaN")
-        self.logger.info(self._calculate_nan_sum(features))
+        self.logger.info("\n%s", self._calculate_nan_sum(features))
 
     def _calculate_nan_sum(self, features: pd.DataFrame) -> pd.Series:
         """データフレームの各列の欠損値の合計を計算する
@@ -105,7 +104,7 @@ class DatasetAnalyzer[T: Dataset]:
         columns = features.columns
         for column in columns:
             df_categorized = self._categorize(features=features, column=column)
-            self.logger.info(df_categorized)
+            self.logger.info("\n%s", df_categorized)
 
     def _categorize(self, features: pd.DataFrame, column: str) -> pd.Series:
         """データフレームの列をユニークなデータごとにグルーピングする

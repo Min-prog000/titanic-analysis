@@ -24,7 +24,7 @@ def main() -> None:
 
     log_file_path = generate_log_file_path()
     titanic_logger = TitanicLogger(
-        logger_name=__name__,
+        logger_name="titanic",
         log_file_name=log_file_path,
     )
 
@@ -35,7 +35,7 @@ def main() -> None:
     logger.info("Execution mode: %s", mode)
 
     if mode == ANALYSIS:
-        analyze()
+        analyze(logger)
     elif mode == TRAINING_SKLEARN:
         run_training_pipeline(logger)
     elif mode == TRAINING_PYTORCH:

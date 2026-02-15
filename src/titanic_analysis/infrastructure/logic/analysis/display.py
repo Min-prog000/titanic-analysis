@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 
 from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
@@ -20,12 +21,12 @@ def prepare_display(config_path: Path) -> None:
     )
 
 
-def describe_dataset(dataset: Dataset) -> None:
+def describe_dataset(dataset: Dataset, logger: Logger) -> None:
     """データセットの概要を表示する
 
     Args:
         dataset (Dataset): データセットのインスタンス
     """
-    dataset_analyzer = DatasetAnalyzer()
+    dataset_analyzer = DatasetAnalyzer(logger)
     dataset_analyzer.display_summary(dataset)
     dataset_analyzer.display_categorized_columns(dataset.x)

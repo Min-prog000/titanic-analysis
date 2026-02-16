@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from logging import Logger
 from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
 from titanic_analysis.infrastructure.io.utils import DisplayUtility
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     import pandas as pd
 
 T = TypeVar("T", bound=Dataset)

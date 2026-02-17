@@ -258,6 +258,57 @@ def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
 
 
 @torch.no_grad()
+def valid_loop(
+    dataloader: DataLoader,
+    model: NeuralNetwork,
+    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss | nn.CrossEntropyLoss,
+    epochs: int,
+    epoch: int,
+) -> tuple[list[int], float, float, int]:
+    epoch_accuracy = 0
+    epoch_correct = 0
+    total_count = 0
+    epoch_loss = 0
+
+    pred_list = []
+
+    model.eval()
+    with tqdm(dataloader) as pbar:
+        pbar.set_description(f"[Epoch {epoch + 1}/{epochs}]")
+        for batch in pbar:
+            data, labels = get_data_with_type_annotation(batch)
+            batch_size = labels.shape[0]
+            # 予測と損失の計算
+            outputs: Tensor = model(data)
+
+            loss: Tensor = loss_fn(outputs, labels)
+
+            threshold = 0.5
+            pred = (outputs >= threshold).float()
+
+            batch_correct = int((pred == labels).sum().item())
+            batch_accuracy = batch_correct / batch_size
+
+            epoch_correct += batch_correct
+            total_count += batch_size
+            epoch_accuracy = epoch_correct / total_count
+            epoch_loss += loss.item()
+
+            pbar_postfix = {
+                "batch_acc": batch_accuracy,
+                "batch_loss": loss.item(),
+                "epoch_acc": epoch_accuracy,
+                "epoch_loss": epoch_loss,
+            }
+
+            pbar.set_postfix(pbar_postfix)
+
+            pred_list.append(pred)
+
+    return pred_list, epoch_accuracy, epoch_loss, epoch_correct
+
+
+@torch.no_grad()
 def test_loop(
     x_train_tensor: Tensor,
     model: NeuralNetwork,
@@ -291,7 +342,7 @@ def run_torch_training_pipeline(
 ):
     prepare_display(ANALYSIS_CONFIG_PATH)
 
-    train_data = pd.read_csv(train_dataset_path)
+    train_valid_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
     # 抽出後の列名（共通）
@@ -305,26 +356,28 @@ def run_torch_training_pipeline(
         "Embarked",
     ]
 
-    train_data_filtered = train_data.loc[:, selected_columns]
+    train_data_filtered = train_valid_data.loc[:, selected_columns]
     logger.debug(train_data_filtered.columns)
 
     train_data_mean = train_data_filtered.mean(numeric_only=True)
     train_fill_values_round = round(train_data_mean)
-    train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
+    train_valid_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
 
-    embarked_groupby = train_data_preprocessed.groupby("Embarked", dropna=False)
+    embarked_groupby = train_valid_data_preprocessed.groupby("Embarked", dropna=False)
     # "S" is the most numerous category
     embarked_groupby_size = embarked_groupby.size()
     mode_embarked_index = embarked_groupby_size.idxmax()
-    train_data_preprocessed["Embarked"] = train_data_preprocessed["Embarked"].fillna(
+    train_valid_data_preprocessed["Embarked"] = train_valid_data_preprocessed[
+        "Embarked"
+    ].fillna(
         mode_embarked_index,
     )
-    embarked_groupby_after = train_data_preprocessed.groupby(
+    embarked_groupby_after = train_valid_data_preprocessed.groupby(
         "Embarked",
         dropna=False,
     ).sum()
     logger.debug(embarked_groupby_after)
-    logger.debug(train_data_preprocessed.columns)
+    logger.debug(train_valid_data_preprocessed.columns)
 
     test_data_filtered = test_data.loc[:, selected_columns]
     logger.debug(test_data_filtered.columns)
@@ -345,16 +398,29 @@ def run_torch_training_pipeline(
 
     pipeline = Pipeline(steps=[("preprocess", preprocessor)])
 
-    train_data_preprocessed = pipeline.fit_transform(train_data_preprocessed)
+    train_valid_data_preprocessed = pipeline.fit_transform(
+        train_valid_data_preprocessed,
+    )
     test_data_preprocessed = pipeline.transform(test_data_preprocessed)
 
-    logger.debug("Train data shape: %s", train_data_preprocessed.shape)
+    logger.debug("Train data shape: %s", train_valid_data_preprocessed.shape)
     logger.debug("Test data shape: %s", test_data_preprocessed.shape)
 
     logger.debug("Column names: %s", preprocessor.get_feature_names_out())
 
     # データセット
-    train_labels = np.array(train_data["Survived"])
+    train_data_size = 720
+    batch_size = 128
+
+    train_data_preprocessed = train_valid_data_preprocessed[:train_data_size]
+    valid_data_preprocessed = train_valid_data_preprocessed[train_data_size:]
+
+    logger.debug("Train data size: %s", train_data_preprocessed.shape)
+    logger.debug("Train data: %s", train_data_preprocessed)
+    logger.debug("Valid data size: %s", valid_data_preprocessed.shape)
+    logger.debug("Valid data: %s", valid_data_preprocessed)
+
+    train_labels = np.array(train_valid_data.loc[: train_data_size - 1, "Survived"])
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
         train_labels,
@@ -362,14 +428,25 @@ def run_torch_training_pipeline(
 
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=128,
-        shuffle=True,
+        batch_size=batch_size,
+        shuffle=False,
     )
 
-    feature_size = train_data_preprocessed.shape[1]
+    valid_labels = np.array(train_valid_data.loc[train_data_size:, "Survived"])
+    valid_dataset = TitanicTorchDataset(
+        valid_data_preprocessed,
+        valid_labels,
+    )
+
+    valid_dataloader = DataLoader(
+        valid_dataset,
+        batch_size=batch_size,
+    )
+
+    feature_size = train_valid_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
 
-    logger.info(summary(model, (train_data_preprocessed.shape[1],)))
+    logger.info(summary(model, (train_valid_data_preprocessed.shape[1],)))
 
     # 1出力
     loss_fn = nn.BCEWithLogitsLoss()
@@ -379,15 +456,19 @@ def run_torch_training_pipeline(
     # weight = torch.tensor([0.9, 1.0])
     # loss_fn = nn.CrossEntropyLoss(weight=weight)
 
-    accuracy_list = []
-    loss_list = []
-    correct_list = []
+    train_accuracy_list = []
+    train_loss_list = []
+    train_correct_list = []
+
+    valid_accuracy_list = []
+    valid_loss_list = []
+    valid_correct_list = []
 
     lr = 0.0001
     optimizer = optim.Adam(model.parameters(), lr)
     epochs = 100
     for epoch in range(epochs):
-        epoch_accuracy, epoch_loss, epoch_correct, model = train_loop(
+        train_epoch_accuracy, train_epoch_loss, train_epoch_correct, model = train_loop(
             train_dataloader,
             model,
             loss_fn,
@@ -395,12 +476,28 @@ def run_torch_training_pipeline(
             epochs,
             epoch,
         )
-        accuracy_list.append(epoch_accuracy)
-        loss_list.append(epoch_loss)
-        correct_list.append(epoch_correct)
+        train_accuracy_list.append(train_epoch_accuracy)
+        train_loss_list.append(train_epoch_loss)
+        train_correct_list.append(train_epoch_correct)
+
+        pred_list, valid_epoch_accuracy, valid_epoch_loss, valid_epoch_correct = (
+            valid_loop(
+                valid_dataloader,
+                model,
+                loss_fn,
+                epochs,
+                epoch,
+            )
+        )
+        valid_accuracy_list.append(valid_epoch_accuracy)
+        valid_loss_list.append(valid_epoch_loss)
+        valid_correct_list.append(valid_epoch_correct)
+
+    logger.debug("Valid accuracy: %s", valid_accuracy_list)
+    logger.debug("Valid loss: %s", valid_loss_list)
+    logger.debug("Valid correct count: %s", valid_correct_list)
 
     # TensorBoard のログ出力先
-    # 変更後
     root_log_dir = Path("./tensorboard_log")
 
     # ケース番号
@@ -414,12 +511,12 @@ def run_torch_training_pipeline(
     # ラベル名
     main_tags = ["accuracy", "loss", "correct"]
     value_tag = f"case{case_id}"
-    histories = [accuracy_list, loss_list, correct_list]
+    train_histories = [train_accuracy_list, train_loss_list, train_correct_list]
 
     # 例として 100 ステップ分のデータを記録
     for i in range(len(main_tags)):
         log_dir = root_log_dir.joinpath(main_tags[i])
-        write_scalar_graph(log_dir, histories[i], main_tags[i], value_tag)
+        write_scalar_graph(log_dir, train_histories[i], main_tags[i], value_tag)
 
     test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
 

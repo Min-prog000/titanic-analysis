@@ -41,6 +41,9 @@ class TitanicTorchDataset(Dataset):
         Returns:
             dict: 訓練データとラベルの辞書
         """
+        print("X:", type(self.data[idx]), self.data[idx])
+        print("y:", type(self.labels[idx]), self.labels[idx])
+
         data = torch.tensor(self.data[idx], dtype=torch.float32)
         label = torch.tensor([self.labels[idx]], dtype=torch.float32)
 

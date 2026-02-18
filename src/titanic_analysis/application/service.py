@@ -140,7 +140,7 @@ def run_training_pipeline(
 
     # 列名の数と名前が等しいことの確認
     if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
-        columns_names = x_train.columns
+        _ = x_train.columns
     else:
         msg = "NotMatchSizeError: either array has one or more false components."
         raise FalseComponentError(msg)
@@ -228,8 +228,6 @@ def train_loop(
 
             threshold = 0.5
             pred = (outputs >= threshold).float()
-
-            # pred = torch.argmax(outputs, dim=1).unsqueeze(dim=1)
 
             batch_correct = int((pred == labels).sum().item())
             batch_accuracy = batch_correct / batch_size

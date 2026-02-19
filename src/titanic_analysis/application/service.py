@@ -48,7 +48,7 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
 
-__all__ = ["analyze", "run_training_pipeline"]
+__all__ = ["analyze", "infer", "run_training_pipeline"]
 
 
 def analyze(
@@ -60,6 +60,8 @@ def analyze(
     r"""データセットを解析する
 
     Args:
+        logger (Logger):
+            ロガー
         config_file_name (Path):
             configファイルのパス
             デフォルトは'titanic_analysis\\infrastructure\\io\\analysis\\base.yaml'
@@ -88,7 +90,8 @@ def run_training_pipeline(
 
     Args:
         logger (Logger): Logger generated in `main`.
-        config_file_name (Path, optional): Config file name with absolute path. Defaults to TRAINING_CONFIG_PATH.
+        config_file_name (Path, optional):
+            Config file name with absolute path. Defaults to TRAINING_CONFIG_PATH.
         train_dataset_path (str, optional): Dataset path. Defaults to PATH_TRAIN.
         test_dataset_path (str, optional): Dataset path. Defaults to PATH_TEST.
 

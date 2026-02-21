@@ -213,3 +213,5 @@ version.py
 id/
 tensorboard_log/
 model/onnx/
+notebooks/*
+!main_notebook.ipynb

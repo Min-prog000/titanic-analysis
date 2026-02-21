@@ -68,7 +68,7 @@ class CsvUtility:
         postfix_save_folder_name = train_datetime.strftime("%Y%m%d")
 
         # 保存先フォルダ名
-        return f"output/{postfix_save_folder_name}"
+        return f"output/submission/{postfix_save_folder_name}"
 
     @classmethod
     def _generate_save_file_name(

@@ -5,9 +5,10 @@ from pathlib import Path
 import yaml
 
 from titanic_analysis.infrastructure.io.analysis.dto import AnalysisDTO
+from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
 
 
-def load_config(config_path: Path) -> AnalysisDTO:
+def load_analysis_config(config_path: Path) -> AnalysisDTO:
     """configファイル（*.yaml）を読み込む
 
     Args:
@@ -20,3 +21,10 @@ def load_config(config_path: Path) -> AnalysisDTO:
         config = yaml.safe_load(file)
 
     return AnalysisDTO(**config["option"]["display"])
+
+
+def load_training_config(config_path: Path) -> TrainingPipelineDTO:
+    with config_path.open() as file:
+        config = yaml.safe_load(file)
+
+    return TrainingPipelineDTO(**config["model"])

@@ -48,6 +48,8 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
 
+from ..infrastructure.io.analysis.config_loader import load_training_config
+
 __all__ = ["analyze", "infer", "run_training_pipeline"]
 
 
@@ -343,6 +345,9 @@ def run_torch_training_pipeline(
 ):
     prepare_display(ANALYSIS_CONFIG_PATH)
 
+    config_path = Path("config/model/base.yaml")
+    config = load_training_config(config_path)
+
     train_valid_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
@@ -408,17 +413,6 @@ def run_torch_training_pipeline(
     logger.debug("Column names: %s", preprocessor.get_feature_names_out())
 
     # データセット
-    # train_data_size = 720
-    batch_size = 128
-
-    # train_data_preprocessed = train_valid_data_preprocessed[:train_data_size]
-    # valid_data_preprocessed = train_valid_data_preprocessed[train_data_size:]
-
-    # logger.debug("Train data size: %s", train_data_preprocessed.shape)
-    # logger.debug("Train data: %s", train_data_preprocessed)
-    # logger.debug("Valid data size: %s", valid_data_preprocessed.shape)
-    # logger.debug("Valid data: %s", valid_data_preprocessed)
-
     train_labels = np.array(train_valid_data.loc[:, "Survived"])
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
@@ -427,7 +421,7 @@ def run_torch_training_pipeline(
 
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=batch_size,
+        batch_size=config.batch_size,
         shuffle=False,
     )
 
@@ -459,16 +453,14 @@ def run_torch_training_pipeline(
     train_loss_list = []
     train_correct_list = []
 
-    lr = 0.0001
-    optimizer = optim.Adam(model.parameters(), lr)
-    epochs = 100
-    for epoch in range(epochs):
+    optimizer = optim.Adam(model.parameters(), config.learning_rate)
+    for epoch in range(config.epochs):
         train_epoch_accuracy, train_epoch_loss, train_epoch_correct, model = train_loop(
             train_dataloader,
             model,
             loss_fn,
             optimizer,
-            epochs,
+            config.epochs,
             epoch,
         )
         train_accuracy_list.append(train_epoch_accuracy)
@@ -496,7 +488,7 @@ def run_torch_training_pipeline(
     root_log_dir = Path("./tensorboard_log")
 
     # ケース番号
-    case_id_path = Path("id/case.joblib")
+    case_id_path = Path("config/id/case.joblib")
     if case_id_path.exists():
         case_id = joblib.load(case_id_path)
     else:

@@ -2,7 +2,9 @@ from logging import Logger
 from pathlib import Path
 
 from titanic_analysis.domain.dataset.sklearn_dataset import Dataset
-from titanic_analysis.infrastructure.io.analysis.config_loader import load_config
+from titanic_analysis.infrastructure.io.analysis.config_loader import (
+    load_analysis_config,
+)
 from titanic_analysis.infrastructure.logic.analysis.analyzer import DatasetAnalyzer
 from titanic_analysis.infrastructure.logic.analysis.utils import set_display_options
 
@@ -13,7 +15,7 @@ def prepare_display(config_path: Path) -> None:
     Args:
         config_path (Path): configファイルの文字列パス
     """
-    config_dto = load_config(config_path)
+    config_dto = load_analysis_config(config_path)
 
     set_display_options(
         max_rows=config_dto.max_rows,

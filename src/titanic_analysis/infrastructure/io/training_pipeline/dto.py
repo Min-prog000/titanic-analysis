@@ -6,4 +6,6 @@ from pydantic import BaseModel
 class TrainingPipelineDTO(BaseModel):
     """訓練・テスト用configファイルの読み込み内容のためのDTO"""
 
-    nan_fill_method: int
+    batch_size: int
+    learning_rate: float
+    epochs: int

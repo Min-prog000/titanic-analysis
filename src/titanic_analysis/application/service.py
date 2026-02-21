@@ -649,7 +649,7 @@ def infer(
     logger.debug(output_df.shape)
 
     model_file_name = Path(model_path).stem
-    output_df_folder_path = Path(f"output/onnx_infernce/{model_file_name}")
+    output_df_folder_path = Path(f"output/onnx_inference/{model_file_name}")
     output_df_folder_path.mkdir(parents=True, exist_ok=True)
     output_df_file_name = Path(f"{model_file_name}_output.csv")
     output_df_file_path = output_df_folder_path.joinpath(output_df_file_name)

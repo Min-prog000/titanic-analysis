@@ -14,7 +14,11 @@ from sklearn.discriminant_analysis import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    OneHotEncoder,
+    RobustScaler,
+)
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -203,69 +207,27 @@ def run_training_pipeline_pytorch(
     logger: Logger,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
-):
+) -> None:
     prepare_display(ANALYSIS_CONFIG_PATH)
 
     config_path = Path("config/model/base.yaml")
     config = load_training_config(config_path)
 
-    train_valid_data = pd.read_csv(train_dataset_path)
+    train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
-    train_data_filtered = train_valid_data.loc[:, SELECTED_FEATURES]
-    logger.debug(train_data_filtered.columns)
-
-    train_data_mean = train_data_filtered.mean(numeric_only=True)
-    train_fill_values_round = round(train_data_mean)
-    train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
-
-    embarked_groupby = train_data_preprocessed.groupby("Embarked", dropna=False)
-    # "S" is the most numerous category
-    embarked_groupby_size = embarked_groupby.size()
-    mode_embarked_index = embarked_groupby_size.idxmax()
-    train_data_preprocessed["Embarked"] = train_data_preprocessed["Embarked"].fillna(
-        mode_embarked_index,
+    train_data_preprocessed, test_data_preprocessed = preprocess_load_data(
+        logger,
+        train_data,
+        test_data,
     )
-    embarked_groupby_after = train_data_preprocessed.groupby(
-        "Embarked",
-        dropna=False,
-    ).sum()
-    logger.debug(embarked_groupby_after)
-    logger.debug(train_data_preprocessed.columns)
-
-    test_data_filtered = test_data.loc[:, SELECTED_FEATURES]
-    logger.debug(test_data_filtered.columns)
-    test_data_mean = test_data_filtered.mean(numeric_only=True)
-    test_fill_values_round = round(test_data_mean)
-    test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
-    logger.debug(test_data_preprocessed.columns)
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", StandardScaler(), NUMERIC_FEATURES),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
-        ],
-    )
-
-    pipeline = Pipeline(steps=[("preprocess", preprocessor)])
-
-    train_data_preprocessed = pipeline.fit_transform(
-        train_data_preprocessed,
-    )
-    test_data_preprocessed = pipeline.transform(test_data_preprocessed)
-
-    logger.debug("Train data shape: %s", train_data_preprocessed.shape)
-    logger.debug("Test data shape: %s", test_data_preprocessed.shape)
-
-    logger.debug("Column names: %s", preprocessor.get_feature_names_out())
 
     # データセット
-    train_labels = np.array(train_valid_data.loc[:, TARGET_COLUMN])
+    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
         train_labels,
     )
-
     train_dataloader = DataLoader(
         train_dataset,
         batch_size=config.batch_size,
@@ -274,8 +236,7 @@ def run_training_pipeline_pytorch(
 
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
-
-    logger.info(summary(model, (train_data_preprocessed.shape[1],)))
+    logger.info(summary(model, (feature_size,)))
 
     # 1出力
     loss_fn = nn.BCEWithLogitsLoss()
@@ -288,7 +249,6 @@ def run_training_pipeline_pytorch(
     train_accuracy_list = []
     train_loss_list = []
     train_correct_list = []
-
     optimizer = optim.Adam(model.parameters(), config.learning_rate)
     for epoch in range(config.epochs):
         train_epoch_accuracy, train_epoch_loss, train_epoch_correct, model = train_loop(
@@ -303,42 +263,50 @@ def run_training_pipeline_pytorch(
         train_loss_list.append(train_epoch_loss)
         train_correct_list.append(train_epoch_correct)
 
-    # TensorBoard のログ出力先
-    root_log_dir = Path("./tensorboard_log")
-
     # ケース番号
     case_id_path = Path("config/id/case.joblib")
-    if case_id_path.exists():
-        case_id = joblib.load(case_id_path)
-    else:
-        case_id_path.parent.mkdir(exist_ok=True)
-        case_id = 1
+    case_id = load_case_id(case_id_path)
 
+    # TensorBoard のログ出力先
+    root_log_dir = Path("./tensorboard_log")
     # ラベル名
     main_tags = ["accuracy", "loss", "correct"]
     value_tag = f"case{case_id}"
     train_histories = [train_accuracy_list, train_loss_list, train_correct_list]
-
     # 例として 100 ステップ分のデータを記録
     for i in range(len(main_tags)):
         log_dir = root_log_dir.joinpath(main_tags[i])
         write_scalar_graph(log_dir, train_histories[i], main_tags[i], value_tag)
 
     test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
-
     pred_list = test_loop(test_dataset, model)
-
     logger.debug(len(test_data[ID_COLUMN].to_numpy()))
     logger.debug(len(pred_list))
 
-    pred_df = pd.DataFrame(
+    submission_data = pd.DataFrame(
         {
             ID_COLUMN: test_data[ID_COLUMN].to_numpy(),
             TARGET_COLUMN: pred_list,
         },
     )
-    CsvUtility.output_csv(pred_df, "torch_neuralnetwork")
+    CsvUtility.output_csv(submission_data, "torch_neural-network")
 
+    create_onnx_model(feature_size, model, case_id)
+
+    joblib.dump(case_id + 1, case_id_path)
+
+
+def load_case_id(case_id_path: Path) -> int:
+    if case_id_path.exists():
+        case_id = joblib.load(case_id_path)
+    else:
+        case_id_path.parent.mkdir(exist_ok=True)
+        case_id = 1
+
+    return case_id
+
+
+def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> None:
     input_tensor = torch.rand((1, 1, feature_size), dtype=torch.float32)
 
     onnx_dir_path = Path(f"model/onnx/case{case_id}")
@@ -358,7 +326,75 @@ def run_training_pipeline_pytorch(
         dynamo=True,
     )
 
-    joblib.dump(case_id + 1, case_id_path)
+
+def preprocess_load_data(
+    logger: Logger,
+    train_data: pd.DataFrame,
+    test_data: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray]:
+    train_data_cleaned = clean_data(logger, train_data, SELECTED_FEATURES)
+    test_data_cleaned = clean_data(logger, test_data, SELECTED_FEATURES)
+
+    preprocessor = generate_preprocessor(
+        StandardScaler(),
+        NUMERIC_FEATURES,
+        CATEGORICAL_FEATURES,
+    )
+
+    pipeline = Pipeline(steps=[("preprocess", preprocessor)])
+
+    train_data_preprocessed = pipeline.fit_transform(
+        train_data_cleaned,
+    )
+    test_data_preprocessed = pipeline.transform(test_data_cleaned)
+
+    logger.debug("Train data shape: %s", train_data_preprocessed.shape)
+    logger.debug("Test data shape: %s", test_data_preprocessed.shape)
+
+    logger.debug("Column names: %s", preprocessor.get_feature_names_out())
+
+    return train_data_preprocessed, test_data_preprocessed
+
+
+def clean_data(
+    logger: Logger,
+    data_loaded: pd.DataFrame,
+    selected_features: list[str],
+) -> pd.DataFrame:
+    # Choose column
+    data_filtered = data_loaded.loc[:, selected_features]
+    logger.debug(data_filtered.columns)
+
+    # Fill numeric column with mean
+    mean_series = data_filtered.mean(numeric_only=True)
+    mean_round = round(mean_series)
+    data_cleaned = data_filtered.fillna(mean_round)
+
+    # Fill "Embarked" column with mode
+    # "S" is the most numerous category
+    dataframe_groupby_embarked = data_cleaned.groupby("Embarked", dropna=False)
+    size_groupby_embarked = dataframe_groupby_embarked.size()
+    mode_embarked_index = size_groupby_embarked.idxmax()
+    data_cleaned["Embarked"] = data_cleaned["Embarked"].fillna(
+        mode_embarked_index,
+    )
+
+    return data_cleaned
+
+
+def generate_preprocessor(
+    scaler: StandardScaler | MinMaxScaler | RobustScaler,
+    numeric_features: list[str],
+    categorical_features: list[str],
+) -> ColumnTransformer:
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", scaler, numeric_features),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+        ],
+    )
+
+    return preprocessor
 
 
 def set_onnx_logger(

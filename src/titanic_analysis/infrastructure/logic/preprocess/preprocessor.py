@@ -34,7 +34,7 @@ class DatasetPreprocessor:
     def preprocess_dataset(
         cls,
         dataset: pd.DataFrame,
-        selected_columns: list[str],
+        selected_features: list[str],
         encode_columns: list[str],
         logger: Logger,
     ) -> pd.DataFrame:
@@ -46,7 +46,7 @@ class DatasetPreprocessor:
 
         Args:
             dataset (pd.DataFrame): 処理対象のデータフレーム
-            selected_columns (List[str]): 抽出対象の列
+            selected_features (List[str]): 抽出対象の列
             encode_columns (List[str]): エンコード対象の列
             logger (Logger): ロガー
 
@@ -55,7 +55,7 @@ class DatasetPreprocessor:
 
         """
         # 1. 特徴量の抽出
-        dataset_selected = cls.select_features(dataset, selected_columns)
+        dataset_selected = cls.select_features(dataset, selected_features)
 
         # 2. カテゴリ変数のエンコード
         dataset_encoded = cls.encode_by_one_hot(dataset_selected, encode_columns)
@@ -72,19 +72,19 @@ class DatasetPreprocessor:
     def select_features(
         cls,
         dataset: pd.DataFrame,
-        selected_columns: list[str],
+        selected_features: list[str],
     ) -> pd.DataFrame:
         """データセットから必要な列を抽出する
 
         Args:
             dataset (pd.DataFrame): 抽出対象のデータフレーム
-            selected_columns (List[str]): 抽出する列
+            selected_features (List[str]): 抽出する列
 
         Returns:
             pd.DataFrame: 抽出後のデータフレーム
 
         """
-        return dataset.loc[:, selected_columns]
+        return dataset.loc[:, selected_features]
 
     # ワンホットエンコーディング
     @classmethod

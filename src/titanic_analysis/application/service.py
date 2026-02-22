@@ -15,11 +15,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from torch import Tensor, nn, optim
+from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
-from tqdm import tqdm
 
 from titanic_analysis.application.exception.exception import FalseComponentError
 from titanic_analysis.domain.dataset.sklearn_dataset import TestDataset, TrainDataset
@@ -51,7 +50,23 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
 
-__all__ = ["analyze", "infer", "run_training_pipeline"]
+from ..infrastructure.logic.build.test import test_loop
+from ..infrastructure.logic.build.train import train_loop
+from .constants import (
+    CATEGORICAL_FEATURES,
+    ID_COLUMN,
+    LOGGING_LEVEL_LITERALS,
+    NUMERIC_FEATURES,
+    SELECTED_FEATURES,
+    TARGET_COLUMN,
+)
+
+__all__ = [
+    "analyze",
+    "predict",
+    "run_training_pipeline_pytorch",
+    "run_training_pipeline_sklearn",
+]
 
 
 def analyze(
@@ -83,7 +98,7 @@ def analyze(
         describe_dataset(dataset, logger)
 
 
-def run_training_pipeline(
+def run_training_pipeline_sklearn(
     logger: Logger,
     config_file_name: Path = TRAINING_CONFIG_PATH,
     train_dataset_path: str = PATH_TRAIN,
@@ -106,31 +121,17 @@ def run_training_pipeline(
     train_dataset = TrainDataset(train_dataset_path)
     test_dataset = TestDataset(test_dataset_path)
 
-    # 抽出後の列名（共通）
-    selected_columns = [
-        "Pclass",
-        "Sex",
-        "Age",
-        "SibSp",
-        "Parch",
-        "Fare",
-        "Embarked",
-    ]
-
-    # 共通
-    encode_columns = ["Pclass", "Sex", "Embarked"]
-
     train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
         dataset=train_dataset.x,
-        selected_columns=selected_columns,
-        encode_columns=encode_columns,
+        selected_features=SELECTED_FEATURES,
+        encode_columns=CATEGORICAL_FEATURES,
         logger=logger,
     )
 
     test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
         dataset=test_dataset.x,
-        selected_columns=selected_columns,
-        encode_columns=encode_columns,
+        selected_features=SELECTED_FEATURES,
+        encode_columns=CATEGORICAL_FEATURES,
         logger=logger,
     )
 
@@ -188,9 +189,9 @@ def run_training_pipeline(
     y_pred = model.predict(np.array(x_test))
 
     # 提出用データの作成
-    y_pred_df = pd.DataFrame(y_pred, columns=["Survived"])
+    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
     y_pred_df_submission = pd.concat(
-        [test_dataset.x["PassengerId"], y_pred_df],
+        [test_dataset.x[ID_COLUMN], y_pred_df],
         axis=1,
     )
     CsvUtility.output_csv(y_pred_df_submission, LOGISTIC_REGRESSION)
@@ -199,96 +200,7 @@ def run_training_pipeline(
     logger.info(y_pred_df_submission)
 
 
-def train_loop(
-    dataloader: DataLoader,
-    model: NeuralNetwork,
-    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss | nn.CrossEntropyLoss,
-    optimizer: optim.Adam | optim.SGD,
-    epochs: int,
-    epoch: int,
-) -> tuple[float, float, int, NeuralNetwork]:
-    epoch_accuracy = 0
-    epoch_loss = 0
-    epoch_correct = 0
-    total_count = 0
-
-    model.train()
-    batch_size = len(dataloader)
-
-    with tqdm(dataloader) as pbar:
-        pbar.set_description(f"[Epoch {epoch + 1}/{epochs}]")
-        for batch in pbar:
-            data, labels = get_data_with_type_annotation(batch)
-            batch_size = labels.shape[0]
-            # 予測と損失の計算
-            outputs: Tensor = model(data)
-            # print(outputs)
-            # labels = labels.squeeze(1).long()
-
-            loss: Tensor = loss_fn(outputs, labels)
-
-            # バックプロパゲーション
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            threshold = 0.5
-            pred = (outputs >= threshold).float()
-
-            batch_correct = int((pred == labels).sum().item())
-            batch_accuracy = batch_correct / batch_size
-
-            epoch_correct += batch_correct
-            total_count += batch_size
-            epoch_accuracy = epoch_correct / total_count
-            epoch_loss += loss.item()
-
-            pbar_postfix = {
-                "batch_acc": batch_accuracy,
-                "batch_loss": loss.item(),
-                "epoch_acc": epoch_accuracy,
-                "epoch_loss": epoch_loss,
-            }
-
-            pbar.set_postfix(pbar_postfix)
-
-    return epoch_accuracy, epoch_loss, epoch_correct, model
-
-
-def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
-    data: Tensor = batch[0]
-    labels: Tensor = batch[1]
-    return data, labels
-
-
-@torch.no_grad()
-def test_loop(
-    x_train_tensor: Tensor,
-    model: NeuralNetwork,
-) -> list[int]:
-    pred_list = []
-
-    model.eval()
-    for x in x_train_tensor:
-        outputs = model(x)
-
-        # BCEWithLogitsLoss
-        threshold = 0.5
-        pred = int(outputs >= threshold)
-
-        # BCELoss
-        # threshold = 0.5
-        # pred = int(outputs >= threshold)
-
-        # CrossEntropyLoss
-        # pred = int(torch.argmax(outputs))
-
-        pred_list.append(pred)
-
-    return pred_list
-
-
-def run_torch_training_pipeline(
+def run_training_pipeline_pytorch(
     logger: Logger,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
@@ -301,18 +213,7 @@ def run_torch_training_pipeline(
     train_valid_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
-    # 抽出後の列名（共通）
-    selected_columns = [
-        "Pclass",
-        "Sex",
-        "Age",
-        "SibSp",
-        "Parch",
-        "Fare",
-        "Embarked",
-    ]
-
-    train_data_filtered = train_valid_data.loc[:, selected_columns]
+    train_data_filtered = train_valid_data.loc[:, SELECTED_FEATURES]
     logger.debug(train_data_filtered.columns)
 
     train_data_mean = train_data_filtered.mean(numeric_only=True)
@@ -333,20 +234,17 @@ def run_torch_training_pipeline(
     logger.debug(embarked_groupby_after)
     logger.debug(train_data_preprocessed.columns)
 
-    test_data_filtered = test_data.loc[:, selected_columns]
+    test_data_filtered = test_data.loc[:, SELECTED_FEATURES]
     logger.debug(test_data_filtered.columns)
     test_data_mean = test_data_filtered.mean(numeric_only=True)
     test_fill_values_round = round(test_data_mean)
     test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
     logger.debug(test_data_preprocessed.columns)
 
-    numeric_features = ["Age", "Fare", "SibSp", "Parch"]
-    categorical_features = ["Pclass", "Sex", "Embarked"]
-
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", StandardScaler(), numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+            ("num", StandardScaler(), NUMERIC_FEATURES),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
         ],
     )
 
@@ -363,7 +261,7 @@ def run_torch_training_pipeline(
     logger.debug("Column names: %s", preprocessor.get_feature_names_out())
 
     # データセット
-    train_labels = np.array(train_valid_data.loc[:, "Survived"])
+    train_labels = np.array(train_valid_data.loc[:, TARGET_COLUMN])
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
         train_labels,
@@ -431,13 +329,13 @@ def run_torch_training_pipeline(
 
     pred_list = test_loop(test_dataset, model)
 
-    logger.debug(len(test_data["PassengerId"].to_numpy()))
+    logger.debug(len(test_data[ID_COLUMN].to_numpy()))
     logger.debug(len(pred_list))
 
     pred_df = pd.DataFrame(
         {
-            "PassengerId": test_data["PassengerId"].to_numpy(),
-            "Survived": pred_list,
+            ID_COLUMN: test_data[ID_COLUMN].to_numpy(),
+            TARGET_COLUMN: pred_list,
         },
     )
     CsvUtility.output_csv(pred_df, "torch_neuralnetwork")
@@ -450,8 +348,7 @@ def run_torch_training_pipeline(
     onnx_file_name = Path(f"case{case_id}.onnx")
     onnx_file_path = onnx_dir_path.joinpath(onnx_file_name)
 
-    logging.getLogger("onnxscript").setLevel(logging.CRITICAL)
-    logging.getLogger("onnx_ir").setLevel(logging.CRITICAL)
+    set_onnx_logger()
 
     torch.onnx.export(
         model,
@@ -463,6 +360,14 @@ def run_torch_training_pipeline(
     )
 
     joblib.dump(case_id + 1, case_id_path)
+
+
+def set_onnx_logger(
+    level_onnxscript: LOGGING_LEVEL_LITERALS = logging.ERROR,
+    level_onnx_ir: LOGGING_LEVEL_LITERALS = logging.ERROR,
+) -> None:
+    logging.getLogger("onnxscript").setLevel(level_onnxscript)
+    logging.getLogger("onnx_ir").setLevel(level_onnx_ir)
 
 
 def write_scalar_graph(
@@ -479,7 +384,7 @@ def write_scalar_graph(
     writer.close()
 
 
-def infer(
+def predict(
     logger: Logger,
     model_path: str,
     train_dataset_path: str = PATH_TRAIN,
@@ -488,19 +393,9 @@ def infer(
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
-    # 抽出後の列名（共通）
-    selected_columns = [
-        "Pclass",
-        "Sex",
-        "Age",
-        "SibSp",
-        "Parch",
-        "Fare",
-        "Embarked",
-    ]
-    logger.debug(selected_columns)
+    logger.debug(SELECTED_FEATURES)
 
-    train_data_filtered = train_data.loc[:, selected_columns]
+    train_data_filtered = train_data.loc[:, SELECTED_FEATURES]
     logger.debug(train_data_filtered.columns)
 
     train_data_mean = train_data_filtered.mean(numeric_only=True)
@@ -508,7 +403,7 @@ def infer(
     train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
     logger.debug(train_data_preprocessed.columns)
 
-    test_data_filtered = test_data.loc[:, selected_columns]
+    test_data_filtered = test_data.loc[:, SELECTED_FEATURES]
     logger.debug(test_data_filtered.columns)
 
     test_data_mean = test_data_filtered.mean(numeric_only=True)
@@ -516,16 +411,13 @@ def infer(
     test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
     logger.debug(test_data_preprocessed.columns)
 
-    numeric_features = ["Age", "Fare", "SibSp", "Parch"]
-    categorical_features = ["Pclass", "Sex", "Embarked"]
-
-    logger.debug(numeric_features)
-    logger.debug(categorical_features)
+    logger.debug(NUMERIC_FEATURES)
+    logger.debug(CATEGORICAL_FEATURES)
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", StandardScaler(), numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+            ("num", StandardScaler(), NUMERIC_FEATURES),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
         ],
     )
 

@@ -2,9 +2,9 @@
 
 from titanic_analysis.application.service import (
     analyze,
-    infer,
-    run_torch_training_pipeline,
-    run_training_pipeline,
+    predict,
+    run_training_pipeline_pytorch,
+    run_training_pipeline_sklearn,
 )
 from titanic_analysis.infrastructure.user.constants import (
     ANALYSIS,
@@ -37,11 +37,11 @@ def main() -> None:
     if mode == ANALYSIS:
         analyze(logger)
     elif mode == TRAINING_SKLEARN:
-        run_training_pipeline(logger)
+        run_training_pipeline_sklearn(logger)
     elif mode == TRAINING_PYTORCH:
-        run_torch_training_pipeline(logger)
+        run_training_pipeline_pytorch(logger)
     elif mode == INFERENCE:
-        infer(logger, model_path)
+        predict(logger, model_path)
     else:
         logger.warning("Invalid mode inputted.")
 

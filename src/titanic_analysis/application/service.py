@@ -25,6 +25,9 @@ from titanic_analysis.application.exception.exception import FalseComponentError
 from titanic_analysis.domain.dataset.sklearn_dataset import TestDataset, TrainDataset
 from titanic_analysis.domain.dataset.torch_dataset import TitanicTorchDataset
 from titanic_analysis.domain.model.torch import NeuralNetwork
+from titanic_analysis.infrastructure.io.analysis.config_loader import (
+    load_training_config,
+)
 from titanic_analysis.infrastructure.io.analysis.constants import (
     CONFIG_PATH as ANALYSIS_CONFIG_PATH,
 )
@@ -47,8 +50,6 @@ from titanic_analysis.infrastructure.logic.analysis.display import (
 from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
-
-from ..infrastructure.io.analysis.config_loader import load_training_config
 
 __all__ = ["analyze", "infer", "run_training_pipeline"]
 

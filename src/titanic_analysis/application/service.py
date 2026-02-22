@@ -262,57 +262,6 @@ def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
 
 
 @torch.no_grad()
-def valid_loop(
-    dataloader: DataLoader,
-    model: NeuralNetwork,
-    loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss | nn.CrossEntropyLoss,
-    epochs: int,
-    epoch: int,
-) -> tuple[list[int], float, float, int]:
-    epoch_accuracy = 0
-    epoch_correct = 0
-    total_count = 0
-    epoch_loss = 0
-
-    pred_list = []
-
-    model.eval()
-    with tqdm(dataloader) as pbar:
-        pbar.set_description(f"[Epoch {epoch + 1}/{epochs}]")
-        for batch in pbar:
-            data, labels = get_data_with_type_annotation(batch)
-            batch_size = labels.shape[0]
-            # 予測と損失の計算
-            outputs: Tensor = model(data)
-
-            loss: Tensor = loss_fn(outputs, labels)
-
-            threshold = 0.5
-            pred = (outputs >= threshold).float()
-
-            batch_correct = int((pred == labels).sum().item())
-            batch_accuracy = batch_correct / batch_size
-
-            epoch_correct += batch_correct
-            total_count += batch_size
-            epoch_accuracy = epoch_correct / total_count
-            epoch_loss += loss.item()
-
-            pbar_postfix = {
-                "batch_acc": batch_accuracy,
-                "batch_loss": loss.item(),
-                "epoch_acc": epoch_accuracy,
-                "epoch_loss": epoch_loss,
-            }
-
-            pbar.set_postfix(pbar_postfix)
-
-            pred_list.append(pred)
-
-    return pred_list, epoch_accuracy, epoch_loss, epoch_correct
-
-
-@torch.no_grad()
 def test_loop(
     x_train_tensor: Tensor,
     model: NeuralNetwork,
@@ -426,17 +375,6 @@ def run_torch_training_pipeline(
         shuffle=False,
     )
 
-    # valid_labels = np.array(train_valid_data.loc[train_data_size:, "Survived"])
-    # valid_dataset = TitanicTorchDataset(
-    #     valid_data_preprocessed,
-    #     valid_labels,
-    # )
-
-    # valid_dataloader = DataLoader(
-    #     valid_dataset,
-    #     batch_size=batch_size,
-    # )
-
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
 
@@ -467,23 +405,6 @@ def run_torch_training_pipeline(
         train_accuracy_list.append(train_epoch_accuracy)
         train_loss_list.append(train_epoch_loss)
         train_correct_list.append(train_epoch_correct)
-
-        # pred_list, valid_epoch_accuracy, valid_epoch_loss, valid_epoch_correct = (
-        #     valid_loop(
-        #         valid_dataloader,
-        #         model,
-        #         loss_fn,
-        #         epochs,
-        #         epoch,
-        #     )
-        # )
-        # valid_accuracy_list.append(valid_epoch_accuracy)
-        # valid_loss_list.append(valid_epoch_loss)
-        # valid_correct_list.append(valid_epoch_correct)
-
-    # logger.debug("Valid accuracy: %s", valid_accuracy_list)
-    # logger.debug("Valid loss: %s", valid_loss_list)
-    # logger.debug("Valid correct count: %s", valid_correct_list)
 
     # TensorBoard のログ出力先
     root_log_dir = Path("./tensorboard_log")

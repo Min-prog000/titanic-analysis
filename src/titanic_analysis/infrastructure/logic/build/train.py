@@ -2,9 +2,9 @@ from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .common import get_data_with_type_annotation
+from titanic_analysis.infrastructure.logic.build.common import get_data_with_type_annotation
 
-from ....domain.model.torch import NeuralNetwork
+from titanic_analysis.domain.model.torch import NeuralNetwork
 
 
 def train_loop(

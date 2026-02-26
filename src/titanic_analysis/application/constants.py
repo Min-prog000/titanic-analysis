@@ -1,5 +1,7 @@
 from typing import Literal
 
+SEED = 42
+
 SELECTED_FEATURES = [
     "Pclass",
     "Sex",

@@ -1,6 +1,8 @@
 """データセットの分析を行うモジュール"""
 
 import logging
+import os
+import random
 from logging import Logger
 from pathlib import Path
 
@@ -29,6 +31,7 @@ from titanic_analysis.application.constants import (
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
+    SEED,
     SELECTED_FEATURES,
     TARGET_COLUMN,
 )
@@ -208,6 +211,8 @@ def run_training_pipeline_pytorch(
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
+    fix_seed(SEED)
+
     prepare_display(ANALYSIS_CONFIG_PATH)
 
     config_path = Path("config/model/base.yaml")
@@ -294,6 +299,15 @@ def run_training_pipeline_pytorch(
     create_onnx_model(feature_size, model, case_id)
 
     joblib.dump(case_id + 1, case_id_path)
+
+
+def fix_seed(seed: int) -> None:
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    # Python random
+    random.seed(seed)
+    # Pytorch
+    torch.manual_seed(seed)
+    torch.use_deterministic_algorithms = True
 
 
 def load_case_id(case_id_path: Path) -> int:

@@ -1,6 +1,6 @@
 import torch
 
-from ....domain.model.torch import NeuralNetwork
+from titanic_analysis.domain.model.torch import NeuralNetwork
 
 
 @torch.no_grad()

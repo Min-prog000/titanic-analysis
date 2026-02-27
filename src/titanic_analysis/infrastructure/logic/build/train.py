@@ -5,6 +5,7 @@ from tqdm import tqdm
 from titanic_analysis.infrastructure.logic.build.common import get_data_with_type_annotation
 
 from titanic_analysis.domain.model.torch import NeuralNetwork
+from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
 
 def train_loop(
@@ -40,8 +41,7 @@ def train_loop(
             loss.backward()
             optimizer.step()
 
-            threshold = 0.5
-            pred = (outputs >= threshold).float()
+            pred = (outputs >= THRESHOLD).float()
 
             batch_correct = int((pred == labels).sum().item())
             batch_accuracy = batch_correct / batch_size

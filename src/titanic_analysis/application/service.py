@@ -312,7 +312,7 @@ def run_training_pipeline_pytorch(
     config_file_name = Path(f"config_case{case_id}.yaml")
     config_file_path = yaml_output_path.joinpath(config_file_name)
     with config_file_path.open(mode="w", encoding="utf-8") as f:
-        safe_dump(config_save, f)
+        safe_dump(config_save, f, sort_keys=False)
 
     joblib.dump(case_id + 1, case_id_path)
 

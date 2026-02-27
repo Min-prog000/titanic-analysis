@@ -25,6 +25,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
+from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
     CATEGORICAL_FEATURES,
@@ -216,7 +217,7 @@ def run_training_pipeline_pytorch(
     prepare_display(ANALYSIS_CONFIG_PATH)
 
     config_path = Path("config/model/base.yaml")
-    config = load_training_config(config_path)
+    config_loaded = load_training_config(config_path)
 
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
@@ -235,7 +236,7 @@ def run_training_pipeline_pytorch(
     )
     train_dataloader = DataLoader(
         train_dataset,
-        batch_size=config.batch_size,
+        batch_size=config_loaded.batch_size,
         shuffle=False,
     )
 
@@ -254,14 +255,14 @@ def run_training_pipeline_pytorch(
     train_accuracy_list = []
     train_loss_list = []
     train_correct_list = []
-    optimizer = optim.Adam(model.parameters(), config.learning_rate)
-    for epoch in range(config.epochs):
+    optimizer = optim.Adam(model.parameters(), config_loaded.learning_rate)
+    for epoch in range(config_loaded.epochs):
         train_epoch_accuracy, train_epoch_loss, train_epoch_correct, model = train_loop(
             train_dataloader,
             model,
             loss_fn,
             optimizer,
-            config.epochs,
+            config_loaded.epochs,
             epoch,
         )
         train_accuracy_list.append(train_epoch_accuracy)
@@ -297,6 +298,21 @@ def run_training_pipeline_pytorch(
     CsvUtility.output_csv(submission_data, "torch_neural-network")
 
     create_onnx_model(feature_size, model, case_id)
+
+    config_save = {
+        "model": {
+            "case_id": case_id,
+            "batch_size": config_loaded.batch_size,
+            "learning_rate": config_loaded.learning_rate,
+            "epochs": config_loaded.epochs,
+        },
+    }
+    yaml_output_path = Path(f"output/config/case{case_id}")
+    yaml_output_path.mkdir(parents=True, exist_ok=True)
+    config_file_name = Path(f"config_case{case_id}.yaml")
+    config_file_path = yaml_output_path.joinpath(config_file_name)
+    with config_file_path.open(mode="w", encoding="utf-8") as f:
+        safe_dump(config_save, f)
 
     joblib.dump(case_id + 1, case_id_path)
 

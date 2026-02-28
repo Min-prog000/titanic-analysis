@@ -22,6 +22,7 @@ from sklearn.preprocessing import (
     RobustScaler,
 )
 from torch import nn, optim
+from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
@@ -255,13 +256,21 @@ def run_training_pipeline_pytorch(
     train_accuracy_list = []
     train_loss_list = []
     train_correct_list = []
+
     optimizer = optim.Adam(model.parameters(), config_loaded.learning_rate)
+
+    scheduler = lr_scheduler.LambdaLR(
+        optimizer,
+        lr_lambda=lambda epoch: config_loaded.gamma**epoch,
+    )
+
     for epoch in range(config_loaded.epochs):
         train_epoch_accuracy, train_epoch_loss, train_epoch_correct, model = train_loop(
             train_dataloader,
             model,
             loss_fn,
             optimizer,
+            scheduler,
             config_loaded.epochs,
             epoch,
         )
@@ -304,6 +313,7 @@ def run_training_pipeline_pytorch(
             "case_id": case_id,
             "batch_size": config_loaded.batch_size,
             "learning_rate": config_loaded.learning_rate,
+            "gamma": config_loaded.gamma,
             "epochs": config_loaded.epochs,
         },
     }

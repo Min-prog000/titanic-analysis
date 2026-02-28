@@ -1,4 +1,5 @@
 from torch import Tensor, nn, optim
+from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -13,6 +14,7 @@ def train_loop(
     model: NeuralNetwork,
     loss_fn: nn.BCEWithLogitsLoss | nn.BCELoss | nn.CrossEntropyLoss,
     optimizer: optim.Adam | optim.SGD,
+    scheduler: lr_scheduler.LambdaLR,
     epochs: int,
     epoch: int,
 ) -> tuple[float, float, int, NeuralNetwork]:
@@ -59,5 +61,7 @@ def train_loop(
             }
 
             pbar.set_postfix(pbar_postfix)
+
+        scheduler.step()
 
     return epoch_accuracy, epoch_loss, epoch_correct, model

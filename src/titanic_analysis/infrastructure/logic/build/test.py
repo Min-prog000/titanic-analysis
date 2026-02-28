@@ -1,6 +1,7 @@
 import torch
 
 from titanic_analysis.domain.model.torch import NeuralNetwork
+from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
 
 @torch.no_grad()
@@ -15,8 +16,7 @@ def test_loop(
         outputs = model(x)
 
         # BCEWithLogitsLoss
-        threshold = 0.5
-        pred = int(outputs >= threshold)
+        pred = int(outputs >= THRESHOLD)
 
         # BCELoss
         # threshold = 0.5

@@ -60,7 +60,7 @@ class DatasetPreprocessor:
         # 2. カテゴリ変数のエンコード
         dataset_encoded = cls.encode_by_one_hot(dataset_selected, encode_columns)
 
-        # 3. 欠損値の置換（平均値）
+        # 3. 欠損値の置換(平均値)
         return cls._fill_nan(
             df=dataset_encoded,
             nan_fill_method=NanFillMethod.MEAN,
@@ -108,7 +108,7 @@ class DatasetPreprocessor:
             # エンコードしたデータフレームの取得
             df_dummy = pd.get_dummies(df[column], dtype=int, prefix=column)
 
-            # 挿入位置の取得（エンコードする列の番号）
+            # 挿入位置の取得(エンコードする列の番号)
             insert_location = df_encoded.columns.get_loc(column)
 
             # 列の削除
@@ -159,12 +159,12 @@ class DatasetPreprocessor:
         round_figure: int,
         logger: Logger,
     ) -> pd.DataFrame:
-        """欠損値（NaN）を置換する
+        """欠損値(NaN)を置換する
 
         Args:
             df (pd.DataFrame): 欠損値のあるデータフレーム
-            nan_fill_method (NanFillMethod): 欠損値の置換方法（平均値のみ有効）
-            round_figure (int): 置換に使用する値の有効桁数（小数点以下）
+            nan_fill_method (NanFillMethod): 欠損値の置換方法(平均値のみ有効)
+            round_figure (int): 置換に使用する値の有効桁数(小数点以下)
             logger (Logger): エラー出力用のロガー
 
         Returns:

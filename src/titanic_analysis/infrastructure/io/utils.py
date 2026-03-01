@@ -36,20 +36,20 @@ class CsvUtility:
         jst = timezone(timedelta(hours=+9), "JST")
         train_datetime = datetime.now(jst)
 
-        # 保存先フォルダ名の接尾辞（日付）
+        # 保存先フォルダ名の接尾辞(日付)
         save_folder_name = cls._generate_save_folder_name(train_datetime)
         save_folder_path = Path(save_folder_name)
 
         # 保存先フォルダの作成
         save_folder_path.mkdir(parents=True, exist_ok=True)
 
-        # 保存ファイル名の接尾辞（日付と日時）
+        # 保存ファイル名の接尾辞(日付と日時)
         save_file_name = cls._generate_save_file_name(
             postfix_method_name,
             train_datetime,
         )
 
-        # 保存ファイルのパス（カレントディレクトリの直下に作成する）
+        # 保存ファイルのパス(カレントディレクトリの直下に作成する)
         save_path = cls._generate_save_path(save_folder_name, save_file_name)
 
         df.to_csv(save_path, index=False)

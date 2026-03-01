@@ -9,7 +9,7 @@ from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPip
 
 
 def load_analysis_config(config_path: Path) -> AnalysisDTO:
-    """configファイル（*.yaml）を読み込む
+    """configファイル(*.yaml)を読み込む
 
     Args:
         config_path (Path): configファイルのパス
@@ -24,6 +24,14 @@ def load_analysis_config(config_path: Path) -> AnalysisDTO:
 
 
 def load_training_config(config_path: Path) -> TrainingPipelineDTO:
+    """Load config file for training using pytorch
+
+    Args:
+        config_path (Path): Config file path
+
+    Returns:
+        TrainingPipelineDTO: DTO for config file
+    """
     with config_path.open() as file:
         config = yaml.safe_load(file)
 

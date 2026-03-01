@@ -21,6 +21,11 @@ class DatasetAnalyzer[T: Dataset]:
     __all__: ClassVar[list[str]] = ["display_summary", "display_categorized_columns"]
 
     def __init__(self, logger: Logger) -> None:
+        """Constructor with logger setting
+
+        Args:
+            logger (Logger): Logger for user information and debug
+        """
         self.logger = logger
 
     def display_summary(self, dataset: T) -> None:
@@ -28,9 +33,9 @@ class DatasetAnalyzer[T: Dataset]:
 
         出力内容
         - データセット本体
-        - 統計量（describe()）
-        - 欠損値かどうか（isnull()）
-        - 各列の欠損値の合計（isnull().sum()）
+        - 統計量(describe())
+        - 欠損値かどうか(isnull())
+        - 各列の欠損値の合計(isnull().sum())
 
         それぞれディバイダ―付きで表示する
 

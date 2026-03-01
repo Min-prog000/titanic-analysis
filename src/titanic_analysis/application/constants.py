@@ -1,3 +1,5 @@
+"""Constants module for model building pipeline"""
+
 from typing import Literal
 
 SEED = 42

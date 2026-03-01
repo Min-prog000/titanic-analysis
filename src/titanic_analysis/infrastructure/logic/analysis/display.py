@@ -1,3 +1,5 @@
+"""Core function module for analysis"""
+
 from logging import Logger
 from pathlib import Path
 
@@ -28,6 +30,7 @@ def describe_dataset(dataset: Dataset, logger: Logger) -> None:
 
     Args:
         dataset (Dataset): データセットのインスタンス
+        logger (Logger): ロガー
     """
     dataset_analyzer = DatasetAnalyzer(logger)
     dataset_analyzer.display_summary(dataset)

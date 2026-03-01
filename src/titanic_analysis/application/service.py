@@ -1,8 +1,6 @@
 """データセットの分析を行うモジュール"""
 
 import logging
-import os
-import random
 from logging import Logger
 from pathlib import Path
 
@@ -65,6 +63,7 @@ from titanic_analysis.infrastructure.logic.analysis.display import (
 )
 from titanic_analysis.infrastructure.logic.build.test import test_loop
 from titanic_analysis.infrastructure.logic.build.train import train_loop
+from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_case_id
 from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
@@ -213,6 +212,15 @@ def run_training_pipeline_pytorch(
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
+    """Train and test using pytorch
+
+    Args:
+        logger (Logger): Logger for user information and debug.
+        train_dataset_path (str, optional):
+            Train dataset file path. Defaults to PATH_TRAIN.
+        test_dataset_path (str, optional):
+            Test dataset file path. Defaults to PATH_TEST.
+    """
     fix_seed(SEED)
 
     prepare_display(ANALYSIS_CONFIG_PATH)
@@ -325,25 +333,6 @@ def run_training_pipeline_pytorch(
         safe_dump(config_save, f, sort_keys=False)
 
     joblib.dump(case_id + 1, case_id_path)
-
-
-def fix_seed(seed: int) -> None:
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    # Python random
-    random.seed(seed)
-    # Pytorch
-    torch.manual_seed(seed)
-    torch.use_deterministic_algorithms = True
-
-
-def load_case_id(case_id_path: Path) -> int:
-    if case_id_path.exists():
-        case_id = joblib.load(case_id_path)
-    else:
-        case_id_path.parent.mkdir(exist_ok=True)
-        case_id = 1
-
-    return case_id
 
 
 def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> None:
@@ -465,6 +454,14 @@ def predict(
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
+    """Infer with ONNX model.
+
+    Args:
+        logger (Logger): Logger for user information and debug
+        model_path (str): ONNX (`*.onnx`) file path
+        train_dataset_path (str, optional): Train dataset path. Defaults to PATH_TRAIN.
+        test_dataset_path (str, optional): Test dataset path. Defaults to PATH_TEST.
+    """
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 

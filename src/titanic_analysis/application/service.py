@@ -50,12 +50,6 @@ from titanic_analysis.infrastructure.io.constants import (
     PATH_TEST,
     PATH_TRAIN,
 )
-from titanic_analysis.infrastructure.io.training_pipeline.config_loader import (
-    load_config,
-)
-from titanic_analysis.infrastructure.io.training_pipeline.constants import (
-    CONFIG_PATH as TRAINING_CONFIG_PATH,
-)
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.analysis.display import (
     describe_dataset,
@@ -107,7 +101,6 @@ def analyze(
 
 def run_training_pipeline_sklearn(
     logger: Logger,
-    config_file_name: Path = TRAINING_CONFIG_PATH,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
@@ -115,16 +108,12 @@ def run_training_pipeline_sklearn(
 
     Args:
         logger (Logger): Logger generated in `main`.
-        config_file_name (Path, optional):
-            Config file name with absolute path. Defaults to TRAINING_CONFIG_PATH.
         train_dataset_path (str, optional): Dataset path. Defaults to PATH_TRAIN.
         test_dataset_path (str, optional): Dataset path. Defaults to PATH_TEST.
 
     Raises:
         FalseComponentError: Raise when missing columns.
     """
-    config_dto = load_config(config_file_name)
-
     train_dataset = TrainDataset(train_dataset_path)
     test_dataset = TestDataset(test_dataset_path)
 

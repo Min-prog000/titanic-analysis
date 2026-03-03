@@ -26,6 +26,14 @@ class NeuralNetwork(nn.Module):
         # )
 
     def forward(self, x: Tensor) -> Tensor:
+        """Train model
+
+        Args:
+            x (Tensor): Data
+
+        Returns:
+            Tensor: predict output
+        """
         outputs: Tensor = self.linear_relu_stack(x)
 
         return outputs

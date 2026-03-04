@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 from sklearn.compose import ColumnTransformer
 from sklearn.discriminant_analysis import StandardScaler
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
@@ -46,6 +47,7 @@ from titanic_analysis.infrastructure.io.analysis.constants import (
     CONFIG_PATH as ANALYSIS_CONFIG_PATH,
 )
 from titanic_analysis.infrastructure.io.constants import (
+    GRADIENT_BOOSTING_DECITION_TREE,
     LOGISTIC_REGRESSION,
     PATH_TEST,
     PATH_TRAIN,
@@ -154,8 +156,9 @@ def run_training_pipeline_sklearn(
     # モデル生成
     weight = {0: 1.0, 1: 1.5}
     logreg = LogisticRegression(random_state=0, class_weight=weight)
+
     # パイプライン生成
-    pipe = make_pipeline(scaler, logreg)
+    pipe_logreg = make_pipeline(scaler, logreg)
 
     # max_iterの範囲生成
     max_iter_scope = [np.int16(max_iter) for max_iter in np.linspace(100, 1000, num=10)]
@@ -166,8 +169,9 @@ def run_training_pipeline_sklearn(
         "logisticregression__max_iter": max_iter_scope,
     }
 
+    # LogisticRegression
     # グリッドサーチ
-    search = GridSearchCV(pipe, params_logreg, n_jobs=2)
+    search = GridSearchCV(pipe_logreg, params_logreg, n_jobs=2)
     search.fit(x_train, y_train)
 
     # グリッドサーチ結果の表示
@@ -181,8 +185,10 @@ def run_training_pipeline_sklearn(
     logger.info("Hyper parameters: %s", search.best_params_)
 
     # 最高精度のモデルによる推論
-    model: LogisticRegression = search.best_estimator_.named_steps["logisticregression"]
-    y_pred = model.predict(np.array(x_test))
+    best_logreg: LogisticRegression = search.best_estimator_.named_steps[
+        "logisticregression"
+    ]
+    y_pred = best_logreg.predict(np.array(x_test))
 
     # 提出用データの作成
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
@@ -191,6 +197,44 @@ def run_training_pipeline_sklearn(
         axis=1,
     )
     CsvUtility.output_csv(y_pred_df_submission, LOGISTIC_REGRESSION)
+
+    # 提出用データの表示
+    logger.info(y_pred_df_submission)
+
+    # GradientBoostingClassifier
+    # グリッドサーチ
+    gbdt = GradientBoostingClassifier(random_state=0)
+    params_gbdt = {
+        "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
+        "gradientboostingclassifier__n_estimators": range(100, 1001, 100),
+    }
+    pipe_gbdt = make_pipeline(scaler, gbdt)
+    search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2)
+    search.fit(x_train, y_train)
+
+    # グリッドサーチ結果の表示
+    result_search = search.cv_results_
+    result_search_df = pd.DataFrame(result_search).iloc[:, 4:]
+    result_search_df_rounded = result_search_df.round(3)
+    logger.info(result_search_df_rounded)
+
+    # グリッドサーチのベストスコア表示
+    logger.info("Grid search best score: %s", search.best_score_)
+    logger.info("Hyper parameters: %s", search.best_params_)
+
+    # 最高精度のモデルによる推論
+    best_gbdt: GradientBoostingClassifier = search.best_estimator_.named_steps[
+        "gradientboostingclassifier"
+    ]
+    y_pred = best_gbdt.predict(np.array(x_test))
+
+    # 提出用データの作成
+    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
+    y_pred_df_submission = pd.concat(
+        [test_dataset.x[ID_COLUMN], y_pred_df],
+        axis=1,
+    )
+    CsvUtility.output_csv(y_pred_df_submission, GRADIENT_BOOSTING_DECITION_TREE)
 
     # 提出用データの表示
     logger.info(y_pred_df_submission)

@@ -1,8 +1,21 @@
+"""Pytorchのニューラルネットワーク用モジュール"""
+
 from torch import Tensor, nn
 
 
 class NeuralNetwork(nn.Module):
+    """ニューラルネットワークのモデル
+
+    Args:
+        nn.Module : 全てのニューラルネットワークのためのクラス
+    """
+
     def __init__(self, feature_size: int) -> None:
+        """モデルの初期化を行う
+
+        Args:
+            feature_size (int): 訓練データの列数
+        """
         super().__init__()
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(in_features=feature_size, out_features=16),

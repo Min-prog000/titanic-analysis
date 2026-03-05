@@ -47,7 +47,7 @@ from titanic_analysis.infrastructure.io.analysis.constants import (
     CONFIG_PATH as ANALYSIS_CONFIG_PATH,
 )
 from titanic_analysis.infrastructure.io.constants import (
-    GRADIENT_BOOSTING_DECITION_TREE,
+    GRADIENT_BOOSTING_DECISION_TREE,
     LOGISTIC_REGRESSION,
     PATH_TEST,
     PATH_TRAIN,
@@ -234,7 +234,7 @@ def run_training_pipeline_sklearn(
         [test_dataset.x[ID_COLUMN], y_pred_df],
         axis=1,
     )
-    CsvUtility.output_csv(y_pred_df_submission, GRADIENT_BOOSTING_DECITION_TREE)
+    CsvUtility.output_csv(y_pred_df_submission, GRADIENT_BOOSTING_DECISION_TREE)
 
     # 提出用データの表示
     logger.info(y_pred_df_submission)

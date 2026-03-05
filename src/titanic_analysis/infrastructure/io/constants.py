@@ -3,7 +3,7 @@
 # csvファイル保存用手法名
 LOGISTIC_REGRESSION = "logreg"
 RANDOM_FOREST = "rf"
-GRADIENT_BOOSTING_DECITION_TREE = "gbdt"
+GRADIENT_BOOSTING_DECISION_TREE = "gbdt"
 
 # データセットのパス
 PATH_TRAIN = "data\\titanic\\train.csv"

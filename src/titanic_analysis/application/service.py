@@ -500,36 +500,44 @@ def predict(
 
     logger.debug(SELECTED_FEATURES)
 
-    train_data_filtered = train_data.loc[:, SELECTED_FEATURES]
-    logger.debug(train_data_filtered.columns)
-
-    train_data_mean = train_data_filtered.mean(numeric_only=True)
-    train_fill_values_round = round(train_data_mean)
-    train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
-    logger.debug(train_data_preprocessed.columns)
-
-    test_data_filtered = test_data.loc[:, SELECTED_FEATURES]
-    logger.debug(test_data_filtered.columns)
-
-    test_data_mean = test_data_filtered.mean(numeric_only=True)
-    test_fill_values_round = round(test_data_mean)
-    test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
-    logger.debug(test_data_preprocessed.columns)
-
-    logger.debug(NUMERIC_FEATURES)
-    logger.debug(CATEGORICAL_FEATURES)
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", StandardScaler(), NUMERIC_FEATURES),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
-        ],
+    _, test_data_preprocessed = preprocess_load_data(
+        logger,
+        train_data,
+        test_data,
     )
 
-    pipeline = Pipeline(steps=[("preprocess", preprocessor)])
+    # train
+    # train_data_filtered = train_data.loc[:, SELECTED_FEATURES]
+    # logger.debug(train_data_filtered.columns)
 
-    train_data_preprocessed = pipeline.fit_transform(train_data_preprocessed)
-    test_data_preprocessed = pipeline.transform(test_data_preprocessed)
+    # train_data_mean = train_data_filtered.mean(numeric_only=True)
+    # train_fill_values_round = round(train_data_mean)
+    # train_data_preprocessed = train_data_filtered.fillna(train_fill_values_round)
+    # logger.debug(train_data_preprocessed.columns)
+
+    # # test
+    # test_data_filtered = test_data.loc[:, SELECTED_FEATURES]
+    # logger.debug(test_data_filtered.columns)
+
+    # test_data_mean = test_data_filtered.mean(numeric_only=True)
+    # test_fill_values_round = round(test_data_mean)
+    # test_data_preprocessed = test_data_filtered.fillna(test_fill_values_round)
+    # logger.debug(test_data_preprocessed.columns)
+
+    # logger.debug(NUMERIC_FEATURES)
+    # logger.debug(CATEGORICAL_FEATURES)
+
+    # preprocessor = ColumnTransformer(
+    #     transformers=[
+    #         ("num", StandardScaler(), NUMERIC_FEATURES),
+    #         ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
+    #     ],
+    # )
+
+    # pipeline = Pipeline(steps=[("preprocess", preprocessor)])
+
+    # train_data_preprocessed = pipeline.fit_transform(train_data_preprocessed)
+    # test_data_preprocessed = pipeline.transform(test_data_preprocessed)
 
     logger.debug(test_data_preprocessed.shape)
 

@@ -67,8 +67,8 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
 __all__ = [
     "analyze",
     "predict",
+    "run_training_logistic_regression",
     "run_training_pipeline_pytorch",
-    "run_training_pipeline_sklearn",
 ]
 
 
@@ -101,12 +101,15 @@ def analyze(
         describe_dataset(dataset, logger)
 
 
-def run_training_pipeline_sklearn(
+def run_training_logistic_regression(
     logger: Logger,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
-    """The function preprocess, training, and generate submission csv
+    """Train with Logistic regression
+
+    This function preprocess, training, and generate submission csv
+        with logistic regression method.
 
     Args:
         logger (Logger): Logger generated in `main`.
@@ -200,6 +203,62 @@ def run_training_pipeline_sklearn(
 
     # 提出用データの表示
     logger.info(y_pred_df_submission)
+
+
+def run_training_gradient_boosting(
+    logger: Logger,
+    train_dataset_path: str = PATH_TRAIN,
+    test_dataset_path: str = PATH_TEST,
+) -> None:
+    """Train with Gradient boosting
+
+    This function preprocess, training, and generate submission csv
+        with gradient boosting decision tree
+
+    Args:
+        logger (Logger): Logger generated in `main`.
+        train_dataset_path (str, optional): Dataset path. Defaults to PATH_TRAIN.
+        test_dataset_path (str, optional): Dataset path. Defaults to PATH_TEST.
+
+    Raises:
+        FalseComponentError: Raise when missing columns.
+    """
+    train_dataset = TrainDataset(train_dataset_path)
+    test_dataset = TestDataset(test_dataset_path)
+
+    train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
+        dataset=train_dataset.x,
+        selected_features=SELECTED_FEATURES,
+        encode_columns=CATEGORICAL_FEATURES,
+        logger=logger,
+    )
+
+    test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
+        dataset=test_dataset.x,
+        selected_features=SELECTED_FEATURES,
+        encode_columns=CATEGORICAL_FEATURES,
+        logger=logger,
+    )
+
+    logger.info(train_dataset_preprocessed)
+    logger.info(test_dataset_preprocessed)
+
+    # 訓練データ
+    x_train = train_dataset_preprocessed
+    y_train = train_dataset.y
+
+    # テストデータ
+    x_test = test_dataset_preprocessed
+
+    # 列名の数と名前が等しいことの確認
+    if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
+        _ = x_train.columns
+    else:
+        msg = "NotMatchSizeError: either array has one or more false components."
+        raise FalseComponentError(msg)
+
+    # 正規化
+    scaler = MinMaxScaler()
 
     # GradientBoostingClassifier
     # グリッドサーチ

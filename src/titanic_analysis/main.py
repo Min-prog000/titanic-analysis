@@ -3,14 +3,16 @@
 from titanic_analysis.application.service import (
     analyze,
     predict,
+    run_training_gradient_boosting,
+    run_training_logistic_regression,
     run_training_pipeline_pytorch,
-    run_training_pipeline_sklearn,
 )
 from titanic_analysis.infrastructure.user.constants import (
     ANALYSIS,
+    GRADIENT_BOOSTING,
     INFERENCE,
-    TRAINING_PYTORCH,
-    TRAINING_SKLEARN,
+    LOGISTIC_REGRESSION,
+    PYTORCH,
 )
 from titanic_analysis.infrastructure.user.parser import generate_parser
 from titanic_analysis.interface.log.logger import TitanicLogger
@@ -36,9 +38,11 @@ def main() -> None:
 
     if mode == ANALYSIS:
         analyze(logger)
-    elif mode == TRAINING_SKLEARN:
-        run_training_pipeline_sklearn(logger)
-    elif mode == TRAINING_PYTORCH:
+    elif mode == LOGISTIC_REGRESSION:
+        run_training_logistic_regression(logger)
+    elif mode == GRADIENT_BOOSTING:
+        run_training_gradient_boosting(logger)
+    elif mode == PYTORCH:
         run_training_pipeline_pytorch(logger)
     elif mode == INFERENCE:
         predict(logger, model_path)

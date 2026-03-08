@@ -67,6 +67,7 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
 __all__ = [
     "analyze",
     "predict",
+    "run_training_gradient_boosting",
     "run_training_logistic_regression",
     "run_training_pipeline_pytorch",
 ]
@@ -148,7 +149,7 @@ def run_training_logistic_regression(
 
     # 列名の数と名前が等しいことの確認
     if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
-        _ = x_train.columns
+        pass
     else:
         msg = "NotMatchSizeError: either array has one or more false components."
         raise FalseComponentError(msg)
@@ -252,7 +253,7 @@ def run_training_gradient_boosting(
 
     # 列名の数と名前が等しいことの確認
     if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
-        _ = x_train.columns
+        pass
     else:
         msg = "NotMatchSizeError: either array has one or more false components."
         raise FalseComponentError(msg)

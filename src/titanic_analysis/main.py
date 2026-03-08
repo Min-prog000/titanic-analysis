@@ -10,8 +10,8 @@ from titanic_analysis.application.service import (
 from titanic_analysis.infrastructure.user.constants import (
     ANALYSIS,
     GRADIENT_BOOSTING,
-    INFERENCE,
     LOGISTIC_REGRESSION,
+    PREDICT,
     PYTORCH,
 )
 from titanic_analysis.infrastructure.user.parser import generate_parser
@@ -44,7 +44,7 @@ def main() -> None:
         run_training_gradient_boosting(logger)
     elif mode == PYTORCH:
         run_training_pipeline_pytorch(logger)
-    elif mode == INFERENCE:
+    elif mode == PREDICT:
         predict(logger, model_path)
     else:
         logger.warning("Invalid mode inputted.")

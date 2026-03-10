@@ -267,6 +267,7 @@ def run_training_gradient_boosting(
     params_gbdt = {
         "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
         "gradientboostingclassifier__n_estimators": range(100, 1001, 100),
+        "gradientboostingclassifier__max_depth": range(1, 5),
     }
     pipe_gbdt = make_pipeline(scaler, gbdt)
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2)
@@ -412,12 +413,9 @@ def run_training_pipeline_pytorch(
     config_save = {
         "model": {
             "case_id": case_id,
-            "batch_size": config_loaded.batch_size,
-            "learning_rate": config_loaded.learning_rate,
-            "gamma": config_loaded.gamma,
-            "epochs": config_loaded.epochs,
         },
     }
+    config_save["model"].update(config_loaded.model_dump())
     yaml_output_path = Path(f"output/config/case{case_id}")
     yaml_output_path.mkdir(parents=True, exist_ok=True)
     config_file_name = Path(f"config_case{case_id}.yaml")

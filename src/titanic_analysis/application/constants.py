@@ -19,5 +19,6 @@ CATEGORICAL_FEATURES = ["Pclass", "Sex", "Embarked"]
 
 ID_COLUMN = "PassengerId"
 TARGET_COLUMN = "Survived"
+ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]

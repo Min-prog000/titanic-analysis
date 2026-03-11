@@ -28,6 +28,7 @@ from torchinfo import summary
 from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
+    ADDITIONAL_ENCODING_COLUMN,
     CATEGORICAL_FEATURES,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
@@ -492,10 +493,14 @@ def clean_data(
 
     # Fill "Embarked" column with mode
     # "S" is the most numerous category
-    dataframe_groupby_embarked = data_cleaned.groupby("Embarked", dropna=False)
+    dataframe_groupby_embarked = data_cleaned.groupby(
+        ADDITIONAL_ENCODING_COLUMN, dropna=False
+    )
     size_groupby_embarked = dataframe_groupby_embarked.size()
     mode_embarked_index = size_groupby_embarked.idxmax()
-    data_cleaned["Embarked"] = data_cleaned["Embarked"].fillna(
+    data_cleaned[ADDITIONAL_ENCODING_COLUMN] = data_cleaned[
+        ADDITIONAL_ENCODING_COLUMN
+    ].fillna(
         mode_embarked_index,
     )
 

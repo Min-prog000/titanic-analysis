@@ -21,6 +21,6 @@ ID_COLUMN = "PassengerId"
 TARGET_COLUMN = "Survived"
 ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
-PYTORCH_CONFIG_PASS = "config/model/base.yaml"
+PYTORCH_CONFIG_PATH = "config/model/base.yaml"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]

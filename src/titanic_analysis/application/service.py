@@ -33,7 +33,7 @@ from titanic_analysis.application.constants import (
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
-    PYTORCH_CONFIG_PASS,
+    PYTORCH_CONFIG_PATH,
     SEED,
     SELECTED_FEATURES,
     TARGET_COLUMN,
@@ -321,7 +321,7 @@ def run_training_pipeline_pytorch(
 
     prepare_display(ANALYSIS_CONFIG_PATH)
 
-    config_path = Path(PYTORCH_CONFIG_PASS)
+    config_path = Path(PYTORCH_CONFIG_PATH)
     config_loaded = load_training_config(config_path)
 
     train_data = pd.read_csv(train_dataset_path)

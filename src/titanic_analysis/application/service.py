@@ -33,6 +33,7 @@ from titanic_analysis.application.constants import (
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
+    PYTORCH_CONFIG_PASS,
     SEED,
     SELECTED_FEATURES,
     TARGET_COLUMN,
@@ -320,7 +321,7 @@ def run_training_pipeline_pytorch(
 
     prepare_display(ANALYSIS_CONFIG_PATH)
 
-    config_path = Path("config/model/base.yaml")
+    config_path = Path(PYTORCH_CONFIG_PASS)
     config_loaded = load_training_config(config_path)
 
     train_data = pd.read_csv(train_dataset_path)
@@ -494,7 +495,8 @@ def clean_data(
     # Fill "Embarked" column with mode
     # "S" is the most numerous category
     dataframe_groupby_embarked = data_cleaned.groupby(
-        ADDITIONAL_ENCODING_COLUMN, dropna=False
+        ADDITIONAL_ENCODING_COLUMN,
+        dropna=False,
     )
     size_groupby_embarked = dataframe_groupby_embarked.size()
     mode_embarked_index = size_groupby_embarked.idxmax()

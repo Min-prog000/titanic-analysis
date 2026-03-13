@@ -21,6 +21,8 @@ ID_COLUMN = "PassengerId"
 TARGET_COLUMN = "Survived"
 ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
-PYTORCH_CONFIG_PATH = "config/model/base.yaml"
+PYTORCH_CASE_ID_PATH = "./config/id/case.joblib"
+PYTORCH_CONFIG_PATH = "./config/model/base.yaml"
+PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]

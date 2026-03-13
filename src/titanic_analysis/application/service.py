@@ -33,7 +33,9 @@ from titanic_analysis.application.constants import (
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
+    PYTORCH_CASE_ID_PATH,
     PYTORCH_CONFIG_PATH,
+    PYTORCH_TENSORBOARD_PATH,
     SEED,
     SELECTED_FEATURES,
     TARGET_COLUMN,
@@ -383,11 +385,11 @@ def run_training_pipeline_pytorch(
         train_correct_list.append(train_epoch_correct)
 
     # ケース番号
-    case_id_path = Path("config/id/case.joblib")
+    case_id_path = Path(PYTORCH_CASE_ID_PATH)
     case_id = load_case_id(case_id_path)
 
     # TensorBoard のログ出力先
-    root_log_dir = Path("./tensorboard_log")
+    root_log_dir = Path(PYTORCH_TENSORBOARD_PATH)
     # ラベル名
     main_tags = ["accuracy", "loss", "correct"]
     value_tag = f"case{case_id}"
@@ -513,15 +515,19 @@ def generate_preprocessor(
     scaler: StandardScaler | MinMaxScaler | RobustScaler,
     numeric_features: list[str],
     categorical_features: list[str],
+    categorical_encoder: OneHotEncoder | None = None,
 ) -> ColumnTransformer:
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", scaler, numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
-        ],
-    )
+    if categorical_encoder is None:
+        categorical_encoder = OneHotEncoder(handle_unknown="ignore")
 
-    return preprocessor
+    transformers = []
+    if numeric_features:
+        transformers.append(("numeric", scaler, numeric_features))
+
+    if categorical_features:
+        transformers.append(("categorical", categorical_encoder, categorical_features))
+
+    return ColumnTransformer(transformers=transformers)
 
 
 def set_onnx_logger(

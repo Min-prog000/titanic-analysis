@@ -26,3 +26,7 @@ PYTORCH_CONFIG_PATH = "./config/model/base.yaml"
 PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]
+
+COLUMN_NOT_MATCH_MESSAGE = (
+    "NotMatchSizeError: either array has one or more false components."
+)

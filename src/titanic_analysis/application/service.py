@@ -30,6 +30,7 @@ from yaml import safe_dump
 from titanic_analysis.application.constants import (
     ADDITIONAL_ENCODING_COLUMN,
     CATEGORICAL_FEATURES,
+    COLUMN_NOT_MATCH_MESSAGE,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
@@ -152,11 +153,10 @@ def run_training_logistic_regression(
     x_test = test_dataset_preprocessed
 
     # 列名の数と名前が等しいことの確認
-    if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
-        pass
-    else:
-        msg = "NotMatchSizeError: either array has one or more false components."
-        raise FalseComponentError(msg)
+    try:
+        _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
+    except Exception:
+        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE)
 
     # 正規化
     scaler = MinMaxScaler()
@@ -259,8 +259,7 @@ def run_training_gradient_boosting(
     if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
         pass
     else:
-        msg = "NotMatchSizeError: either array has one or more false components."
-        raise FalseComponentError(msg)
+        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE)
 
     # 正規化
     scaler = MinMaxScaler()

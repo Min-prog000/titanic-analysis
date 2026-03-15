@@ -155,8 +155,8 @@ def run_training_logistic_regression(
     # 列名の数と名前が等しいことの確認
     try:
         _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
-    except Exception:
-        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE)
+    except FalseComponentError as _:
+        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
 
     # 正規化
     scaler = MinMaxScaler()
@@ -256,10 +256,10 @@ def run_training_gradient_boosting(
     x_test = test_dataset_preprocessed
 
     # 列名の数と名前が等しいことの確認
-    if x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all():
-        pass
-    else:
-        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE)
+    try:
+        _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
+    except FalseComponentError as _:
+        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
 
     # 正規化
     scaler = MinMaxScaler()

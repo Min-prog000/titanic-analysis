@@ -39,7 +39,7 @@ class TitanicTorchDataset(Dataset):
             idx (int): 取得したいデータのインデックス
 
         Returns:
-            dict: 訓練データとラベルの辞書
+            tuple: 訓練データとラベルのタプル
         """
         data = torch.tensor(self.data[idx], dtype=torch.float32)
         label = torch.tensor([self.labels[idx]], dtype=torch.float32)

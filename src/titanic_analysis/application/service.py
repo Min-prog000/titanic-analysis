@@ -348,7 +348,7 @@ def run_training_pipeline_pytorch(
 
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
-    logger.info(summary(model, (feature_size,)))
+    logger.info(summary(model, (1, feature_size)))
 
     # 1出力
     loss_fn = nn.BCEWithLogitsLoss()
@@ -398,8 +398,21 @@ def run_training_pipeline_pytorch(
         log_dir = root_log_dir.joinpath(main_tags[i])
         write_scalar_graph(log_dir, train_histories[i], main_tags[i], value_tag)
 
-    test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
-    pred_list = test_loop(test_dataset, model)
+    # データセット
+    test_labels = np.array([0] * test_data_preprocessed.shape[0])
+    print(test_labels.shape)
+    test_dataset = TitanicTorchDataset(
+        test_data_preprocessed,
+        test_labels,
+    )
+    test_dataloader = DataLoader(
+        test_dataset,
+        batch_size=config_loaded.batch_size,
+        shuffle=False,
+    )
+
+    # test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
+    pred_list = test_loop(test_dataloader, model)
     logger.debug(len(test_data[ID_COLUMN].to_numpy()))
     logger.debug(len(pred_list))
 
@@ -430,7 +443,7 @@ def run_training_pipeline_pytorch(
 
 
 def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> None:
-    input_tensor = torch.rand((1, 1, feature_size), dtype=torch.float32)
+    input_tensor = torch.rand((1, feature_size), dtype=torch.float32)
 
     onnx_dir_path = Path(f"model/onnx/case{case_id}")
     onnx_dir_path.mkdir(parents=True, exist_ok=True)
@@ -446,7 +459,7 @@ def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> 
         onnx_file_path,
         input_names=["input"],
         output_names=["output"],
-        dynamo=True,
+        # dynamo=True,
     )
 
 

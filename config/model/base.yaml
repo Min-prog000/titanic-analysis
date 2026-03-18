@@ -3,4 +3,4 @@ model:
   batch_size: 128
   learning_rate: 1e-3
   gamma: 0.99
-  epochs: 500
+  epochs: 100

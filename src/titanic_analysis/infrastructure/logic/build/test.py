@@ -1,4 +1,8 @@
+from itertools import chain
+
 import torch
+from torch import Tensor
+from torch.utils.data import DataLoader
 
 from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
@@ -6,17 +10,20 @@ from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
 @torch.no_grad()
 def test_loop(
-    x_train_tensor: torch.Tensor,
+    test_dataloader: DataLoader,
     model: NeuralNetwork,
 ) -> list[int]:
     pred_list = []
 
     model.eval()
-    for x in x_train_tensor:
-        outputs = model(x)
+    for x, _ in test_dataloader:
+        outputs: Tensor = model(x)
 
         # BCEWithLogitsLoss
-        pred = int(outputs >= THRESHOLD)
+        pred = outputs >= THRESHOLD
+        print(pred)
+        print(pred.shape)
+
 
         # BCELoss
         # threshold = 0.5
@@ -25,6 +32,10 @@ def test_loop(
         # CrossEntropyLoss
         # pred = int(torch.argmax(outputs))
 
-        pred_list.append(pred)
+        print(list(chain.from_iterable(pred.cpu().numpy().astype(int))))
+        pred_list.extend(list(chain.from_iterable(pred.cpu().numpy().astype(int))))
+
+        # print(pred.cpu().numpy().astype(int))
+        # pred_list.extend(pred.cpu().numpy().astype(int))
 
     return pred_list

@@ -21,8 +21,7 @@ def test_loop(
 
         # BCEWithLogitsLoss
         pred = outputs >= THRESHOLD
-        print(pred)
-        print(pred.shape)
+        # print(pred)
 
 
         # BCELoss

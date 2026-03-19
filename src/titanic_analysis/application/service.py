@@ -336,6 +336,18 @@ def run_training_pipeline_pytorch(
 
     # データセット
     train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
+
+    logger.debug(train_labels)
+    bin_count = np.bincount(train_labels)
+    logger.debug(bin_count)
+
+    false_percentage: np.float64 = bin_count[0] / np.sum(bin_count)
+    true_percentage: np.float64 = bin_count[1] / np.sum(bin_count)
+    logger.debug("false_percentage type: %s", type(false_percentage))
+    logger.debug("true_percentage type: %s", type(true_percentage))
+    logger.debug("False: %s %%", float(false_percentage))
+    logger.debug("True: %s %%", float(true_percentage))
+
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
         train_labels,
@@ -351,7 +363,9 @@ def run_training_pipeline_pytorch(
     logger.info(summary(model, (1, feature_size)))
 
     # 1出力
-    loss_fn = nn.BCEWithLogitsLoss()
+    pos_weight = torch.tensor([1.5])
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
     # loss_fn = nn.BCELoss()
 
     # 2出力
@@ -393,7 +407,6 @@ def run_training_pipeline_pytorch(
     main_tags = ["accuracy", "loss", "correct"]
     value_tag = f"case{case_id}"
     train_histories = [train_accuracy_list, train_loss_list, train_correct_list]
-    # 例として 100 ステップ分のデータを記録
     for i in range(len(main_tags)):
         log_dir = root_log_dir.joinpath(main_tags[i])
         write_scalar_graph(log_dir, train_histories[i], main_tags[i], value_tag)
@@ -415,6 +428,7 @@ def run_training_pipeline_pytorch(
     pred_list = test_loop(test_dataloader, model)
     logger.debug(len(test_data[ID_COLUMN].to_numpy()))
     logger.debug(len(pred_list))
+    # logger.debug()
 
     submission_data = pd.DataFrame(
         {

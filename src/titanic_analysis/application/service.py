@@ -271,9 +271,10 @@ def run_training_gradient_boosting(
         "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
         "gradientboostingclassifier__n_estimators": range(100, 1001, 100),
         "gradientboostingclassifier__max_depth": range(1, 5),
+        "gradientboostingclassifier__max_features": range(1, x_train.shape[1]),
     }
     pipe_gbdt = make_pipeline(scaler, gbdt)
-    search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2)
+    search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
     search.fit(x_train, y_train)
 
     # グリッドサーチ結果の表示

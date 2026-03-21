@@ -18,9 +18,13 @@ def test_loop(
     model.eval()
     for x, _ in test_dataloader:
         outputs: Tensor = model(x)
+        print(outputs)
 
         # BCEWithLogitsLoss
-        pred = outputs >= THRESHOLD
+        # model側のnn.Sigmoidを削除したためスケーリングが必要
+        scaled_outputs = torch.sigmoid(outputs)
+        print(scaled_outputs)
+        pred = scaled_outputs >= THRESHOLD
         # print(pred)
 
 

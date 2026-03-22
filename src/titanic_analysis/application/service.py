@@ -250,12 +250,12 @@ def run_training_gradient_boosting(
     #     logger=logger,
     # )
 
-    test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-        dataset=test_dataset.x,
-        selected_features=SELECTED_FEATURES,
-        encode_columns=CATEGORICAL_FEATURES,
-        logger=logger,
-    )
+    # test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
+    #     dataset=test_dataset.x,
+    #     selected_features=SELECTED_FEATURES,
+    #     encode_columns=CATEGORICAL_FEATURES,
+    #     logger=logger,
+    # )
 
     logger.info(train_dataset_preprocessed)
     logger.info(test_dataset_preprocessed)
@@ -264,7 +264,7 @@ def run_training_gradient_boosting(
     # x_train = train_dataset_preprocessed
     # y_train = train_dataset.y
     x_train = train_dataset_preprocessed
-    y_train = train_dataset.y
+    y_train = train_labels
 
     # テストデータ
     x_test = test_dataset_preprocessed
@@ -287,9 +287,9 @@ def run_training_gradient_boosting(
     gbdt = GradientBoostingClassifier(random_state=0)
     params_gbdt = {
         "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
-        "gradientboostingclassifier__n_estimators": range(100, 1001, 100),
-        "gradientboostingclassifier__max_depth": range(1, 5),
-        "gradientboostingclassifier__max_features": range(1, x_train.shape[1]),
+        "gradientboostingclassifier__n_estimators": range(100, 301, 100),
+        "gradientboostingclassifier__max_depth": range(5, 8),
+        "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
     }
     pipe_gbdt = make_pipeline(scaler, gbdt)
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)

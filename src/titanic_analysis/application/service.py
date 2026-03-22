@@ -228,15 +228,27 @@ def run_training_gradient_boosting(
     Raises:
         FalseComponentError: Raise when missing columns.
     """
-    train_dataset = TrainDataset(train_dataset_path)
-    test_dataset = TestDataset(test_dataset_path)
+    train_data = pd.read_csv(train_dataset_path)
+    test_data = pd.read_csv(test_dataset_path)
 
-    train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-        dataset=train_dataset.x,
-        selected_features=SELECTED_FEATURES,
-        encode_columns=CATEGORICAL_FEATURES,
-        logger=logger,
+    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
+        logger,
+        train_data,
+        test_data,
     )
+
+    # データセット
+    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
+
+    # train_dataset = TrainDataset(train_dataset_path)
+    # test_dataset = TestDataset(test_dataset_path)
+
+    # train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
+    #     dataset=train_dataset.x,
+    #     selected_features=SELECTED_FEATURES,
+    #     encode_columns=CATEGORICAL_FEATURES,
+    #     logger=logger,
+    # )
 
     test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
         dataset=test_dataset.x,
@@ -249,6 +261,8 @@ def run_training_gradient_boosting(
     logger.info(test_dataset_preprocessed)
 
     # 訓練データ
+    # x_train = train_dataset_preprocessed
+    # y_train = train_dataset.y
     x_train = train_dataset_preprocessed
     y_train = train_dataset.y
 
@@ -256,10 +270,14 @@ def run_training_gradient_boosting(
     x_test = test_dataset_preprocessed
 
     # 列名の数と名前が等しいことの確認
-    try:
-        _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
-    except FalseComponentError as _:
-        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
+    # try:
+    # _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
+    # except FalseComponentError as _:
+    # raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
+
+    if not x_train.shape and x_test.shape:
+        logger.info("Not match datasets shape.")
+        return
 
     # 正規化
     scaler = MinMaxScaler()
@@ -296,7 +314,8 @@ def run_training_gradient_boosting(
     # 提出用データの作成
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
     y_pred_df_submission = pd.concat(
-        [test_dataset.x[ID_COLUMN], y_pred_df],
+        # [test_dataset.x[ID_COLUMN], y_pred_df],
+        [test_data[ID_COLUMN], y_pred_df],
         axis=1,
     )
     CsvUtility.output_csv(y_pred_df_submission, GRADIENT_BOOSTING_DECISION_TREE)

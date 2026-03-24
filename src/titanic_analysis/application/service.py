@@ -290,7 +290,7 @@ def run_training_gradient_boosting(
         "gradientboostingclassifier__n_estimators": range(100, 301, 100),
         "gradientboostingclassifier__max_depth": range(5, 8),
         "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
-        "gradientboostingclassifier__subsample": np.arange(0.1, 1.1, 0.1),
+        # "gradientboostingclassifier__subsample": np.arange(0.1, 1.1, 0.1),
     }
     pipe_gbdt = make_pipeline(scaler, gbdt)
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
@@ -384,7 +384,7 @@ def run_training_pipeline_pytorch(
     logger.info(summary(model, (1, feature_size)))
 
     # 1出力
-    pos_weight = torch.tensor([1.5])
+    pos_weight = torch.tensor([1.2])
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     # loss_fn = nn.BCELoss()

@@ -384,7 +384,7 @@ def run_training_pipeline_pytorch(
     logger.info(summary(model, (1, feature_size)))
 
     # 1出力
-    pos_weight = torch.tensor([0.5])
+    pos_weight = torch.tensor([0.7])
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     # loss_fn = nn.BCELoss()

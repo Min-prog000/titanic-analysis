@@ -384,7 +384,7 @@ def run_training_pipeline_pytorch(
     logger.info(summary(model, (1, feature_size)))
 
     # 1出力
-    pos_weight = torch.tensor([0.7])
+    pos_weight = torch.tensor([config_loaded.pos_weight])
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     # loss_fn = nn.BCELoss()
@@ -397,7 +397,11 @@ def run_training_pipeline_pytorch(
     train_loss_list = []
     train_correct_list = []
 
-    optimizer = optim.Adam(model.parameters(), config_loaded.learning_rate)
+    optimizer = optim.Adam(
+        model.parameters(),
+        config_loaded.learning_rate,
+        weight_decay=config_loaded.weight_decay,
+    )
 
     scheduler = lr_scheduler.LambdaLR(
         optimizer,

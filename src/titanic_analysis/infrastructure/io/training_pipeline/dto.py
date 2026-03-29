@@ -10,3 +10,5 @@ class TrainingPipelineDTO(BaseModel):
     learning_rate: float
     gamma: float
     epochs: int
+    pos_weight: float
+    weight_decay: float

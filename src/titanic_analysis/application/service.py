@@ -336,7 +336,9 @@ def run_training_gradient_boosting(
     graph = pydotplus.graph_from_dot_data(dot_data)
     logger.debug(type(graph))
     logger.debug(graph)
-    graph.write_png("test_graph.png")
+
+    if isinstance(graph, pydotplus.graphviz.Dot):
+        graph.write(path="test_graph.png", format="png")
 
     # 可視化する dtreeviz
     # from dtreeviz.trees import *

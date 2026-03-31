@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import onnxruntime as ort
 import pandas as pd
+import pydotplus
 import torch
 from sklearn.compose import ColumnTransformer
 from sklearn.discriminant_analysis import StandardScaler
@@ -20,6 +21,7 @@ from sklearn.preprocessing import (
     OneHotEncoder,
     RobustScaler,
 )
+from sklearn.tree import export_graphviz
 from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
@@ -287,7 +289,7 @@ def run_training_gradient_boosting(
     gbdt = GradientBoostingClassifier(random_state=0)
     params_gbdt = {
         "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
-        "gradientboostingclassifier__n_estimators": range(100, 301, 100),
+        # "gradientboostingclassifier__n_estimators": range(100, 201, 100),
         "gradientboostingclassifier__max_depth": range(5, 8),
         "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
         # "gradientboostingclassifier__subsample": np.arange(0.1, 1.1, 0.1),
@@ -323,6 +325,31 @@ def run_training_gradient_boosting(
 
     # 提出用データの表示
     logger.info(y_pred_df_submission)
+
+    dot_data = export_graphviz(
+        best_gbdt.estimators_[0, 0],
+        out_file=None,
+        filled=True,
+        rounded=True,
+        special_characters=True,
+    )
+    graph = pydotplus.graph_from_dot_data(dot_data)
+    logger.debug(type(graph))
+    logger.debug(graph)
+    graph.write_png("test_graph.png")
+
+    # 可視化する dtreeviz
+    # from dtreeviz.trees import *
+
+    # viz = dtreeviz(
+    #     gbdt.estimators_[0, 0],
+    #     x_train,
+    #     y_train,
+    #     target_name="cancer",
+    #     class_names=["malignant", "benign"],
+    #     feature_names=train_data,
+    # )
+    # viz.view()  # save as svg to tmp dir
 
 
 def run_training_pipeline_pytorch(

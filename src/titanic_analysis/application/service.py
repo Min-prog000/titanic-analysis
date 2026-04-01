@@ -288,7 +288,7 @@ def run_training_gradient_boosting(
     # グリッドサーチ
     gbdt = GradientBoostingClassifier(random_state=0)
     params_gbdt = {
-        "gradientboostingclassifier__learning_rate": np.logspace(-4, -1, num=4),
+        "gradientboostingclassifier__learning_rate": np.logspace(-2, -1, num=2),
         # "gradientboostingclassifier__n_estimators": range(100, 201, 100),
         "gradientboostingclassifier__max_depth": range(5, 8),
         "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
@@ -326,6 +326,8 @@ def run_training_gradient_boosting(
     # 提出用データの表示
     logger.info(y_pred_df_submission)
 
+    # 決定木の可視化
+    # graphviz, pydotplus使用
     dot_data = export_graphviz(
         best_gbdt.estimators_[0, 0],
         out_file=None,
@@ -340,18 +342,18 @@ def run_training_gradient_boosting(
     if isinstance(graph, pydotplus.graphviz.Dot):
         graph.write(path="test_graph.png", format="png")
 
-    # 可視化する dtreeviz
-    # from dtreeviz.trees import *
-
+    # dtreeviz使用
+    # logger.debug(train_data.columns.tolist())
     # viz = dtreeviz(
-    #     gbdt.estimators_[0, 0],
+    #     best_gbdt.estimators_[0, 0],
     #     x_train,
     #     y_train,
-    #     target_name="cancer",
-    #     class_names=["malignant", "benign"],
-    #     feature_names=train_data,
+    #     target_name="titanic",
+    #     class_names=["not_survived", "survived"],
+    #     feature_names=train_data.columns.tolist(),
     # )
-    # viz.view()  # save as svg to tmp dir
+    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
+    # viz.save(filename_dtreeviz)
 
 
 def run_training_pipeline_pytorch(

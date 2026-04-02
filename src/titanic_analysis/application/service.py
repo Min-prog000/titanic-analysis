@@ -542,7 +542,7 @@ def preprocess_load_data(
     test_data_cleaned = clean_data(logger, test_data, SELECTED_FEATURES)
 
     preprocessor = generate_preprocessor(
-        StandardScaler(),
+        MinMaxScaler(),
         NUMERIC_FEATURES,
         CATEGORICAL_FEATURES,
     )

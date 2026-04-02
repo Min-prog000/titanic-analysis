@@ -5,4 +5,4 @@ model:
   gamma: 0.99
   epochs: 100
   pos_weight: 1.5
-  weight_decay: 0.2
+  weight_decay: 0.1

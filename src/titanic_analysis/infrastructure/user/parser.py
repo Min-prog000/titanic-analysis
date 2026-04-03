@@ -2,13 +2,7 @@
 
 import argparse
 
-from titanic_analysis.infrastructure.user.constants import (
-    ANALYSIS,
-    GRADIENT_BOOSTING,
-    LOGISTIC_REGRESSION,
-    PREDICT,
-    PYTORCH,
-)
+from titanic_analysis.infrastructure.user.constants import ExecutionMode
 
 
 def generate_parser() -> argparse.ArgumentParser:
@@ -17,6 +11,8 @@ def generate_parser() -> argparse.ArgumentParser:
     Returns:
         argparse.ArgumentParser: コマンドライン引数パーサー
     """
+    exec_mode = ExecutionMode
+
     parser = argparse.ArgumentParser(
         description="Analysis method definition for titanic dataset analysis",
     )
@@ -25,8 +21,14 @@ def generate_parser() -> argparse.ArgumentParser:
         "-m",
         "--mode",
         type=int,
-        default=ANALYSIS,
-        choices=[ANALYSIS, LOGISTIC_REGRESSION, GRADIENT_BOOSTING, PYTORCH, PREDICT],
+        default=ExecutionMode.ANALYSIS,
+        choices=[
+            exec_mode.ANALYSIS,
+            exec_mode.LOGISTIC_REGRESSION,
+            exec_mode.GRADIENT_BOOSTING,
+            exec_mode.PYTORCH,
+            exec_mode.PREDICT,
+        ],
         help="Type of the execution mode (default: 0, meaning analysis mode).",
     )
 

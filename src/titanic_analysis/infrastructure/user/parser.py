@@ -2,7 +2,13 @@
 
 import argparse
 
-from titanic_analysis.infrastructure.user.constants import ANALYSIS
+from titanic_analysis.infrastructure.user.constants import (
+    ANALYSIS,
+    GRADIENT_BOOSTING,
+    LOGISTIC_REGRESSION,
+    PREDICT,
+    PYTORCH,
+)
 
 
 def generate_parser() -> argparse.ArgumentParser:
@@ -20,6 +26,7 @@ def generate_parser() -> argparse.ArgumentParser:
         "--mode",
         type=int,
         default=ANALYSIS,
+        choices=[ANALYSIS, LOGISTIC_REGRESSION, GRADIENT_BOOSTING, PYTORCH, PREDICT],
         help="Type of the execution mode (default: 0, meaning analysis mode).",
     )
 

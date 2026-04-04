@@ -9,5 +9,5 @@ class ExecutionMode(Enum):
     ANALYSIS = 0
     LOGISTIC_REGRESSION = 1
     GRADIENT_BOOSTING = 2
-    PYTORCH = 3
+    NEURAL_NETWORK = 3
     PREDICT = 4

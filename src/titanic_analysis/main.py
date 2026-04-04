@@ -32,15 +32,15 @@ def main() -> None:
 
     exec_mode = ExecutionMode
 
-    if mode == exec_mode.ANALYSIS:
+    if mode == exec_mode.ANALYSIS.value:
         analyze(logger)
-    elif mode == exec_mode.LOGISTIC_REGRESSION:
+    elif mode == exec_mode.LOGISTIC_REGRESSION.value:
         run_training_logistic_regression(logger)
-    elif mode == exec_mode.GRADIENT_BOOSTING:
+    elif mode == exec_mode.GRADIENT_BOOSTING.value:
         run_training_gradient_boosting(logger)
-    elif mode == exec_mode.PYTORCH:
+    elif mode == exec_mode.NEURAL_NETWORK.value:
         run_training_neural_network(logger)
-    elif mode == exec_mode.PREDICT:
+    elif mode == exec_mode.PREDICT.value:
         predict(logger, model_path)
     else:
         logger.warning("Invalid mode inputted.")

@@ -5,7 +5,7 @@ from titanic_analysis.application.service import (
     predict,
     run_training_gradient_boosting,
     run_training_logistic_regression,
-    run_training_pipeline_pytorch,
+    run_training_neural_network,
 )
 from titanic_analysis.infrastructure.user.constants import ExecutionMode
 from titanic_analysis.infrastructure.user.parser import generate_parser
@@ -39,7 +39,7 @@ def main() -> None:
     elif mode == exec_mode.GRADIENT_BOOSTING:
         run_training_gradient_boosting(logger)
     elif mode == exec_mode.PYTORCH:
-        run_training_pipeline_pytorch(logger)
+        run_training_neural_network(logger)
     elif mode == exec_mode.PREDICT:
         predict(logger, model_path)
     else:

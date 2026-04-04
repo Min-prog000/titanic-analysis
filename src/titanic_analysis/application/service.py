@@ -76,7 +76,7 @@ __all__ = [
     "predict",
     "run_training_gradient_boosting",
     "run_training_logistic_regression",
-    "run_training_pipeline_pytorch",
+    "run_training_neural_network",
 ]
 
 
@@ -356,7 +356,7 @@ def run_training_gradient_boosting(
     # viz.save(filename_dtreeviz)
 
 
-def run_training_pipeline_pytorch(
+def run_training_neural_network(
     logger: Logger,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,

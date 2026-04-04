@@ -21,7 +21,7 @@ def generate_parser() -> argparse.ArgumentParser:
         "-m",
         "--mode",
         type=int,
-        default=ExecutionMode.ANALYSIS,
+        default=exec_mode.ANALYSIS,
         choices=[
             exec_mode.ANALYSIS,
             exec_mode.LOGISTIC_REGRESSION,

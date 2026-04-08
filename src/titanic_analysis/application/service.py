@@ -71,6 +71,8 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
 
+from ..infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
+
 __all__ = [
     "analyze",
     "predict",
@@ -480,11 +482,9 @@ def run_training_neural_network(
         shuffle=False,
     )
 
-    # test_dataset = torch.tensor(test_data_preprocessed, dtype=torch.float32)
     pred_list = test_loop(test_dataloader, model)
     logger.debug(len(test_data[ID_COLUMN].to_numpy()))
     logger.debug(len(pred_list))
-    # logger.debug()
 
     submission_data = pd.DataFrame(
         {
@@ -496,6 +496,12 @@ def run_training_neural_network(
 
     create_onnx_model(feature_size, model, case_id)
 
+    save_config(config_loaded, case_id)
+
+    joblib.dump(case_id + 1, case_id_path)
+
+
+def save_config(config_loaded: TrainingPipelineDTO, case_id: int) -> None:
     config_save = {
         "model": {
             "case_id": case_id,
@@ -508,8 +514,6 @@ def run_training_neural_network(
     config_file_path = yaml_output_path.joinpath(config_file_name)
     with config_file_path.open(mode="w", encoding="utf-8") as f:
         safe_dump(config_save, f, sort_keys=False)
-
-    joblib.dump(case_id + 1, case_id_path)
 
 
 def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> None:

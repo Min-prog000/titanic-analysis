@@ -28,9 +28,11 @@ def main() -> None:
     mode: int = args.mode
     model_path: str = args.model_path
 
-    logger.info("Execution mode: %s", mode)
-
     exec_mode = ExecutionMode
+
+    mode_name = exec_mode(mode)
+
+    logger.info("Execution mode: %s", mode_name)
 
     if mode == exec_mode.ANALYSIS.value:
         analyze(logger)

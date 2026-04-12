@@ -213,6 +213,7 @@ version.py
 id/
 tensorboard_log/
 model/onnx/
+model/gbdt/
 notebooks/*
 !main_notebook.ipynb
 *.png

@@ -4,6 +4,7 @@ import logging
 from logging import Logger
 from pathlib import Path
 
+import dtreeviz
 import joblib
 import numpy as np
 import onnxruntime as ort
@@ -31,12 +32,12 @@ from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
     ADDITIONAL_ENCODING_COLUMN,
+    CASE_ID_PATH,
     CATEGORICAL_FEATURES,
     COLUMN_NOT_MATCH_MESSAGE,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
-    PYTORCH_CASE_ID_PATH,
     PYTORCH_CONFIG_PATH,
     PYTORCH_TENSORBOARD_PATH,
     SEED,
@@ -244,29 +245,10 @@ def run_training_gradient_boosting(
     # データセット
     train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
 
-    # train_dataset = TrainDataset(train_dataset_path)
-    # test_dataset = TestDataset(test_dataset_path)
-
-    # train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-    #     dataset=train_dataset.x,
-    #     selected_features=SELECTED_FEATURES,
-    #     encode_columns=CATEGORICAL_FEATURES,
-    #     logger=logger,
-    # )
-
-    # test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-    #     dataset=test_dataset.x,
-    #     selected_features=SELECTED_FEATURES,
-    #     encode_columns=CATEGORICAL_FEATURES,
-    #     logger=logger,
-    # )
-
     logger.info(train_dataset_preprocessed)
     logger.info(test_dataset_preprocessed)
 
     # 訓練データ
-    # x_train = train_dataset_preprocessed
-    # y_train = train_dataset.y
     x_train = train_dataset_preprocessed
     y_train = train_labels
 
@@ -345,17 +327,34 @@ def run_training_gradient_boosting(
         graph.write(path="test_graph.png", format="png")
 
     # dtreeviz使用
-    # logger.debug(train_data.columns.tolist())
-    # viz = dtreeviz(
-    #     best_gbdt.estimators_[0, 0],
-    #     x_train,
-    #     y_train,
-    #     target_name="titanic",
-    #     class_names=["not_survived", "survived"],
-    #     feature_names=train_data.columns.tolist(),
-    # )
-    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
-    # viz.save(filename_dtreeviz)
+    logger.debug(train_data.columns.tolist())
+    viz = dtreeviz.dtreeviz(
+        best_gbdt.estimators_[0, 0],
+        x_train,
+        y_train,
+        target_name="titanic",
+        class_names=["not_survived", "survived"],
+        feature_names=train_data.columns.tolist(),
+    )
+    filename_dtreeviz = Path("test_graph_dtreeviz.png")
+    viz.save(filename_dtreeviz)
+
+    # case番号はPytorchと共有
+    case_id_path = Path(CASE_ID_PATH)
+    case_id = load_case_id(case_id_path)
+    dump_folder_path = Path(f".\\model\\gbdt\\case_{case_id}")
+    model_file_name = Path(f"case_{case_id}.joblib")
+
+    if dump_folder_path.exists():
+        pass
+    else:
+        dump_folder_path.mkdir(parents=True)
+
+    model_dump_path = dump_folder_path.joinpath(model_file_name)
+    joblib.dump(best_gbdt, model_dump_path, protocol=5)
+
+    next_case_id = case_id + 1
+    joblib.dump(next_case_id, CASE_ID_PATH)
 
 
 def run_training_neural_network(
@@ -456,7 +455,7 @@ def run_training_neural_network(
         train_correct_list.append(train_epoch_correct)
 
     # ケース番号
-    case_id_path = Path(PYTORCH_CASE_ID_PATH)
+    case_id_path = Path(CASE_ID_PATH)
     case_id = load_case_id(case_id_path)
 
     # TensorBoard のログ出力先

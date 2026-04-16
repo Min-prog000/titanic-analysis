@@ -470,7 +470,7 @@ def run_training_neural_network(
 
     # データセット
     test_labels = np.array([0] * test_data_preprocessed.shape[0])
-    print(test_labels.shape)
+    logger.debug(test_labels.shape)
     test_dataset = TitanicTorchDataset(
         test_data_preprocessed,
         test_labels,

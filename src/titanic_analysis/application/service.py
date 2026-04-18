@@ -532,6 +532,7 @@ def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> 
         onnx_file_path,
         input_names=["input"],
         output_names=["output"],
+        optimize=True,
         # dynamo=True,
     )
 
@@ -671,8 +672,13 @@ def predict(
     input_name: str = session.get_inputs()[0].name
     output_name: str = session.get_outputs()[0].name
 
+    logger.debug("input name: %s", input_name)
+    logger.debug("output name: %s", output_name)
+
     for onnx_input in session.get_inputs():
-        print(onnx_input.name, onnx_input.shape, onnx_input.type)
+        logger.debug("input name: %s", onnx_input.name)
+        logger.debug("input shape: %s", onnx_input.shape)
+        logger.debug("input type: %s", onnx_input.type)
 
     logger.debug(test_dataset.shape)
 
@@ -680,6 +686,9 @@ def predict(
 
     for test_data in test_dataset:
         input_data = np.expand_dims(test_data, axis=(0, 1))
+        logger.debug("input data shape: %s", input_data.shape)
+        input_data = input_data.reshape(1, -1).astype(np.float32)
+        logger.debug("input data shape: %s", input_data.shape)
         output = session.run(
             output_names=[output_name],
             input_feed={input_name: input_data},

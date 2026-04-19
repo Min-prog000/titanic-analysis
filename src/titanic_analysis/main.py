@@ -32,7 +32,7 @@ def main() -> None:
 
     mode_name = exec_mode(mode)
 
-    logger.info("Execution mode: %s", mode_name)
+    logger.info("Execution mode: %s", mode_name.name)
 
     if mode == exec_mode.ANALYSIS.value:
         analyze(logger)

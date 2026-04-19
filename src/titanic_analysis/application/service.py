@@ -60,6 +60,7 @@ from titanic_analysis.infrastructure.io.constants import (
     PATH_TEST,
     PATH_TRAIN,
 )
+from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.analysis.display import (
     describe_dataset,
@@ -71,8 +72,6 @@ from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_cas
 from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
-
-from ..infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
 
 __all__ = [
     "analyze",
@@ -256,10 +255,11 @@ def run_training_gradient_boosting(
     x_test = test_dataset_preprocessed
 
     # 列名の数と名前が等しいことの確認
+    # TODO: Revise to be able to compare preprocessed data columns
     # try:
-    # _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
+    #     _ = train_data.columns.shape and test_data.columns.to_numpy().all()
     # except FalseComponentError as _:
-    # raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
+    #     raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
 
     if not x_train.shape and x_test.shape:
         logger.info("Not match datasets shape.")
@@ -269,8 +269,10 @@ def run_training_gradient_boosting(
     scaler = MinMaxScaler()
 
     # GradientBoostingClassifier
-    # グリッドサーチ
     gbdt = GradientBoostingClassifier(random_state=0)
+    pipe_gbdt = make_pipeline(scaler, gbdt)
+
+    # グリッドサーチ
     params_gbdt = {
         "gradientboostingclassifier__learning_rate": np.logspace(-2, -1, num=2),
         # "gradientboostingclassifier__n_estimators": range(100, 201, 100),
@@ -278,7 +280,6 @@ def run_training_gradient_boosting(
         "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
         # "gradientboostingclassifier__subsample": np.arange(0.1, 1.1, 0.1),
     }
-    pipe_gbdt = make_pipeline(scaler, gbdt)
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
     search.fit(x_train, y_train)
 
@@ -301,7 +302,6 @@ def run_training_gradient_boosting(
     # 提出用データの作成
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
     y_pred_df_submission = pd.concat(
-        # [test_dataset.x[ID_COLUMN], y_pred_df],
         [test_data[ID_COLUMN], y_pred_df],
         axis=1,
     )
@@ -320,9 +320,6 @@ def run_training_gradient_boosting(
         special_characters=True,
     )
     graph = pydotplus.graph_from_dot_data(dot_data)
-    logger.debug(type(graph))
-    logger.debug(graph)
-
     if isinstance(graph, pydotplus.graphviz.Dot):
         graph.write(path="test_graph.png", format="png")
 
@@ -344,17 +341,11 @@ def run_training_gradient_boosting(
     case_id = load_case_id(case_id_path)
     dump_folder_path = Path(f".\\model\\gbdt\\case_{case_id}")
     model_file_name = Path(f"case_{case_id}.joblib")
-
-    if dump_folder_path.exists():
-        pass
-    else:
-        dump_folder_path.mkdir(parents=True)
-
+    dump_folder_path.mkdir(parents=True, exist_ok=True)
     model_dump_path = dump_folder_path.joinpath(model_file_name)
     joblib.dump(best_gbdt, model_dump_path, protocol=5)
 
-    next_case_id = case_id + 1
-    joblib.dump(next_case_id, CASE_ID_PATH)
+    joblib.dump(case_id + 1, CASE_ID_PATH)
 
 
 def run_training_neural_network(

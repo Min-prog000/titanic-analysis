@@ -22,7 +22,8 @@ TARGET_COLUMN = "Survived"
 ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
 CASE_ID_PATH = "./config/id/case.joblib"
-PYTORCH_CONFIG_PATH = "./config/model/base.yaml"
+PYTORCH_CONFIG_PATH = "./config/model/base_pytorch.yaml"
+PYTORCH_CONFIG_PATH = "./config/model/base_gbdt.yaml"
 PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]
@@ -30,3 +31,5 @@ LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]
 COLUMN_NOT_MATCH_MESSAGE = (
     "NotMatchSizeError: either array has one or more false components."
 )
+
+PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"

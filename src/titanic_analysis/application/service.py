@@ -38,6 +38,7 @@ from titanic_analysis.application.constants import (
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
+    PIPELINE_PREFIX_GBDT,
     PYTORCH_CONFIG_PATH,
     PYTORCH_TENSORBOARD_PATH,
     SEED,
@@ -261,7 +262,7 @@ def run_training_gradient_boosting(
     # except FalseComponentError as _:
     #     raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
 
-    if not x_train.shape and x_test.shape:
+    if not (x_train.shape and x_test.shape):
         logger.info("Not match datasets shape.")
         return
 
@@ -274,11 +275,11 @@ def run_training_gradient_boosting(
 
     # グリッドサーチ
     params_gbdt = {
-        "gradientboostingclassifier__learning_rate": np.logspace(-2, -1, num=2),
-        # "gradientboostingclassifier__n_estimators": range(100, 201, 100),
-        "gradientboostingclassifier__max_depth": range(5, 8),
-        "gradientboostingclassifier__max_features": range(7, x_train.shape[1]),
-        # "gradientboostingclassifier__subsample": np.arange(0.1, 1.1, 0.1),
+        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(-2, -1, num=2),
+        # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
+        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(5, 8),
+        f"{PIPELINE_PREFIX_GBDT}__max_features": range(7, x_train.shape[1]),
+        # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
     }
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
     search.fit(x_train, y_train)
@@ -295,7 +296,7 @@ def run_training_gradient_boosting(
 
     # 最高精度のモデルによる推論
     best_gbdt: GradientBoostingClassifier = search.best_estimator_.named_steps[
-        "gradientboostingclassifier"
+        PIPELINE_PREFIX_GBDT
     ]
     y_pred = best_gbdt.predict(np.array(x_test))
 

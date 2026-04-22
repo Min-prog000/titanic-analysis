@@ -382,7 +382,7 @@ def run_training_neural_network(
     # データセット
     train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
 
-    logger.debug(train_labels)
+    logger.debug("\n%s", train_labels)
     bin_count = np.bincount(train_labels)
     logger.debug(bin_count)
 
@@ -405,7 +405,7 @@ def run_training_neural_network(
 
     feature_size = train_data_preprocessed.shape[1]
     model = NeuralNetwork(feature_size)
-    logger.info(summary(model, (1, feature_size)))
+    logger.info("\n%s", summary(model, (1, feature_size)))
 
     # 1出力
     pos_weight = torch.tensor([config_loaded.pos_weight])
@@ -553,7 +553,7 @@ def preprocess_load_data(
     logger.debug("Train data shape: %s", train_data_preprocessed.shape)
     logger.debug("Test data shape: %s", test_data_preprocessed.shape)
 
-    logger.debug("Column names: %s", preprocessor.get_feature_names_out())
+    logger.debug("\nColumn names: %s", preprocessor.get_feature_names_out())
 
     return train_data_preprocessed, test_data_preprocessed
 

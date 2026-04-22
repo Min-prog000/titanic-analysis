@@ -23,7 +23,7 @@ ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
 CASE_ID_PATH = "./config/id/case.joblib"
 PYTORCH_CONFIG_PATH = "./config/model/base_pytorch.yaml"
-PYTORCH_CONFIG_PATH = "./config/model/base_gbdt.yaml"
+GBDT_CONFIG_PATH = "./config/model/base_gbdt.yaml"
 PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]

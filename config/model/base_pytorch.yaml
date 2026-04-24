@@ -1,7 +1,7 @@
 model:
   case_id: 1
   batch_size: 128
-  learning_rate: 4e-4
+  learning_rate: 3e-4
   gamma: 0.99
   epochs: 100
   pos_weight: 1.5

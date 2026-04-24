@@ -76,6 +76,7 @@ from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
 
+from ..infrastructure.logic.build.constants import THRESHOLD
 from .types import OutputItem
 
 __all__ = [
@@ -694,6 +695,7 @@ def predict(
         )
         output = extract_scalar(output)
         output = sigmoid(torch.tensor(output))
+        output = (output >= THRESHOLD).numpy().astype(int)
         output_list.append(output.item())
 
     submission_data = pd.DataFrame(

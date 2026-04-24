@@ -1,6 +1,7 @@
 """データセットの分析を行うモジュール"""
 
 import logging
+from datetime import datetime, timedelta, timezone
 from logging import Logger
 from pathlib import Path
 
@@ -525,7 +526,7 @@ def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> 
         input_names=["input"],
         output_names=["output"],
         optimize=True,
-        # dynamo=True,
+        dynamo=True,
     )
 
 
@@ -686,14 +687,32 @@ def predict(
             input_feed={input_name: input_data},
             run_options=None,
         )
+        logger.debug(output)
+        logger.debug(type(output))
+        if isinstance(output, list):
+            output = output[0]
+            if isinstance(output, np.ndarray):
+                output = output[0, 0]
         output_list.append(output)
 
     output_df = pd.DataFrame(output_list)
     logger.debug(output_df.shape)
 
     model_file_name = Path(model_path).stem
-    output_df_folder_path = Path(f"output/onnx_inference/{model_file_name}")
+    predict_id = generate_now_datetime()
+    output_df_folder_path = Path(
+        f"output/onnx_inference/{model_file_name}/{predict_id}",
+    )
     output_df_folder_path.mkdir(parents=True, exist_ok=True)
     output_df_file_name = Path(f"{model_file_name}_output.csv")
     output_df_file_path = output_df_folder_path.joinpath(output_df_file_name)
     output_df.to_csv(output_df_file_path)
+
+
+def generate_now_datetime(
+    datetime_format: str = "%Y%m%d%H%M%S",
+) -> str:
+    jst = timezone(timedelta(hours=+9), "JST")
+    datetime_now = datetime.now(jst)
+
+    return datetime_now.strftime(datetime_format)

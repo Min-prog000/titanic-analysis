@@ -1,6 +1,7 @@
 """データセットの分析を行うモジュール"""
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from logging import Logger
 from pathlib import Path
@@ -24,7 +25,7 @@ from sklearn.preprocessing import (
     RobustScaler,
 )
 from sklearn.tree import export_graphviz
-from torch import nn, optim
+from torch import nn, optim, sigmoid
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -74,6 +75,8 @@ from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_cas
 from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
+
+from .types import OutputItem
 
 __all__ = [
     "analyze",
@@ -648,6 +651,8 @@ def predict(
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
+    logger.debug(test_data.columns)
+
     logger.debug(SELECTED_FEATURES)
 
     _, test_data_preprocessed = preprocess_load_data(
@@ -677,36 +682,52 @@ def predict(
 
     output_list = []
 
-    for test_data in test_dataset:
-        input_data = np.expand_dims(test_data, axis=(0, 1))
-        logger.debug("input data shape: %s", input_data.shape)
+    for data in test_dataset:
+        input_data = np.expand_dims(data, axis=(0, 1))
+        # logger.debug("input data shape: %s", input_data.shape)
         input_data = input_data.reshape(1, -1).astype(np.float32)
-        logger.debug("input data shape: %s", input_data.shape)
+        # logger.debug("input data shape: %s", input_data.shape)
         output = session.run(
             output_names=[output_name],
             input_feed={input_name: input_data},
             run_options=None,
         )
-        logger.debug(output)
-        logger.debug(type(output))
-        if isinstance(output, list):
-            output = output[0]
-            if isinstance(output, np.ndarray):
-                output = output[0, 0]
-        output_list.append(output)
+        output = extract_scalar(output)
+        output = sigmoid(torch.tensor(output))
+        output_list.append(output.item())
 
-    output_df = pd.DataFrame(output_list)
-    logger.debug(output_df.shape)
+    submission_data = pd.DataFrame(
+        {
+            ID_COLUMN: test_data[ID_COLUMN].to_numpy(),
+            TARGET_COLUMN: output_list,
+        },
+    )
+    logger.debug(submission_data.shape)
 
     model_file_name = Path(model_path).stem
     predict_id = generate_now_datetime()
-    output_df_folder_path = Path(
+    submission_folder_path = Path(
         f"output/onnx_inference/{model_file_name}/{predict_id}",
     )
-    output_df_folder_path.mkdir(parents=True, exist_ok=True)
-    output_df_file_name = Path(f"{model_file_name}_output.csv")
-    output_df_file_path = output_df_folder_path.joinpath(output_df_file_name)
-    output_df.to_csv(output_df_file_path)
+    submission_folder_path.mkdir(parents=True, exist_ok=True)
+    submission_file_name = Path(f"{model_file_name}_output.csv")
+    submission_file_path = submission_folder_path.joinpath(submission_file_name)
+    submission_data.to_csv(submission_file_path, index=False)
+
+
+def extract_scalar(
+    output: Sequence[OutputItem],
+) -> OutputItem:
+    if not output:
+        msg = "Output list is empty"
+        raise ValueError(msg)
+
+    item = output[0]
+
+    if isinstance(item, np.ndarray):
+        return item.flatten()[0]
+
+    return item
 
 
 def generate_now_datetime(

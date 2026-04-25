@@ -25,24 +25,22 @@ def main() -> None:
     )
 
     logger = titanic_logger.logger
+
     mode: int = args.mode
     model_path: str = args.model_path
 
-    exec_mode = ExecutionMode
-
-    mode_name = exec_mode(mode)
-
+    mode_name = ExecutionMode(mode)
     logger.info("Execution mode: %s", mode_name.name)
 
-    if mode == exec_mode.ANALYSIS.value:
+    if mode == ExecutionMode.ANALYSIS.value:
         analyze(logger)
-    elif mode == exec_mode.LOGISTIC_REGRESSION.value:
+    elif mode == ExecutionMode.LOGISTIC_REGRESSION.value:
         run_training_logistic_regression(logger)
-    elif mode == exec_mode.GRADIENT_BOOSTING.value:
+    elif mode == ExecutionMode.GRADIENT_BOOSTING.value:
         run_training_gradient_boosting(logger)
-    elif mode == exec_mode.NEURAL_NETWORK.value:
+    elif mode == ExecutionMode.NEURAL_NETWORK.value:
         run_training_neural_network(logger)
-    elif mode == exec_mode.PREDICT.value:
+    elif mode == ExecutionMode.PREDICT.value:
         predict(logger, model_path)
     else:
         logger.warning("Invalid mode inputted.")

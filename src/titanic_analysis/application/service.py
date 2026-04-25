@@ -48,6 +48,7 @@ from titanic_analysis.application.constants import (
     TARGET_COLUMN,
 )
 from titanic_analysis.application.exception.exception import FalseComponentError
+from titanic_analysis.application.types import OutputItem
 from titanic_analysis.domain.dataset.sklearn_dataset import TestDataset, TrainDataset
 from titanic_analysis.domain.dataset.torch_dataset import TitanicTorchDataset
 from titanic_analysis.domain.model.torch import NeuralNetwork
@@ -69,15 +70,13 @@ from titanic_analysis.infrastructure.logic.analysis.display import (
     describe_dataset,
     prepare_display,
 )
+from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 from titanic_analysis.infrastructure.logic.build.test import test_loop
 from titanic_analysis.infrastructure.logic.build.train import train_loop
 from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_case_id
 from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
     DatasetPreprocessor,
 )
-
-from ..infrastructure.logic.build.constants import THRESHOLD
-from .types import OutputItem
 
 __all__ = [
     "analyze",
@@ -387,16 +386,7 @@ def run_training_neural_network(
     # データセット
     train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
 
-    logger.debug("\n%s", train_labels)
-    bin_count = np.bincount(train_labels)
-    logger.debug(bin_count)
-
-    false_percentage: np.float64 = bin_count[0] / np.sum(bin_count)
-    true_percentage: np.float64 = bin_count[1] / np.sum(bin_count)
-    logger.debug("false_percentage type: %s", type(false_percentage))
-    logger.debug("true_percentage type: %s", type(true_percentage))
-    logger.debug("False: %s %%", float(false_percentage))
-    logger.debug("True: %s %%", float(true_percentage))
+    log_label_distribution(logger, train_labels)
 
     train_dataset = TitanicTorchDataset(
         train_data_preprocessed,
@@ -495,6 +485,19 @@ def run_training_neural_network(
     save_config(config_loaded, case_id)
 
     joblib.dump(case_id + 1, case_id_path)
+
+
+def log_label_distribution(logger: Logger, train_labels: np.ndarray) -> None:
+    logger.debug("\n%s", train_labels)
+    bin_count = np.bincount(train_labels)
+    logger.debug(bin_count)
+
+    false_percentage: np.float64 = bin_count[0] / np.sum(bin_count)
+    true_percentage: np.float64 = bin_count[1] / np.sum(bin_count)
+    logger.debug("false_percentage type: %s", type(false_percentage))
+    logger.debug("true_percentage type: %s", type(true_percentage))
+    logger.debug("False: %s %%", float(false_percentage))
+    logger.debug("True: %s %%", float(true_percentage))
 
 
 def save_config(config_loaded: TrainingPipelineDTO, case_id: int) -> None:
@@ -717,9 +720,7 @@ def predict(
     submission_data.to_csv(submission_file_path, index=False)
 
 
-def extract_scalar(
-    output: Sequence[OutputItem],
-) -> OutputItem:
+def extract_scalar(output: Sequence[OutputItem]) -> OutputItem:
     if not output:
         msg = "Output list is empty"
         raise ValueError(msg)
@@ -732,9 +733,7 @@ def extract_scalar(
     return item
 
 
-def generate_now_datetime(
-    datetime_format: str = "%Y%m%d%H%M%S",
-) -> str:
+def generate_now_datetime(datetime_format: str = "%Y%m%d%H%M%S") -> str:
     jst = timezone(timedelta(hours=+9), "JST")
     datetime_now = datetime.now(jst)
 

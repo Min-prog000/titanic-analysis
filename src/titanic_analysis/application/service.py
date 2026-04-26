@@ -36,7 +36,6 @@ from titanic_analysis.application.constants import (
     ADDITIONAL_ENCODING_COLUMN,
     CASE_ID_PATH,
     CATEGORICAL_FEATURES,
-    COLUMN_NOT_MATCH_MESSAGE,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     NUMERIC_FEATURES,
@@ -47,7 +46,6 @@ from titanic_analysis.application.constants import (
     SELECTED_FEATURES,
     TARGET_COLUMN,
 )
-from titanic_analysis.application.exception.exception import FalseComponentError
 from titanic_analysis.application.types import OutputItem
 from titanic_analysis.domain.dataset.sklearn_dataset import TestDataset, TrainDataset
 from titanic_analysis.domain.dataset.torch_dataset import TitanicTorchDataset
@@ -74,9 +72,6 @@ from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 from titanic_analysis.infrastructure.logic.build.test import test_loop
 from titanic_analysis.infrastructure.logic.build.train import train_loop
 from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_case_id
-from titanic_analysis.infrastructure.logic.preprocess.preprocessor import (
-    DatasetPreprocessor,
-)
 
 __all__ = [
     "analyze",
@@ -134,38 +129,32 @@ def run_training_logistic_regression(
     Raises:
         FalseComponentError: Raise when missing columns.
     """
-    train_dataset = TrainDataset(train_dataset_path)
-    test_dataset = TestDataset(test_dataset_path)
+    train_data = pd.read_csv(train_dataset_path)
+    test_data = pd.read_csv(test_dataset_path)
 
-    train_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-        dataset=train_dataset.x,
-        selected_features=SELECTED_FEATURES,
-        encode_columns=CATEGORICAL_FEATURES,
-        logger=logger,
+    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
+        logger,
+        train_data,
+        test_data,
     )
 
-    test_dataset_preprocessed = DatasetPreprocessor.preprocess_dataset(
-        dataset=test_dataset.x,
-        selected_features=SELECTED_FEATURES,
-        encode_columns=CATEGORICAL_FEATURES,
-        logger=logger,
-    )
+    # データセット
+    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
 
     logger.info(train_dataset_preprocessed)
     logger.info(test_dataset_preprocessed)
 
     # 訓練データ
     x_train = train_dataset_preprocessed
-    y_train = train_dataset.y
+    y_train = train_labels
 
     # テストデータ
     x_test = test_dataset_preprocessed
 
     # 列名の数と名前が等しいことの確認
-    try:
-        _ = x_train.columns.to_numpy().all() and x_test.columns.to_numpy().all()
-    except FalseComponentError as _:
-        raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
+    if not (x_train.shape and x_test.shape):
+        logger.info("Not match datasets shape.")
+        return
 
     # 正規化
     scaler = MinMaxScaler()
@@ -210,7 +199,7 @@ def run_training_logistic_regression(
     # 提出用データの作成
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
     y_pred_df_submission = pd.concat(
-        [test_dataset.x[ID_COLUMN], y_pred_df],
+        [test_data[ID_COLUMN], y_pred_df],
         axis=1,
     )
     CsvUtility.output_csv(y_pred_df_submission, LOGISTIC_REGRESSION)

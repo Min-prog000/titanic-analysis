@@ -3,8 +3,7 @@
 from titanic_analysis.application.service import (
     analyze,
     predict,
-    run_training_gradient_boosting,
-    run_training_logistic_regression,
+    run_train_sklearn,
     run_training_neural_network,
 )
 from titanic_analysis.infrastructure.user.constants import ExecutionMode
@@ -34,10 +33,11 @@ def main() -> None:
 
     if mode == ExecutionMode.ANALYSIS.value:
         analyze(logger)
-    elif mode == ExecutionMode.LOGISTIC_REGRESSION.value:
-        run_training_logistic_regression(logger)
-    elif mode == ExecutionMode.GRADIENT_BOOSTING.value:
-        run_training_gradient_boosting(logger)
+    elif mode in (
+        ExecutionMode.LOGISTIC_REGRESSION.value,
+        ExecutionMode.GRADIENT_BOOSTING.value,
+    ):
+        run_train_sklearn(logger, mode)
     elif mode == ExecutionMode.NEURAL_NETWORK.value:
         run_training_neural_network(logger)
     elif mode == ExecutionMode.PREDICT.value:

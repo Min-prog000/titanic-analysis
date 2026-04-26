@@ -33,4 +33,5 @@ COLUMN_NOT_MATCH_MESSAGE = (
     "NotMatchSizeError: either array has one or more false components."
 )
 
+PIPELINE_PREFIX_LOGREG = "logisticregression"
 PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"

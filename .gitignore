@@ -212,8 +212,9 @@ output/
 version.py
 id/
 tensorboard_log/
-model/onnx/
 model/gbdt/
+model/logreg/
+model/onnx/
 notebooks/*
 !main_notebook.ipynb
 *.png

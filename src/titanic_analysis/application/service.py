@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from logging import Logger
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import joblib
 import numpy as np
@@ -41,6 +42,7 @@ from titanic_analysis.application.constants import (
     LOGREG_CONFIG_PATH,
     NUMERIC_FEATURES,
     PIPELINE_PREFIX_GBDT,
+    PIPELINE_PREFIX_LOGREG,
     PYTORCH_CONFIG_PATH,
     PYTORCH_TENSORBOARD_PATH,
     SEED,
@@ -65,7 +67,11 @@ from titanic_analysis.infrastructure.io.constants import (
     PATH_TEST,
     PATH_TRAIN,
 )
-from titanic_analysis.infrastructure.io.training_pipeline.dto import PytorchConfigDTO
+from titanic_analysis.infrastructure.io.training_pipeline.dto import (
+    GradientBoostingClassifierConfigDTO,
+    LogisticRegressionConfigDTO,
+    PytorchConfigDTO,
+)
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.analysis.display import (
     describe_dataset,
@@ -75,12 +81,15 @@ from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 from titanic_analysis.infrastructure.logic.build.test import test_loop
 from titanic_analysis.infrastructure.logic.build.train import train_loop
 from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_case_id
+from titanic_analysis.infrastructure.user.constants import ExecutionMode
+
+if TYPE_CHECKING:
+    from titanic_analysis.domain.model.types import SklearnModelTypes
 
 __all__ = [
     "analyze",
     "predict",
-    "run_training_gradient_boosting",
-    "run_training_logistic_regression",
+    "run_train_sklearn",
     "run_training_neural_network",
 ]
 
@@ -114,15 +123,16 @@ def analyze(
         describe_dataset(dataset, logger)
 
 
-def run_training_logistic_regression(
+def run_train_sklearn(
     logger: Logger,
+    mode: int,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
-    """Train with Logistic regression
+    """Train using sklearn models
 
     This function preprocess, training, and generate submission csv
-        with logistic regression method.
+        using sklearn models (ex. LogisticRegression, GradientBoostingClassifier, ...)
 
     Args:
         logger (Logger): Logger generated in `main`.
@@ -134,115 +144,6 @@ def run_training_logistic_regression(
     """
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
-
-    config_path = Path(LOGREG_CONFIG_PATH)
-    config_loaded = load_logistic_regression_config(config_path)
-
-    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
-        logger,
-        train_data,
-        test_data,
-    )
-
-    # データセット
-    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
-
-    logger.info(train_dataset_preprocessed)
-    logger.info(test_dataset_preprocessed)
-
-    # 訓練データ
-    x_train = train_dataset_preprocessed
-    y_train = train_labels
-
-    # テストデータ
-    x_test = test_dataset_preprocessed
-
-    # 列名の数と名前が等しいことの確認
-    if not (x_train.shape and x_test.shape):
-        logger.info("Not match datasets shape.")
-        return
-
-    # 正規化
-    scaler = MinMaxScaler()
-
-    # モデル生成
-    logreg = LogisticRegression(random_state=0)
-
-    # パイプライン生成
-    pipe_logreg = make_pipeline(scaler, logreg)
-
-    # max_iterの範囲生成
-    max_iter_scope = [
-        np.int16(max_iter)
-        for max_iter in np.linspace(config_loaded.max_iter, 1000, num=10)
-    ]
-
-    # ハイパーパラメータ設定
-    params_logreg = {
-        "logisticregression__C": np.logspace(config_loaded.C, 3, num=7),
-        "logisticregression__class_weight": [
-            config_loaded.class_weight,
-            {0: 1.0, 1: 0.5},
-        ],
-        "logisticregression__max_iter": max_iter_scope,
-    }
-
-    # LogisticRegression
-    # グリッドサーチ
-    search = GridSearchCV(pipe_logreg, params_logreg, n_jobs=2)
-    search.fit(x_train, y_train)
-
-    # グリッドサーチ結果の表示
-    result_search = search.cv_results_
-    result_search_df = pd.DataFrame(result_search).iloc[:, 4:]
-    result_search_df_rounded = result_search_df.round(3)
-    logger.info(result_search_df_rounded)
-
-    # グリッドサーチのベストスコア表示
-    logger.info("Grid search best score: %s", search.best_score_)
-    logger.info("Hyper parameters: %s", search.best_params_)
-
-    # 最高精度のモデルによる推論
-    best_logreg: LogisticRegression = search.best_estimator_.named_steps[
-        "logisticregression"
-    ]
-    y_pred = best_logreg.predict(np.array(x_test))
-
-    # 提出用データの作成
-    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat(
-        [test_data[ID_COLUMN], y_pred_df],
-        axis=1,
-    )
-    CsvUtility.output_csv(y_pred_df_submission, LOGISTIC_REGRESSION)
-
-    # 提出用データの表示
-    logger.info(y_pred_df_submission)
-
-
-def run_training_gradient_boosting(
-    logger: Logger,
-    train_dataset_path: str = PATH_TRAIN,
-    test_dataset_path: str = PATH_TEST,
-) -> None:
-    """Train with Gradient boosting
-
-    This function preprocess, training, and generate submission csv
-        with gradient boosting decision tree
-
-    Args:
-        logger (Logger): Logger generated in `main`.
-        train_dataset_path (str, optional): Dataset path. Defaults to PATH_TRAIN.
-        test_dataset_path (str, optional): Dataset path. Defaults to PATH_TEST.
-
-    Raises:
-        FalseComponentError: Raise when missing columns.
-    """
-    train_data = pd.read_csv(train_dataset_path)
-    test_data = pd.read_csv(test_dataset_path)
-
-    config_path = Path(GBDT_CONFIG_PATH)
-    config_loaded = load_gradient_boosting_classifier_config(config_path)
 
     train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
         logger,
@@ -272,28 +173,35 @@ def run_training_gradient_boosting(
     # 正規化
     scaler = MinMaxScaler()
 
+    model = None
+    params_grid = {}
+    pipeline_prefix = ""
+    csv_postfix = ""
+    dump_folder_name = ""
+    # LogisticRegression
+    if mode == ExecutionMode.LOGISTIC_REGRESSION.value:
+        config_path = Path(LOGREG_CONFIG_PATH)
+        config_loaded = load_logistic_regression_config(config_path)
+        model = LogisticRegression(random_state=config_loaded.random_state)
+        params_grid: dict = get_params_grid_logreg(config_loaded)
+        pipeline_prefix = PIPELINE_PREFIX_LOGREG
+        csv_postfix = LOGISTIC_REGRESSION
+        dump_folder_name = "logreg"
     # GradientBoostingClassifier
-    gbdt = GradientBoostingClassifier(random_state=config_loaded.random_state)
-    pipe_gbdt = make_pipeline(scaler, gbdt)
+    elif mode == ExecutionMode.GRADIENT_BOOSTING.value:
+        config_path = Path(GBDT_CONFIG_PATH)
+        config_loaded = load_gradient_boosting_classifier_config(config_path)
+        model = GradientBoostingClassifier(random_state=config_loaded.random_state)
+        params_grid: dict = get_params_grid_gbdt(x_train.shape[1], config_loaded)
+        pipeline_prefix = PIPELINE_PREFIX_GBDT
+        csv_postfix = GRADIENT_BOOSTING_DECISION_TREE
+        dump_folder_name = "gbdt"
+    pipeline = make_pipeline(scaler, model)
 
     # pipe_gbdt.fit(x_train, y_train)
 
     # グリッドサーチ
-    params_gbdt = {
-        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
-            config_loaded.learning_rate,
-            -1,
-            num=2,
-        ),
-        # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
-        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(config_loaded.max_depth, 8),
-        f"{PIPELINE_PREFIX_GBDT}__max_features": range(
-            config_loaded.max_features,
-            x_train.shape[1],
-        ),
-        # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
-    }
-    search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
+    search = GridSearchCV(pipeline, params_grid, n_jobs=2, verbose=10)
     search.fit(x_train, y_train)
 
     # グリッドサーチ結果の表示
@@ -307,10 +215,8 @@ def run_training_gradient_boosting(
     logger.info("Hyper parameters: %s", search.best_params_)
 
     # 最高精度のモデルによる推論
-    best_gbdt: GradientBoostingClassifier = search.best_estimator_.named_steps[
-        PIPELINE_PREFIX_GBDT
-    ]
-    y_pred = best_gbdt.predict(np.array(x_test))
+    model_best: SklearnModelTypes = search.best_estimator_.named_steps[pipeline_prefix]
+    y_pred = model_best.predict(np.array(x_test))
 
     # 提出用データの作成
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
@@ -318,23 +224,24 @@ def run_training_gradient_boosting(
         [test_data[ID_COLUMN], y_pred_df],
         axis=1,
     )
-    CsvUtility.output_csv(y_pred_df_submission, GRADIENT_BOOSTING_DECISION_TREE)
+    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
 
     # 提出用データの表示
     logger.info(y_pred_df_submission)
 
     # 決定木の可視化
     # graphviz, pydotplus使用
-    dot_data = export_graphviz(
-        best_gbdt.estimators_[0, 0],
-        out_file=None,
-        filled=True,
-        rounded=True,
-        special_characters=True,
-    )
-    graph = pydotplus.graph_from_dot_data(dot_data)
-    if isinstance(graph, pydotplus.graphviz.Dot):
-        graph.write(path="test_graph.png", format="png")
+    if isinstance(model_best, GradientBoostingClassifier):
+        dot_data = export_graphviz(
+            model_best.estimators_[0, 0],
+            out_file=None,
+            filled=True,
+            rounded=True,
+            special_characters=True,
+        )
+        graph = pydotplus.graph_from_dot_data(dot_data)
+        if isinstance(graph, pydotplus.graphviz.Dot):
+            graph.write(path="test_graph.png", format="png")
 
     # dtreeviz使用
     # logger.debug(train_data.columns.tolist())
@@ -352,13 +259,51 @@ def run_training_gradient_boosting(
     # case番号はPytorchと共有
     case_id_path = Path(CASE_ID_PATH)
     case_id = load_case_id(case_id_path)
-    dump_folder_path = Path(f".\\model\\gbdt\\case_{case_id}")
+    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
     model_file_name = Path(f"case_{case_id}.joblib")
     dump_folder_path.mkdir(parents=True, exist_ok=True)
     model_dump_path = dump_folder_path.joinpath(model_file_name)
-    joblib.dump(best_gbdt, model_dump_path, protocol=5)
+    joblib.dump(model_best, model_dump_path, protocol=5)
 
     joblib.dump(case_id + 1, CASE_ID_PATH)
+
+
+def get_params_grid_logreg(
+    config_loaded: LogisticRegressionConfigDTO,
+) -> dict:
+    # max_iterの範囲生成
+    max_iter_scope = [
+        np.int16(max_iter)
+        for max_iter in np.linspace(config_loaded.max_iter, 1000, num=10)
+    ]
+    return {
+        "logisticregression__C": np.logspace(config_loaded.C, 3, num=7),
+        "logisticregression__class_weight": [
+            config_loaded.class_weight,
+            {0: 1.0, 1: 0.5},
+        ],
+        "logisticregression__max_iter": max_iter_scope,
+    }
+
+
+def get_params_grid_gbdt(
+    max_features_max: int,
+    config_loaded: GradientBoostingClassifierConfigDTO,
+) -> dict:
+    return {
+        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
+            config_loaded.learning_rate,
+            -1,
+            num=2,
+        ),
+        # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
+        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(config_loaded.max_depth, 8),
+        f"{PIPELINE_PREFIX_GBDT}__max_features": range(
+            config_loaded.max_features,
+            max_features_max,
+        ),
+        # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
+    }
 
 
 def run_training_neural_network(

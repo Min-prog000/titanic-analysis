@@ -5,7 +5,11 @@ from pathlib import Path
 import yaml
 
 from titanic_analysis.infrastructure.io.analysis.dto import AnalysisDTO
-from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
+from titanic_analysis.infrastructure.io.training_pipeline.dto import (
+    GradientBoostingClassifierConfigDTO,
+    LogisticRegressionConfigDTO,
+    PytorchConfigDTO,
+)
 
 
 def load_analysis_config(config_path: Path) -> AnalysisDTO:
@@ -23,7 +27,41 @@ def load_analysis_config(config_path: Path) -> AnalysisDTO:
     return AnalysisDTO(**config["option"]["display"])
 
 
-def load_training_config(config_path: Path) -> TrainingPipelineDTO:
+def load_logistic_regression_config(
+    config_path: Path,
+) -> LogisticRegressionConfigDTO:
+    """Load config file for training using logistic regression
+
+    Args:
+        config_path (Path): Config file path
+
+    Returns:
+        LogisticRegressionConfigDTO: DTO for config file
+    """
+    with config_path.open() as file:
+        config = yaml.safe_load(file)
+
+    return LogisticRegressionConfigDTO(**config["model"])
+
+
+def load_gradient_boosting_classifier_config(
+    config_path: Path,
+) -> GradientBoostingClassifierConfigDTO:
+    """Load config file for training using gradient boosting classifier
+
+    Args:
+        config_path (Path): Config file path
+
+    Returns:
+        GradientBoostingClassifierConfigDTO: DTO for config file
+    """
+    with config_path.open() as file:
+        config = yaml.safe_load(file)
+
+    return GradientBoostingClassifierConfigDTO(**config["model"])
+
+
+def load_pytorch_config(config_path: Path) -> PytorchConfigDTO:
     """Load config file for training using pytorch
 
     Args:
@@ -35,4 +73,4 @@ def load_training_config(config_path: Path) -> TrainingPipelineDTO:
     with config_path.open() as file:
         config = yaml.safe_load(file)
 
-    return TrainingPipelineDTO(**config["model"])
+    return PytorchConfigDTO(**config["model"])

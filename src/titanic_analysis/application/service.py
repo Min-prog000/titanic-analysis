@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from logging import Logger
 from pathlib import Path
 
-import dtreeviz
 import joblib
 import numpy as np
 import onnxruntime as ort
@@ -36,8 +35,10 @@ from titanic_analysis.application.constants import (
     ADDITIONAL_ENCODING_COLUMN,
     CASE_ID_PATH,
     CATEGORICAL_FEATURES,
+    GBDT_CONFIG_PATH,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
+    LOGREG_CONFIG_PATH,
     NUMERIC_FEATURES,
     PIPELINE_PREFIX_GBDT,
     PYTORCH_CONFIG_PATH,
@@ -51,7 +52,9 @@ from titanic_analysis.domain.dataset.sklearn_dataset import TestDataset, TrainDa
 from titanic_analysis.domain.dataset.torch_dataset import TitanicTorchDataset
 from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
-    load_training_config,
+    load_gradient_boosting_classifier_config,
+    load_logistic_regression_config,
+    load_pytorch_config,
 )
 from titanic_analysis.infrastructure.io.analysis.constants import (
     CONFIG_PATH as ANALYSIS_CONFIG_PATH,
@@ -62,7 +65,7 @@ from titanic_analysis.infrastructure.io.constants import (
     PATH_TEST,
     PATH_TRAIN,
 )
-from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
+from titanic_analysis.infrastructure.io.training_pipeline.dto import PytorchConfigDTO
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.analysis.display import (
     describe_dataset,
@@ -132,6 +135,9 @@ def run_training_logistic_regression(
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
+    config_path = Path(LOGREG_CONFIG_PATH)
+    config_loaded = load_logistic_regression_config(config_path)
+
     train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
         logger,
         train_data,
@@ -160,18 +166,24 @@ def run_training_logistic_regression(
     scaler = MinMaxScaler()
 
     # モデル生成
-    weight = {0: 1.0, 1: 1.5}
-    logreg = LogisticRegression(random_state=0, class_weight=weight)
+    logreg = LogisticRegression(random_state=0)
 
     # パイプライン生成
     pipe_logreg = make_pipeline(scaler, logreg)
 
     # max_iterの範囲生成
-    max_iter_scope = [np.int16(max_iter) for max_iter in np.linspace(100, 1000, num=10)]
+    max_iter_scope = [
+        np.int16(max_iter)
+        for max_iter in np.linspace(config_loaded.max_iter, 1000, num=10)
+    ]
 
     # ハイパーパラメータ設定
     params_logreg = {
-        "logisticregression__C": np.logspace(-3, 3, num=7),
+        "logisticregression__C": np.logspace(config_loaded.C, 3, num=7),
+        "logisticregression__class_weight": [
+            config_loaded.class_weight,
+            {0: 1.0, 1: 0.5},
+        ],
         "logisticregression__max_iter": max_iter_scope,
     }
 
@@ -229,6 +241,9 @@ def run_training_gradient_boosting(
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
+    config_path = Path(GBDT_CONFIG_PATH)
+    config_loaded = load_gradient_boosting_classifier_config(config_path)
+
     train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
         logger,
         train_data,
@@ -248,13 +263,8 @@ def run_training_gradient_boosting(
     # テストデータ
     x_test = test_dataset_preprocessed
 
-    # 列名の数と名前が等しいことの確認
+    # データセットのサイズが等しいことの確認
     # TODO: Revise to be able to compare preprocessed data columns
-    # try:
-    #     _ = train_data.columns.shape and test_data.columns.to_numpy().all()
-    # except FalseComponentError as _:
-    #     raise FalseComponentError(COLUMN_NOT_MATCH_MESSAGE) from None
-
     if not (x_train.shape and x_test.shape):
         logger.info("Not match datasets shape.")
         return
@@ -263,15 +273,24 @@ def run_training_gradient_boosting(
     scaler = MinMaxScaler()
 
     # GradientBoostingClassifier
-    gbdt = GradientBoostingClassifier(random_state=0)
+    gbdt = GradientBoostingClassifier(random_state=config_loaded.random_state)
     pipe_gbdt = make_pipeline(scaler, gbdt)
+
+    # pipe_gbdt.fit(x_train, y_train)
 
     # グリッドサーチ
     params_gbdt = {
-        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(-2, -1, num=2),
+        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
+            config_loaded.learning_rate,
+            -1,
+            num=2,
+        ),
         # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
-        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(5, 8),
-        f"{PIPELINE_PREFIX_GBDT}__max_features": range(7, x_train.shape[1]),
+        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(config_loaded.max_depth, 8),
+        f"{PIPELINE_PREFIX_GBDT}__max_features": range(
+            config_loaded.max_features,
+            x_train.shape[1],
+        ),
         # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
     }
     search = GridSearchCV(pipe_gbdt, params_gbdt, n_jobs=2, verbose=10)
@@ -318,17 +337,17 @@ def run_training_gradient_boosting(
         graph.write(path="test_graph.png", format="png")
 
     # dtreeviz使用
-    logger.debug(train_data.columns.tolist())
-    viz = dtreeviz.dtreeviz(
-        best_gbdt.estimators_[0, 0],
-        x_train,
-        y_train,
-        target_name="titanic",
-        class_names=["not_survived", "survived"],
-        feature_names=train_data.columns.tolist(),
-    )
-    filename_dtreeviz = Path("test_graph_dtreeviz.png")
-    viz.save(filename_dtreeviz)
+    # logger.debug(train_data.columns.tolist())
+    # viz = dtreeviz.dtreeviz(
+    #     best_gbdt.estimators_[0, 0],
+    #     x_train,
+    #     y_train,
+    #     target_name="titanic",
+    #     class_names=["not_survived", "survived"],
+    #     feature_names=train_data.columns.tolist(),
+    # )
+    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
+    # viz.save(filename_dtreeviz)
 
     # case番号はPytorchと共有
     case_id_path = Path(CASE_ID_PATH)
@@ -361,7 +380,7 @@ def run_training_neural_network(
     prepare_display(ANALYSIS_CONFIG_PATH)
 
     config_path = Path(PYTORCH_CONFIG_PATH)
-    config_loaded = load_training_config(config_path)
+    config_loaded = load_pytorch_config(config_path)
 
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
@@ -489,7 +508,7 @@ def log_label_distribution(logger: Logger, train_labels: np.ndarray) -> None:
     logger.debug("True: %s %%", float(true_percentage))
 
 
-def save_config(config_loaded: TrainingPipelineDTO, case_id: int) -> None:
+def save_config(config_loaded: PytorchConfigDTO, case_id: int) -> None:
     config_save = {
         "model": {
             "case_id": case_id,

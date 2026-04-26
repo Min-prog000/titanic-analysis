@@ -4,10 +4,10 @@ from pathlib import Path
 
 import yaml
 
-from titanic_analysis.infrastructure.io.training_pipeline.dto import TrainingPipelineDTO
+from titanic_analysis.infrastructure.io.training_pipeline.dto import PytorchConfigDTO
 
 
-def load_config(config_path: Path) -> TrainingPipelineDTO:
+def load_config(config_path: Path) -> PytorchConfigDTO:
     """configファイル（*.yaml）を読み込む
 
     Args:
@@ -19,4 +19,4 @@ def load_config(config_path: Path) -> TrainingPipelineDTO:
     with config_path.open() as file:
         config = yaml.safe_load(file)
 
-    return TrainingPipelineDTO(**config["preprocess"])
+    return PytorchConfigDTO(**config["preprocess"])

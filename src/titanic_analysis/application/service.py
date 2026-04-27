@@ -198,8 +198,6 @@ def run_train_sklearn(
         dump_folder_name = "gbdt"
     pipeline = make_pipeline(scaler, model)
 
-    # pipe_gbdt.fit(x_train, y_train)
-
     # グリッドサーチ
     search = GridSearchCV(pipeline, params_grid, n_jobs=2, verbose=10)
     search.fit(x_train, y_train)
@@ -641,9 +639,7 @@ def predict(
 
     for data in test_dataset:
         input_data = np.expand_dims(data, axis=(0, 1))
-        # logger.debug("input data shape: %s", input_data.shape)
         input_data = input_data.reshape(1, -1).astype(np.float32)
-        # logger.debug("input data shape: %s", input_data.shape)
         output = session.run(
             output_names=[output_name],
             input_feed={input_name: input_data},

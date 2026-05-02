@@ -1,10 +1,10 @@
 """Main module for the titanic dataset analysis codes."""
 
-from titanic_analysis.application.service import (
-    analyze,
-    predict,
-    run_train_sklearn,
-    run_training_neural_network,
+from titanic_analysis.application.analysis import analyze
+from titanic_analysis.application.prediction import predict
+from titanic_analysis.application.train import (
+    train_neural_network,
+    train_sklearn_model,
 )
 from titanic_analysis.infrastructure.user.constants import ExecutionMode
 from titanic_analysis.infrastructure.user.parser import generate_parser
@@ -37,9 +37,9 @@ def main() -> None:
         ExecutionMode.LOGISTIC_REGRESSION.value,
         ExecutionMode.GRADIENT_BOOSTING.value,
     ):
-        run_train_sklearn(logger, mode)
+        train_sklearn_model(logger, mode)
     elif mode == ExecutionMode.NEURAL_NETWORK.value:
-        run_training_neural_network(logger)
+        train_neural_network(logger)
     elif mode == ExecutionMode.PREDICT.value:
         predict(logger, model_path)
     else:

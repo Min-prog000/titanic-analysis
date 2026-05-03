@@ -2,10 +2,8 @@
 
 from titanic_analysis.application.analysis import analyze
 from titanic_analysis.application.prediction import predict
-from titanic_analysis.application.train import (
-    train_neural_network,
-    train_sklearn_model,
-)
+from titanic_analysis.application.train.sklearn_model import train_sklearn_model
+from titanic_analysis.application.train.torch_model import train_neural_network
 from titanic_analysis.infrastructure.user.constants import ExecutionMode
 from titanic_analysis.infrastructure.user.parser import generate_parser
 from titanic_analysis.interface.log.logger import TitanicLogger

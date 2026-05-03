@@ -1,7 +1,7 @@
 """Prediction use case"""
 
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from logging import Logger
 from pathlib import Path
 
@@ -13,13 +13,19 @@ from torch import sigmoid
 
 from titanic_analysis.application.constants import (
     ID_COLUMN,
+    JST,
+    PREDICT_SUBMISSION_FORMAT,
     SELECTED_FEATURES,
     TARGET_COLUMN,
 )
-from titanic_analysis.application.train import preprocess_load_data
+from titanic_analysis.application.train.torch_model import preprocess_load_data
 from titanic_analysis.application.types import OutputItem
 from titanic_analysis.infrastructure.io.constants import PATH_TEST, PATH_TRAIN
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
+
+__all__ = [
+    "predict",
+]
 
 
 def predict(
@@ -126,7 +132,7 @@ def extract_scalar(output: Sequence[OutputItem]) -> OutputItem:
     return item
 
 
-def generate_now_datetime(datetime_format: str = "%Y%m%d%H%M%S") -> str:
+def generate_now_datetime(datetime_format: str = PREDICT_SUBMISSION_FORMAT) -> str:
     """Generate datetime formatted string for submission file prefix
 
     Args:
@@ -135,7 +141,6 @@ def generate_now_datetime(datetime_format: str = "%Y%m%d%H%M%S") -> str:
     Returns:
         str: datetime formatted string
     """
-    jst = timezone(timedelta(hours=+9), "JST")
-    datetime_now = datetime.now(jst)
+    datetime_now = datetime.now(JST)
 
     return datetime_now.strftime(datetime_format)

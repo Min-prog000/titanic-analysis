@@ -1,5 +1,6 @@
 """Constants module for model building pipeline"""
 
+from datetime import timedelta, timezone
 from typing import Literal
 
 SEED = 42
@@ -35,3 +36,6 @@ COLUMN_NOT_MATCH_MESSAGE = (
 
 PIPELINE_PREFIX_LOGREG = "logisticregression"
 PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"
+
+PREDICT_SUBMISSION_FORMAT = "%Y%m%d%H%M%S"
+JST = timezone(timedelta(hours=+9), "JST")

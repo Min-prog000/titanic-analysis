@@ -10,16 +10,12 @@ import numpy as np
 import pandas as pd
 import pydotplus
 import torch
-from sklearn.compose import ColumnTransformer
-from sklearn.discriminant_analysis import StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import (
     MinMaxScaler,
-    OneHotEncoder,
-    RobustScaler,
 )
 from sklearn.tree import export_graphviz
 from torch import nn, optim
@@ -30,22 +26,19 @@ from torchinfo import summary
 from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
-    ADDITIONAL_ENCODING_COLUMN,
     CASE_ID_PATH,
-    CATEGORICAL_FEATURES,
     GBDT_CONFIG_PATH,
     ID_COLUMN,
     LOGGING_LEVEL_LITERALS,
     LOGREG_CONFIG_PATH,
-    NUMERIC_FEATURES,
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
     PYTORCH_CONFIG_PATH,
     PYTORCH_TENSORBOARD_PATH,
     SEED,
-    SELECTED_FEATURES,
     TARGET_COLUMN,
 )
+from titanic_analysis.application.preprocess import preprocess_load_data
 from titanic_analysis.domain.dataset.torch_dataset import TitanicTorchDataset
 from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
@@ -448,85 +441,6 @@ def create_onnx_model(feature_size: int, model: NeuralNetwork, case_id: int) -> 
         optimize=True,
         dynamo=True,
     )
-
-
-def preprocess_load_data(
-    logger: Logger,
-    train_data: pd.DataFrame,
-    test_data: pd.DataFrame,
-) -> tuple[np.ndarray, np.ndarray]:
-    train_data_cleaned = clean_data(logger, train_data, SELECTED_FEATURES)
-    test_data_cleaned = clean_data(logger, test_data, SELECTED_FEATURES)
-
-    preprocessor = generate_preprocessor(
-        MinMaxScaler(),
-        NUMERIC_FEATURES,
-        CATEGORICAL_FEATURES,
-    )
-
-    pipeline = Pipeline(steps=[("preprocess", preprocessor)])
-
-    train_data_preprocessed = pipeline.fit_transform(
-        train_data_cleaned,
-    )
-    test_data_preprocessed = pipeline.transform(test_data_cleaned)
-
-    logger.debug("Train data shape: %s", train_data_preprocessed.shape)
-    logger.debug("Test data shape: %s", test_data_preprocessed.shape)
-
-    logger.debug("\nColumn names: %s", preprocessor.get_feature_names_out())
-
-    return train_data_preprocessed, test_data_preprocessed
-
-
-def clean_data(
-    logger: Logger,
-    data_loaded: pd.DataFrame,
-    selected_features: list[str],
-) -> pd.DataFrame:
-    # Choose column
-    data_filtered = data_loaded.loc[:, selected_features]
-    logger.debug(data_filtered.columns)
-
-    # Fill numeric column with mean
-    mean_series = data_filtered.mean(numeric_only=True)
-    mean_round = round(mean_series)
-    data_cleaned = data_filtered.fillna(mean_round)
-
-    # Fill "Embarked" column with mode
-    # "S" is the most numerous category
-    dataframe_groupby_embarked = data_cleaned.groupby(
-        ADDITIONAL_ENCODING_COLUMN,
-        dropna=False,
-    )
-    size_groupby_embarked = dataframe_groupby_embarked.size()
-    mode_embarked_index = size_groupby_embarked.idxmax()
-    data_cleaned[ADDITIONAL_ENCODING_COLUMN] = data_cleaned[
-        ADDITIONAL_ENCODING_COLUMN
-    ].fillna(
-        mode_embarked_index,
-    )
-
-    return data_cleaned
-
-
-def generate_preprocessor(
-    scaler: StandardScaler | MinMaxScaler | RobustScaler,
-    numeric_features: list[str],
-    categorical_features: list[str],
-    categorical_encoder: OneHotEncoder | None = None,
-) -> ColumnTransformer:
-    if categorical_encoder is None:
-        categorical_encoder = OneHotEncoder(handle_unknown="ignore")
-
-    transformers = []
-    if numeric_features:
-        transformers.append(("numeric", scaler, numeric_features))
-
-    if categorical_features:
-        transformers.append(("categorical", categorical_encoder, categorical_features))
-
-    return ColumnTransformer(transformers=transformers)
 
 
 def set_onnx_logger(

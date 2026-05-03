@@ -103,6 +103,17 @@ def predict(
 
 
 def extract_scalar(output: Sequence[OutputItem]) -> OutputItem:
+    """Extract predict result from numpy array
+
+    Args:
+        output (Sequence[OutputItem]): raw predict result
+
+    Raises:
+        ValueError: raise when predict result is empty
+
+    Returns:
+        OutputItem: extracted result
+    """
     if not output:
         msg = "Output list is empty"
         raise ValueError(msg)
@@ -116,6 +127,14 @@ def extract_scalar(output: Sequence[OutputItem]) -> OutputItem:
 
 
 def generate_now_datetime(datetime_format: str = "%Y%m%d%H%M%S") -> str:
+    """Generate datetime formatted string for submission file prefix
+
+    Args:
+        datetime_format (str, optional): datetime format. Defaults to "%Y%m%d%H%M%S".
+
+    Returns:
+        str: datetime formatted string
+    """
     jst = timezone(timedelta(hours=+9), "JST")
     datetime_now = datetime.now(jst)
 

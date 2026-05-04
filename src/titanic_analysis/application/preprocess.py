@@ -20,10 +20,7 @@ from titanic_analysis.application.constants import (
     SELECTED_FEATURES,
 )
 
-__all__ = [
-    "generate_preprocessor",
-    "preprocess_load_data",
-]
+__all__ = ["preprocess_load_data"]
 
 
 def preprocess_load_data(

@@ -48,9 +48,7 @@ from titanic_analysis.infrastructure.logic.build.test import test_loop
 from titanic_analysis.infrastructure.logic.build.train import train_loop
 from titanic_analysis.infrastructure.logic.build.utils import fix_seed, load_case_id
 
-__all__ = [
-    "train_neural_network",
-]
+__all__ = ["train_neural_network"]
 
 
 def train_neural_network(

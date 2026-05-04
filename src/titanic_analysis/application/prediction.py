@@ -23,9 +23,7 @@ from titanic_analysis.application.types import OutputItem
 from titanic_analysis.infrastructure.io.constants import PATH_TEST, PATH_TRAIN
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
-__all__ = [
-    "predict",
-]
+__all__ = ["predict"]
 
 
 def predict(

@@ -2,7 +2,7 @@
 
 import argparse
 
-from titanic_analysis.infrastructure.user.constants import ExecutionMode
+from .constants import ExecutionMode, TrainMethod
 
 
 def generate_parser() -> argparse.ArgumentParser:
@@ -11,25 +11,34 @@ def generate_parser() -> argparse.ArgumentParser:
     Returns:
         argparse.ArgumentParser: コマンドライン引数パーサー
     """
-    exec_mode = ExecutionMode
-
     parser = argparse.ArgumentParser(
         description="Analysis method definition for titanic dataset analysis",
     )
 
     parser.add_argument(
         "-m",
-        "--mode",
+        "--execution_mode",
         type=int,
-        default=exec_mode.ANALYSIS.value,
+        default=ExecutionMode.ANALYSIS.value,
         choices=[
-            exec_mode.ANALYSIS.value,
-            exec_mode.LOGISTIC_REGRESSION.value,
-            exec_mode.GRADIENT_BOOSTING.value,
-            exec_mode.NEURAL_NETWORK.value,
-            exec_mode.PREDICT.value,
+            ExecutionMode.ANALYSIS.value,
+            ExecutionMode.TRAIN.value,
+            ExecutionMode.PREDICT.value,
         ],
-        help="Type of the execution mode (default: 0, meaning analysis mode).",
+        help="Type of the execution mode (default: 0, meaning ANALYSIS).",
+    )
+
+    parser.add_argument(
+        "-t",
+        "--train_method",
+        type=int,
+        default=TrainMethod.NEURAL_NETWORK.value,
+        choices=[
+            TrainMethod.LOGISTIC_REGRESSION.value,
+            TrainMethod.GRADIENT_BOOSTING.value,
+            TrainMethod.NEURAL_NETWORK.value,
+        ],
+        help="Type of the training method (default: 2, meaning NEURAL_NETWORK).",
     )
 
     parser.add_argument(

@@ -41,7 +41,7 @@ from titanic_analysis.infrastructure.io.training_pipeline.dto import (
 )
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.build.utils import load_case_id
-from titanic_analysis.infrastructure.user.constants import ExecutionMode
+from titanic_analysis.infrastructure.user.constants import TrainMethod
 
 if TYPE_CHECKING:
     from titanic_analysis.domain.model.types import SklearnModelTypes
@@ -51,7 +51,7 @@ __all__ = ["train_sklearn_model"]
 
 def train_sklearn_model(
     logger: Logger,
-    mode: int,
+    method_id: int,
     train_dataset_path: str = PATH_TRAIN,
     test_dataset_path: str = PATH_TEST,
 ) -> None:
@@ -106,7 +106,7 @@ def train_sklearn_model(
     csv_postfix = ""
     dump_folder_name = ""
     # LogisticRegression
-    if mode == ExecutionMode.LOGISTIC_REGRESSION.value:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
         config_path = Path(LOGREG_CONFIG_PATH)
         config_loaded = load_logistic_regression_config(config_path)
         model = LogisticRegression(random_state=config_loaded.random_state)
@@ -115,7 +115,7 @@ def train_sklearn_model(
         csv_postfix = LOGISTIC_REGRESSION
         dump_folder_name = "logreg"
     # GradientBoostingClassifier
-    elif mode == ExecutionMode.GRADIENT_BOOSTING.value:
+    elif method_id == TrainMethod.GRADIENT_BOOSTING.value:
         config_path = Path(GBDT_CONFIG_PATH)
         config_loaded = load_gradient_boosting_classifier_config(config_path)
         model = GradientBoostingClassifier(random_state=config_loaded.random_state)

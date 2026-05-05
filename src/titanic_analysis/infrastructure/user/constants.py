@@ -7,7 +7,13 @@ class ExecutionMode(Enum):
     """Execution mode analysis, training and predict process"""
 
     ANALYSIS = 0
-    LOGISTIC_REGRESSION = 1
-    GRADIENT_BOOSTING = 2
-    NEURAL_NETWORK = 3
-    PREDICT = 4
+    TRAIN = 1
+    PREDICT = 2
+
+
+class TrainMethod(Enum):
+    """Train methods"""
+
+    LOGISTIC_REGRESSION = 0
+    GRADIENT_BOOSTING = 1
+    NEURAL_NETWORK = 2

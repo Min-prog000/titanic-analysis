@@ -2,7 +2,7 @@
 
 import argparse
 
-from .constants import ExecutionMode, TrainMethod
+from titanic_analysis.infrastructure.user.constants import ExecutionMode, TrainMethod
 
 
 def generate_parser() -> argparse.ArgumentParser:

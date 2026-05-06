@@ -1,13 +1,14 @@
 """Training use case using sklearn"""
 
+import sys
 from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import joblib
 import numpy as np
 import pandas as pd
 import pydotplus
+from pandas import Series
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
@@ -25,6 +26,7 @@ from titanic_analysis.application.constants import (
     TARGET_COLUMN,
 )
 from titanic_analysis.application.preprocess import preprocess_load_data
+from titanic_analysis.domain.model.types import SklearnModelTypes
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_gradient_boosting_classifier_config,
     load_logistic_regression_config,
@@ -43,9 +45,6 @@ from titanic_analysis.infrastructure.io.utils import CsvUtility
 from titanic_analysis.infrastructure.logic.build.utils import load_case_id
 from titanic_analysis.infrastructure.user.constants import TrainMethod
 
-if TYPE_CHECKING:
-    from titanic_analysis.domain.model.types import SklearnModelTypes
-
 __all__ = ["train_sklearn_model"]
 
 
@@ -62,13 +61,126 @@ def train_sklearn_model(
 
     Args:
         logger (Logger): Logger generated in `main`.
-        mode (int): Execution mode.
+        method_id (int): Training method id.
         train_dataset_path (str, optional): Dataset path. Defaults to PATH_TRAIN.
         test_dataset_path (str, optional): Dataset path. Defaults to PATH_TEST.
 
     Raises:
         FalseComponentError: Raise when missing columns.
     """
+    # data loading
+    passenger_id, x_train, y_train, x_test = load_data(
+        logger,
+        train_dataset_path,
+        test_dataset_path,
+    )
+
+    # training
+    csv_postfix, dump_folder_name, model_best = run_grid_search(
+        logger,
+        method_id,
+        x_train,
+        y_train,
+    )
+
+    # prediction(create submission file)
+    predict_with_sklearn_method(logger, passenger_id, x_test, csv_postfix, model_best)
+
+    # model save
+    # 1. save visualized tree
+    if isinstance(model_best, GradientBoostingClassifier):
+        save_tree_graph(model_best)
+    # 2. save model
+    save_model(dump_folder_name, model_best)
+
+
+def predict_with_sklearn_method(
+    logger: Logger,
+    passenger_id: Series,
+    x_test: np.ndarray,
+    csv_postfix: str,
+    model_best: SklearnModelTypes,
+) -> None:
+    # predict
+    y_pred = model_best.predict(np.array(x_test))
+
+    # create submission data
+    # 提出用データの作成
+    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
+    y_pred_df_submission = pd.concat(
+        [passenger_id, y_pred_df],
+        axis=1,
+    )
+
+    # output
+    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
+
+    # 提出用データの表示
+    logger.info(y_pred_df_submission)
+
+
+def run_grid_search(
+    logger: Logger,
+    method_id: int,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+) -> tuple[str, str, SklearnModelTypes]:
+    # Scaling
+    scaler = MinMaxScaler()
+
+    # Parameters
+    model = None
+    params_grid = {}
+    pipeline_prefix = ""
+    csv_postfix = ""
+    dump_folder_name = ""
+
+    # LogisticRegression
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        config_path = Path(LOGREG_CONFIG_PATH)
+        config_loaded = load_logistic_regression_config(config_path)
+        model = LogisticRegression(random_state=config_loaded.random_state)
+        params_grid: dict = get_params_grid_logreg(config_loaded)
+        pipeline_prefix = PIPELINE_PREFIX_LOGREG
+        csv_postfix = LOGISTIC_REGRESSION
+        dump_folder_name = "logreg"
+    # GradientBoostingClassifier
+    elif method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        config_path = Path(GBDT_CONFIG_PATH)
+        config_loaded = load_gradient_boosting_classifier_config(config_path)
+        model = GradientBoostingClassifier(random_state=config_loaded.random_state)
+        params_grid: dict = get_params_grid_gbdt(x_train.shape[1], config_loaded)
+        pipeline_prefix = PIPELINE_PREFIX_GBDT
+        csv_postfix = GRADIENT_BOOSTING_DECISION_TREE
+        dump_folder_name = "gbdt"
+
+    pipeline = make_pipeline(scaler, model)
+
+    # グリッドサーチ
+    search = GridSearchCV(pipeline, params_grid, n_jobs=2, verbose=10)
+    search.fit(x_train, y_train)
+
+    # グリッドサーチ結果の表示
+    result_search = search.cv_results_
+    result_search_df = pd.DataFrame(result_search).iloc[:, 4:]
+    result_search_df_rounded = result_search_df.round(3)
+    logger.info(result_search_df_rounded)
+
+    # グリッドサーチのベストスコア表示
+    logger.info("Grid search best score: %s", search.best_score_)
+    logger.info("Hyper parameters: %s", search.best_params_)
+
+    # 最高精度のモデルによる推論
+    model_best: SklearnModelTypes = search.best_estimator_.named_steps[pipeline_prefix]
+
+    return csv_postfix, dump_folder_name, model_best
+
+
+def load_data(
+    logger: Logger,
+    train_dataset_path: str,
+    test_dataset_path: str,
+) -> tuple[Series, np.ndarray, np.ndarray, np.ndarray]:
     train_data = pd.read_csv(train_dataset_path)
     test_data = pd.read_csv(test_dataset_path)
 
@@ -95,78 +207,35 @@ def train_sklearn_model(
     # TODO: Revise to be able to compare preprocessed data columns
     if not (x_train.shape and x_test.shape):
         logger.info("Not match datasets shape.")
-        return
+        sys.exit()
 
-    # 正規化
-    scaler = MinMaxScaler()
+    return test_data[ID_COLUMN], x_train, y_train, x_test
 
-    model = None
-    params_grid = {}
-    pipeline_prefix = ""
-    csv_postfix = ""
-    dump_folder_name = ""
-    # LogisticRegression
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        config_path = Path(LOGREG_CONFIG_PATH)
-        config_loaded = load_logistic_regression_config(config_path)
-        model = LogisticRegression(random_state=config_loaded.random_state)
-        params_grid: dict = get_params_grid_logreg(config_loaded)
-        pipeline_prefix = PIPELINE_PREFIX_LOGREG
-        csv_postfix = LOGISTIC_REGRESSION
-        dump_folder_name = "logreg"
-    # GradientBoostingClassifier
-    elif method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        config_path = Path(GBDT_CONFIG_PATH)
-        config_loaded = load_gradient_boosting_classifier_config(config_path)
-        model = GradientBoostingClassifier(random_state=config_loaded.random_state)
-        params_grid: dict = get_params_grid_gbdt(x_train.shape[1], config_loaded)
-        pipeline_prefix = PIPELINE_PREFIX_GBDT
-        csv_postfix = GRADIENT_BOOSTING_DECISION_TREE
-        dump_folder_name = "gbdt"
-    pipeline = make_pipeline(scaler, model)
 
-    # グリッドサーチ
-    search = GridSearchCV(pipeline, params_grid, n_jobs=2, verbose=10)
-    search.fit(x_train, y_train)
+def save_model(dump_folder_name: str, model_best: SklearnModelTypes) -> None:
+    # case番号はPytorchと共有
+    case_id_path = Path(CASE_ID_PATH)
+    case_id = load_case_id(case_id_path)
+    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
+    model_file_name = Path(f"case_{case_id}.joblib")
+    dump_folder_path.mkdir(parents=True, exist_ok=True)
+    model_dump_path = dump_folder_path.joinpath(model_file_name)
+    joblib.dump(model_best, model_dump_path, protocol=5)
+    joblib.dump(case_id + 1, CASE_ID_PATH)
 
-    # グリッドサーチ結果の表示
-    result_search = search.cv_results_
-    result_search_df = pd.DataFrame(result_search).iloc[:, 4:]
-    result_search_df_rounded = result_search_df.round(3)
-    logger.info(result_search_df_rounded)
 
-    # グリッドサーチのベストスコア表示
-    logger.info("Grid search best score: %s", search.best_score_)
-    logger.info("Hyper parameters: %s", search.best_params_)
-
-    # 最高精度のモデルによる推論
-    model_best: SklearnModelTypes = search.best_estimator_.named_steps[pipeline_prefix]
-    y_pred = model_best.predict(np.array(x_test))
-
-    # 提出用データの作成
-    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat(
-        [test_data[ID_COLUMN], y_pred_df],
-        axis=1,
-    )
-    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
-
-    # 提出用データの表示
-    logger.info(y_pred_df_submission)
-
-    # 決定木の可視化
+def save_tree_graph(model_best: GradientBoostingClassifier) -> None:
     # graphviz, pydotplus使用
-    if isinstance(model_best, GradientBoostingClassifier):
-        dot_data = export_graphviz(
-            model_best.estimators_[0, 0],
-            out_file=None,
-            filled=True,
-            rounded=True,
-            special_characters=True,
-        )
-        graph = pydotplus.graph_from_dot_data(dot_data)
-        if isinstance(graph, pydotplus.graphviz.Dot):
-            graph.write(path="test_graph.png", format="png")
+    dot_data = export_graphviz(
+        model_best.estimators_[0, 0],
+        out_file=None,
+        filled=True,
+        rounded=True,
+        special_characters=True,
+    )
+    graph = pydotplus.graph_from_dot_data(dot_data)
+    if isinstance(graph, pydotplus.graphviz.Dot):
+        graph.write(path="test_graph.png", format="png")
 
     # dtreeviz使用
     # logger.debug(train_data.columns.tolist())
@@ -180,17 +249,6 @@ def train_sklearn_model(
     # )
     # filename_dtreeviz = Path("test_graph_dtreeviz.png")
     # viz.save(filename_dtreeviz)
-
-    # case番号はPytorchと共有
-    case_id_path = Path(CASE_ID_PATH)
-    case_id = load_case_id(case_id_path)
-    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
-    model_file_name = Path(f"case_{case_id}.joblib")
-    dump_folder_path.mkdir(parents=True, exist_ok=True)
-    model_dump_path = dump_folder_path.joinpath(model_file_name)
-    joblib.dump(model_best, model_dump_path, protocol=5)
-
-    joblib.dump(case_id + 1, CASE_ID_PATH)
 
 
 def get_params_grid_logreg(

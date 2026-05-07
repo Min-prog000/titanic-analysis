@@ -2,19 +2,16 @@
 
 from titanic_analysis.application.analysis import analyze
 from titanic_analysis.application.prediction import predict
-from titanic_analysis.application.train.sklearn_model import train_sklearn_model
-from titanic_analysis.application.train.torch_model import train_neural_network
-from titanic_analysis.infrastructure.user.constants import ExecutionMode, TrainMethod
+from titanic_analysis.infrastructure.user.constants import ExecutionMode
 from titanic_analysis.infrastructure.user.parser import generate_parser
 from titanic_analysis.interface.log.logger import TitanicLogger
 from titanic_analysis.interface.log.utils import generate_log_file_path
+from titanic_analysis.interface.utils import train_dispatcher
 
 
 def main() -> None:
     """Main entry point of the application."""
-    parser = generate_parser()
-    args = parser.parse_args()
-
+    # logger setting
     log_file_path = generate_log_file_path()
     titanic_logger = TitanicLogger(
         logger_name="titanic",
@@ -23,29 +20,32 @@ def main() -> None:
 
     logger = titanic_logger.logger
 
+    # get arguments
+    parser = generate_parser()
+    args = parser.parse_args()
+
     execution_mode: int = args.execution_mode
     train_method: int = args.train_method
     model_path: str = args.model_path
 
+    # strategy choice
     mode_name = ExecutionMode(execution_mode)
     logger.info("Execution mode: %s", mode_name.name)
 
-    is_analysis = execution_mode == ExecutionMode.ANALYSIS.value
-    is_train = execution_mode == ExecutionMode.TRAIN.value
-    is_prediction = execution_mode == ExecutionMode.PREDICT.value
+    mode_handlers = {
+        ExecutionMode.ANALYSIS.value: lambda: analyze(logger),
+        ExecutionMode.TRAIN.value: lambda: train_dispatcher(
+            logger,
+            train_method,
+            execution_mode,
+        ),
+        ExecutionMode.PREDICT.value: lambda: predict(logger, model_path),
+    }
 
-    if is_analysis:
-        analyze(logger)
-    elif is_train:
-        if train_method in (
-            TrainMethod.LOGISTIC_REGRESSION.value,
-            TrainMethod.GRADIENT_BOOSTING.value,
-        ):
-            train_sklearn_model(logger, execution_mode)
-        elif train_method == TrainMethod.NEURAL_NETWORK.value:
-            train_neural_network(logger)
-    elif is_prediction:
-        predict(logger, model_path)
+    handler = mode_handlers.get(execution_mode)
+
+    if handler:
+        handler()
     else:
         logger.warning("Invalid mode inputted.")
 

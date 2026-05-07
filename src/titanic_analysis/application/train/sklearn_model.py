@@ -69,7 +69,7 @@ def train_sklearn_model(
         FalseComponentError: Raise when missing columns.
     """
     # data loading
-    passenger_id, x_train, y_train, x_test = load_data(
+    passenger_id, x_train, y_train, x_test = create_dataset(
         logger,
         train_dataset_path,
         test_dataset_path,
@@ -94,29 +94,41 @@ def train_sklearn_model(
     save_model(dump_folder_name, model_best)
 
 
-def predict_with_sklearn_method(
+def create_dataset(
     logger: Logger,
-    passenger_id: Series,
-    x_test: np.ndarray,
-    csv_postfix: str,
-    model_best: SklearnModelTypes,
-) -> None:
-    # predict
-    y_pred = model_best.predict(np.array(x_test))
+    train_dataset_path: str,
+    test_dataset_path: str,
+) -> tuple[Series, np.ndarray, np.ndarray, np.ndarray]:
+    train_data = pd.read_csv(train_dataset_path)
+    test_data = pd.read_csv(test_dataset_path)
 
-    # create submission data
-    # 提出用データの作成
-    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat(
-        [passenger_id, y_pred_df],
-        axis=1,
+    # Preprocess
+    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
+        logger,
+        train_data,
+        test_data,
     )
 
-    # output
-    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
+    # データセット
+    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
 
-    # 提出用データの表示
-    logger.info(y_pred_df_submission)
+    logger.info(train_dataset_preprocessed)
+    logger.info(test_dataset_preprocessed)
+
+    # 訓練データ
+    x_train = train_dataset_preprocessed
+    y_train = train_labels
+
+    # テストデータ
+    x_test = test_dataset_preprocessed
+
+    # データセットのサイズが等しいことの確認
+    # TODO: Revise to be able to compare preprocessed data columns
+    if not (x_train.shape and x_test.shape):
+        logger.info("Not match datasets shape.")
+        sys.exit()
+
+    return test_data[ID_COLUMN], x_train, y_train, x_test
 
 
 def run_grid_search(
@@ -176,81 +188,6 @@ def run_grid_search(
     return csv_postfix, dump_folder_name, model_best
 
 
-def load_data(
-    logger: Logger,
-    train_dataset_path: str,
-    test_dataset_path: str,
-) -> tuple[Series, np.ndarray, np.ndarray, np.ndarray]:
-    train_data = pd.read_csv(train_dataset_path)
-    test_data = pd.read_csv(test_dataset_path)
-
-    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
-        logger,
-        train_data,
-        test_data,
-    )
-
-    # データセット
-    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
-
-    logger.info(train_dataset_preprocessed)
-    logger.info(test_dataset_preprocessed)
-
-    # 訓練データ
-    x_train = train_dataset_preprocessed
-    y_train = train_labels
-
-    # テストデータ
-    x_test = test_dataset_preprocessed
-
-    # データセットのサイズが等しいことの確認
-    # TODO: Revise to be able to compare preprocessed data columns
-    if not (x_train.shape and x_test.shape):
-        logger.info("Not match datasets shape.")
-        sys.exit()
-
-    return test_data[ID_COLUMN], x_train, y_train, x_test
-
-
-def save_model(dump_folder_name: str, model_best: SklearnModelTypes) -> None:
-    # case番号はPytorchと共有
-    case_id_path = Path(CASE_ID_PATH)
-    case_id = load_case_id(case_id_path)
-    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
-    model_file_name = Path(f"case_{case_id}.joblib")
-    dump_folder_path.mkdir(parents=True, exist_ok=True)
-    model_dump_path = dump_folder_path.joinpath(model_file_name)
-    joblib.dump(model_best, model_dump_path, protocol=5)
-    joblib.dump(case_id + 1, CASE_ID_PATH)
-
-
-def save_tree_graph(model_best: GradientBoostingClassifier) -> None:
-    # graphviz, pydotplus使用
-    dot_data = export_graphviz(
-        model_best.estimators_[0, 0],
-        out_file=None,
-        filled=True,
-        rounded=True,
-        special_characters=True,
-    )
-    graph = pydotplus.graph_from_dot_data(dot_data)
-    if isinstance(graph, pydotplus.graphviz.Dot):
-        graph.write(path="test_graph.png", format="png")
-
-    # dtreeviz使用
-    # logger.debug(train_data.columns.tolist())
-    # viz = dtreeviz.dtreeviz(
-    #     best_gbdt.estimators_[0, 0],
-    #     x_train,
-    #     y_train,
-    #     target_name="titanic",
-    #     class_names=["not_survived", "survived"],
-    #     feature_names=train_data.columns.tolist(),
-    # )
-    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
-    # viz.save(filename_dtreeviz)
-
-
 def get_params_grid_logreg(
     config_loaded: LogisticRegressionConfigDTO,
 ) -> dict:
@@ -287,3 +224,67 @@ def get_params_grid_gbdt(
         ),
         # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
     }
+
+
+def predict_with_sklearn_method(
+    logger: Logger,
+    passenger_id: Series,
+    x_test: np.ndarray,
+    csv_postfix: str,
+    model_best: SklearnModelTypes,
+) -> None:
+    # predict
+    y_pred = model_best.predict(np.array(x_test))
+
+    # create submission data
+    # 提出用データの作成
+    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
+    y_pred_df_submission = pd.concat(
+        [passenger_id, y_pred_df],
+        axis=1,
+    )
+
+    # output
+    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
+
+    # 提出用データの表示
+    logger.info(y_pred_df_submission)
+
+
+def save_tree_graph(model_best: GradientBoostingClassifier) -> None:
+    # graphviz, pydotplus使用
+    dot_data = export_graphviz(
+        model_best.estimators_[0, 0],
+        out_file=None,
+        filled=True,
+        rounded=True,
+        special_characters=True,
+    )
+    graph = pydotplus.graph_from_dot_data(dot_data)
+    if isinstance(graph, pydotplus.graphviz.Dot):
+        graph.write(path="test_graph.png", format="png")
+
+    # dtreeviz使用
+    # logger.debug(train_data.columns.tolist())
+    # viz = dtreeviz.dtreeviz(
+    #     best_gbdt.estimators_[0, 0],
+    #     x_train,
+    #     y_train,
+    #     target_name="titanic",
+    #     class_names=["not_survived", "survived"],
+    #     feature_names=train_data.columns.tolist(),
+    # )
+    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
+    # viz.save(filename_dtreeviz)
+
+
+def save_model(dump_folder_name: str, model_best: SklearnModelTypes) -> None:
+    # case番号はPytorchと共有
+    case_id_path = Path(CASE_ID_PATH)
+    case_id = load_case_id(case_id_path)
+    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
+    model_file_name = Path(f"case_{case_id}.joblib")
+    dump_folder_path.mkdir(parents=True, exist_ok=True)
+    model_dump_path = dump_folder_path.joinpath(model_file_name)
+    joblib.dump(model_best, model_dump_path, protocol=5)
+    joblib.dump(case_id + 1, CASE_ID_PATH)

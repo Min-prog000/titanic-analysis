@@ -69,7 +69,7 @@ def train_sklearn_model(
         FalseComponentError: Raise when missing columns.
     """
     # data loading
-    passenger_id, x_train, y_train, x_test = create_dataset(
+    x_train, y_train, x_test, passenger_ids = create_dataset(
         logger,
         train_dataset_path,
         test_dataset_path,
@@ -84,10 +84,10 @@ def train_sklearn_model(
     )
 
     # prediction(create submission file)
-    predict_with_sklearn_method(logger, passenger_id, x_test, csv_postfix, model_best)
+    predict_with_sklearn_method(logger, passenger_ids, x_test, csv_postfix, model_best)
 
     # model save
-    # 1. save visualized tree
+    # 1. save tree visualization
     if isinstance(model_best, GradientBoostingClassifier):
         save_tree_graph(model_best)
     # 2. save model
@@ -98,29 +98,23 @@ def create_dataset(
     logger: Logger,
     train_dataset_path: str,
     test_dataset_path: str,
-) -> tuple[Series, np.ndarray, np.ndarray, np.ndarray]:
-    train_data = pd.read_csv(train_dataset_path)
-    test_data = pd.read_csv(test_dataset_path)
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, Series]:
+    df_train = pd.read_csv(train_dataset_path)
+    df_test = pd.read_csv(test_dataset_path)
 
     # Preprocess
-    train_dataset_preprocessed, test_dataset_preprocessed = preprocess_load_data(
+    x_train, x_test = preprocess_load_data(
         logger,
-        train_data,
-        test_data,
+        df_train,
+        df_test,
     )
 
     # データセット
-    train_labels = np.array(train_data.loc[:, TARGET_COLUMN])
+    y_train = np.array(df_train.loc[:, TARGET_COLUMN])
+    passenger_ids = df_test[ID_COLUMN]
 
-    logger.info(train_dataset_preprocessed)
-    logger.info(test_dataset_preprocessed)
-
-    # 訓練データ
-    x_train = train_dataset_preprocessed
-    y_train = train_labels
-
-    # テストデータ
-    x_test = test_dataset_preprocessed
+    logger.info("\n%s", x_train)
+    logger.info("\n%s", x_test)
 
     # データセットのサイズが等しいことの確認
     # TODO: Revise to be able to compare preprocessed data columns
@@ -128,7 +122,7 @@ def create_dataset(
         logger.info("Not match datasets shape.")
         sys.exit()
 
-    return test_data[ID_COLUMN], x_train, y_train, x_test
+    return x_train, y_train, x_test, passenger_ids
 
 
 def run_grid_search(

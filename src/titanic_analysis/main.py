@@ -28,10 +28,10 @@ def main() -> None:
     train_method: int = args.train_method
     model_path: str = args.model_path
 
-    # strategy choice
     mode_name = ExecutionMode(execution_mode)
     logger.info("Execution mode: %s", mode_name.name)
 
+    # strategy choice
     mode_handlers = {
         ExecutionMode.ANALYSIS.value: lambda: analyze(logger),
         ExecutionMode.TRAIN.value: lambda: train_dispatcher(

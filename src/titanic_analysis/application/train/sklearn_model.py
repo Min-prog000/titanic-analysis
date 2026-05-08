@@ -228,6 +228,7 @@ def predict_with_sklearn_method(
     model_best: SklearnModelTypes,
 ) -> None:
     # predict
+    # TODO: Check type of `x_test` and remove type conversion using `np.array()`
     y_pred = model_best.predict(np.array(x_test))
 
     # create submission data

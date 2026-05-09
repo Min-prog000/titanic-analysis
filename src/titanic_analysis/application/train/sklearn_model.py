@@ -56,7 +56,7 @@ def train_sklearn_model(
 ) -> None:
     """Train using sklearn models
 
-    This function preprocess, training, and generate submission csv
+    This function performs preprocess, training, and generate submission csv
         using sklearn models (ex. LogisticRegression, GradientBoostingClassifier, ...)
 
     Args:
@@ -103,13 +103,14 @@ def create_dataset(
     df_test = pd.read_csv(test_dataset_path)
 
     # Preprocess
+    # training data
     x_train, x_test = preprocess_load_data(
         logger,
         df_train,
         df_test,
     )
 
-    # データセット
+    # label
     y_train = np.array(df_train.loc[:, TARGET_COLUMN])
     passenger_ids = df_test[ID_COLUMN]
 

@@ -212,8 +212,9 @@ output/
 version.py
 id/
 tensorboard_log/
-model/gbdt/
 model/logreg/
+model/gbdt/
+model/xgboost
 model/onnx/
 notebooks/*
 !main_notebook.ipynb

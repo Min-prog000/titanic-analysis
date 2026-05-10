@@ -36,6 +36,7 @@ def generate_parser() -> argparse.ArgumentParser:
         choices=[
             TrainMethod.LOGISTIC_REGRESSION.value,
             TrainMethod.GRADIENT_BOOSTING.value,
+            TrainMethod.XGBOOST.value,
             TrainMethod.NEURAL_NETWORK.value,
         ],
         help="Type of the training method (default: 2, meaning NEURAL_NETWORK).",

@@ -6,6 +6,7 @@ from titanic_analysis.application.analysis import analyze
 from titanic_analysis.application.prediction import predict
 from titanic_analysis.application.train.sklearn_model import train_sklearn_model
 from titanic_analysis.application.train.torch_model import train_neural_network
+from titanic_analysis.application.train.xgboost_model import train_xgboost_model
 from titanic_analysis.infrastructure.user.constants import ExecutionMode, TrainMethod
 from titanic_analysis.interface.log.logger import TitanicLogger
 from titanic_analysis.interface.log.utils import generate_log_file_path
@@ -90,6 +91,8 @@ def dispatch_training_model(
 
     if train_method in sklearn_methods:
         train_sklearn_model(logger, execution_mode)
+    elif train_method == TrainMethod.XGBOOST.value:
+        train_xgboost_model(logger)
     elif train_method == TrainMethod.NEURAL_NETWORK.value:
         train_neural_network(logger)
     else:

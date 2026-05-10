@@ -61,6 +61,13 @@ def load_gradient_boosting_classifier_config(
     return GradientBoostingClassifierConfigDTO(**config["model"])
 
 
+def load_xgboost_config(config_path: Path) -> dict:
+    with config_path.open() as file:
+        config = yaml.safe_load(file)
+
+    return dict(**config["model"])
+
+
 def load_pytorch_config(config_path: Path) -> PytorchConfigDTO:
     """Load config file for training using pytorch
 

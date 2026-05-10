@@ -4,6 +4,7 @@
 LOGISTIC_REGRESSION = "logreg"
 RANDOM_FOREST = "rf"
 GRADIENT_BOOSTING_DECISION_TREE = "gbdt"
+XGBOOST = "xgboost"
 
 # データセットのパス
 PATH_TRAIN = "data\\titanic\\train.csv"

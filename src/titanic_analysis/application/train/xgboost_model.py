@@ -15,31 +15,35 @@ from sklearn.preprocessing import MinMaxScaler
 from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
+    BOOSTER_DUMP_FORMAT_XGBOOST,
     CASE_ID_PATH,
     ID_COLUMN,
     PIPELINE_PREFIX_XGBOOST,
     TARGET_COLUMN,
+    TREE_RENDER_FORMAT_XGBOOST,
     XGBOOST_CONFIG_PATH,
     XGBOOST_TREE_PATH,
 )
 from titanic_analysis.application.preprocess import preprocess_load_data
+from titanic_analysis.application.train.utils import (
+    generate_config_path,
+    generate_model_save_path,
+    generate_next_case_id,
+    generate_output_path,
+    get_case_id,
+)
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_xgboost_config,
 )
 from titanic_analysis.infrastructure.io.constants import (
-    CONFIG_FILE_EXTENSION,
-    CONFIG_FILE_PREFIX_XGBOOST,
-    CONFIG_FOLDER_PREFIX,
     PATH_TEST,
     PATH_TRAIN,
-    SAVE_MODEL_FILE_EXTENSION_XGBOOST,
-    SAVE_MODEL_FILE_PARENT_XGBOOST,
-    SAVE_MODEL_FILE_PREFIX_XGBOOST,
-    SAVE_MODEL_ROOT_XGBOOST,
+    SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST,
+    SAVE_TREE_FILE_PREFIX_XGBOOST,
+    SAVE_TREE_INDEX,
     XGBOOST,
 )
 from titanic_analysis.infrastructure.io.utils import CsvUtility
-from titanic_analysis.infrastructure.logic.build.utils import load_case_id
 
 __all__ = ["train_xgboost_model"]
 
@@ -193,35 +197,73 @@ def predict(
 
 
 def save_artifacts(parameters: dict, model: xgb.XGBClassifier) -> None:
+    # 1. get current case id
     case_id = get_case_id(CASE_ID_PATH)
 
-    # 1. save tree visualization
-    save_tree_graph(model, case_id)
+    # 2. save tree visualization
+    save_tree(model, case_id)
 
-    # 2. save config
+    # 3. save config
     save_config(parameters, case_id)
 
-    # 3. save model
+    # 4. save model
     save_model(model, case_id)
 
-
-def get_case_id(case_id_path_str: str) -> int:
-    # Get case id
-    case_id_path = Path(case_id_path_str)
-
-    return load_case_id(case_id_path)
+    # 5. save next case id
+    save_case_id(case_id)
 
 
-def save_tree_graph(model: xgb.XGBClassifier, case_id: int) -> None:
+def save_case_id(case_id: int, file_name_path: str = CASE_ID_PATH) -> None:
+    joblib.dump(generate_next_case_id(case_id), Path(file_name_path))
+
+
+def save_tree(model: xgb.XGBClassifier, case_id: int) -> None:
     # Get tree data
-    booster = model.get_booster()
-    dot_data = booster.get_dump(dump_format="dot")[0]  # 0番目の木
+    dot_data = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
 
     # Save as "PNG"
+    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT_XGBOOST)
+
+
+def tree_to_image(
+    case_id: int,
+    dot_data: str,
+    save_tree_index: int,
+    render_format: str,
+) -> None:
     graph = Source(dot_data)
     # graph.format = "png"
-    graph_path = Path(f"{XGBOOST_TREE_PATH}\\case{case_id}_tree_0")
-    graph.render(graph_path, cleanup=True, format="png")
+    graph_path = get_tree_save_path(case_id, save_tree_index)
+    graph.render(graph_path, cleanup=True, format=render_format)
+
+
+def get_tree_save_path(case_id: int, save_tree_index: int) -> Path:
+    folder_path = get_tree_folder_path()
+    file_path = get_tree_file_path(case_id, save_tree_index)
+
+    return generate_output_path(folder_path, file_path)
+
+
+def get_tree_folder_path(xgboost_tree_path: str = XGBOOST_TREE_PATH) -> Path:
+    return Path(xgboost_tree_path)
+
+
+def get_tree_file_path(case_id: int, save_tree_index: int) -> Path:
+    return Path(generate_tree_file_name_path(case_id, save_tree_index))
+
+
+def generate_tree_file_name_path(case_id: int, save_tree_index: int) -> str:
+    file_prefix = SAVE_TREE_FILE_PREFIX_XGBOOST
+    index_prefix = SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST
+
+    return f"{file_prefix}{case_id}{index_prefix}{save_tree_index}"
+
+
+def get_tree_data(model: xgb.XGBClassifier, index: int) -> str:
+    booster = model.get_booster()
+    dot_data = booster.get_dump(dump_format=BOOSTER_DUMP_FORMAT_XGBOOST)
+
+    return dot_data[index]
 
 
 def save_config(parameters: dict, case_id: int) -> None:
@@ -231,45 +273,9 @@ def save_config(parameters: dict, case_id: int) -> None:
     # Make parent directory
     config_folder_path.mkdir(parents=True, exist_ok=True)
 
-    # Save config
+    # Output config
     with config_file_path.open(mode="w", encoding="utf-8") as f:
         safe_dump(parameters, f, sort_keys=False)
-
-
-def generate_config_path(case_id: int) -> tuple[Path, Path]:
-    folder_path = get_config_folder_path(case_id)
-    file_name_path = get_config_file_name_path(case_id)
-
-    file_path = generate_output_path(folder_path, file_name_path)
-
-    return folder_path, file_path
-
-
-def get_config_folder_path(case_id: int) -> Path:
-    return Path(generate_config_folder_name(case_id))
-
-
-def generate_config_folder_name(
-    case_id: int,
-    prefix: str = CONFIG_FOLDER_PREFIX,
-) -> str:
-    return f"{prefix}{case_id}"
-
-
-def get_config_file_name_path(case_id: int) -> Path:
-    return Path(generate_config_file_name(case_id))
-
-
-def generate_config_file_name(
-    case_id: int,
-    prefix: str = CONFIG_FILE_PREFIX_XGBOOST,
-    extension: str = CONFIG_FILE_EXTENSION,
-) -> str:
-    return f"{prefix}{case_id}{extension}"
-
-
-def generate_output_path(folder_path: Path, file_path: Path) -> Path:
-    return folder_path.joinpath(file_path)
 
 
 def save_model(model: xgb.XGBClassifier, case_id: int) -> None:
@@ -280,40 +286,5 @@ def save_model(model: xgb.XGBClassifier, case_id: int) -> None:
     save_folder_path.mkdir(parents=True, exist_ok=True)
 
     # Save model
+    # NOTE: XGBoost has save method in default.
     model.save_model(save_file_path)
-
-    # Save next case id
-    joblib.dump(case_id + 1, CASE_ID_PATH)
-
-
-def generate_model_save_path(case_id: int) -> tuple[Path, Path]:
-    save_folder_path = get_model_folder_path(case_id)
-    save_file_name_path = get_model_file_name_path(case_id)
-
-    save_file_path = generate_output_path(save_folder_path, save_file_name_path)
-
-    return save_folder_path, save_file_path
-
-
-def get_model_file_name_path(case_id: int) -> Path:
-    return Path(generate_model_file_name(case_id))
-
-
-def generate_model_file_name(
-    case_id: int,
-    prefix: str = SAVE_MODEL_FILE_PREFIX_XGBOOST,
-    extension: str = SAVE_MODEL_FILE_EXTENSION_XGBOOST,
-) -> str:
-    return f"{prefix}{case_id}{extension}"
-
-
-def get_model_folder_path(case_id: int) -> Path:
-    return Path(generate_model_folder_name(case_id))
-
-
-def generate_model_folder_name(
-    case_id: int,
-    root: str = SAVE_MODEL_ROOT_XGBOOST,
-    file_parent: str = SAVE_MODEL_FILE_PARENT_XGBOOST,
-) -> str:
-    return f"{root}{XGBOOST}{file_parent}{case_id}"

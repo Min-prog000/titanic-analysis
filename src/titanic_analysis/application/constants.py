@@ -44,5 +44,8 @@ PIPELINE_PREFIX_XGBOOST = "xgbclassifier"
 PREDICT_SUBMISSION_FORMAT = "%Y%m%d%H%M%S"
 JST = timezone(timedelta(hours=+9), "JST")
 
+CONCAT_WITH_COLUMN = 1
+WRITE_ONLY = "w"
+UTF_8 = "utf-8"
 BOOSTER_DUMP_FORMAT_XGBOOST = "dot"
 TREE_RENDER_FORMAT_XGBOOST = "png"

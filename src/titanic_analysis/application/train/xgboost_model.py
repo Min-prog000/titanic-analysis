@@ -17,19 +17,21 @@ from yaml import safe_dump
 from titanic_analysis.application.constants import (
     BOOSTER_DUMP_FORMAT_XGBOOST,
     CASE_ID_PATH,
+    CONCAT_WITH_COLUMN,
     ID_COLUMN,
     PIPELINE_PREFIX_XGBOOST,
     TARGET_COLUMN,
     TREE_RENDER_FORMAT_XGBOOST,
+    UTF_8,
+    WRITE_ONLY,
     XGBOOST_CONFIG_PATH,
-    XGBOOST_TREE_PATH,
 )
 from titanic_analysis.application.preprocess import preprocess_load_data
 from titanic_analysis.application.train.utils import (
     generate_config_path,
     generate_model_save_path,
     generate_next_case_id,
-    generate_output_path,
+    generate_tree_save_path,
     get_case_id,
 )
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
@@ -38,8 +40,6 @@ from titanic_analysis.infrastructure.io.analysis.config_loader import (
 from titanic_analysis.infrastructure.io.constants import (
     PATH_TEST,
     PATH_TRAIN,
-    SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST,
-    SAVE_TREE_FILE_PREFIX_XGBOOST,
     SAVE_TREE_INDEX,
     XGBOOST,
 )
@@ -88,8 +88,12 @@ def create_dataset(
     train_dataset_path: str,
     test_dataset_path: str,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, Series]:
+    # Data file loading
     df_train = pd.read_csv(train_dataset_path)
     df_test = pd.read_csv(test_dataset_path)
+
+    logger.info("\n%s", df_train.head())
+    logger.info("\n%s", df_test.head())
 
     # Preprocess
     # Training data
@@ -99,20 +103,30 @@ def create_dataset(
         df_test,
     )
 
+    logger.info("\n%s", x_train[:5, :])
+    logger.info("\n%s", x_test[:5, :])
+
     # Training label
     y_train = np.array(df_train.loc[:, TARGET_COLUMN])
-    passenger_ids = df_test[ID_COLUMN]
 
-    logger.info("\n%s", x_train)
-    logger.info("\n%s", x_test)
+    # Submission file column
+    passenger_ids = df_test[ID_COLUMN]
 
     # データセットのサイズが等しいことの確認
     # TODO: Revise to be able to compare preprocessed data columns
-    if not (x_train.shape and x_test.shape):
-        logger.info("Not match datasets shape.")
-        sys.exit()
+    validate_data_shapes(logger, x_train, x_test)
 
     return x_train, y_train, x_test, passenger_ids
+
+
+def validate_data_shapes(
+    logger: Logger,
+    x_train: np.ndarray,
+    x_test: np.ndarray,
+) -> None:
+    if not (x_train.shape and x_test.shape):
+        logger.error("Not match datasets shape.")
+        sys.exit()
 
 
 def train(x_train: np.ndarray, y_train: np.ndarray) -> tuple[dict, xgb.XGBClassifier]:
@@ -187,7 +201,10 @@ def predict(
 
     # Create submission data
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat([passenger_ids, y_pred_df], axis=1)
+    y_pred_df_submission = pd.concat(
+        [passenger_ids, y_pred_df],
+        axis=CONCAT_WITH_COLUMN,
+    )
 
     # Log submission data
     logger.info(y_pred_df_submission)
@@ -233,30 +250,13 @@ def tree_to_image(
 ) -> None:
     graph = Source(dot_data)
     # graph.format = "png"
-    graph_path = get_tree_save_path(case_id, save_tree_index)
-    graph.render(graph_path, cleanup=True, format=render_format)
+    graph_folder_path, graph_file_path = generate_tree_save_path(
+        case_id, save_tree_index
+    )
 
+    graph_folder_path.mkdir(parents=True, exist_ok=True)
 
-def get_tree_save_path(case_id: int, save_tree_index: int) -> Path:
-    folder_path = get_tree_folder_path()
-    file_path = get_tree_file_path(case_id, save_tree_index)
-
-    return generate_output_path(folder_path, file_path)
-
-
-def get_tree_folder_path(xgboost_tree_path: str = XGBOOST_TREE_PATH) -> Path:
-    return Path(xgboost_tree_path)
-
-
-def get_tree_file_path(case_id: int, save_tree_index: int) -> Path:
-    return Path(generate_tree_file_name_path(case_id, save_tree_index))
-
-
-def generate_tree_file_name_path(case_id: int, save_tree_index: int) -> str:
-    file_prefix = SAVE_TREE_FILE_PREFIX_XGBOOST
-    index_prefix = SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST
-
-    return f"{file_prefix}{case_id}{index_prefix}{save_tree_index}"
+    graph.render(graph_file_path, cleanup=True, format=render_format)
 
 
 def get_tree_data(model: xgb.XGBClassifier, index: int) -> str:
@@ -274,7 +274,7 @@ def save_config(parameters: dict, case_id: int) -> None:
     config_folder_path.mkdir(parents=True, exist_ok=True)
 
     # Output config
-    with config_file_path.open(mode="w", encoding="utf-8") as f:
+    with config_file_path.open(mode=WRITE_ONLY, encoding=UTF_8) as f:
         safe_dump(parameters, f, sort_keys=False)
 
 

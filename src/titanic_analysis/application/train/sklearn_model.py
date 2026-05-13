@@ -150,7 +150,7 @@ def run_grid_search(
         params_grid: dict = get_params_grid_logreg(config_loaded)
         pipeline_prefix = PIPELINE_PREFIX_LOGREG
         csv_postfix = LOGISTIC_REGRESSION
-        dump_folder_name = "logreg"
+        dump_folder_name = LOGISTIC_REGRESSION
     # GradientBoostingClassifier
     elif method_id == TrainMethod.GRADIENT_BOOSTING.value:
         config_path = Path(GBDT_CONFIG_PATH)
@@ -159,7 +159,7 @@ def run_grid_search(
         params_grid: dict = get_params_grid_gbdt(x_train.shape[1], config_loaded)
         pipeline_prefix = PIPELINE_PREFIX_GBDT
         csv_postfix = GRADIENT_BOOSTING_DECISION_TREE
-        dump_folder_name = "gbdt"
+        dump_folder_name = GRADIENT_BOOSTING_DECISION_TREE
 
     pipeline = make_pipeline(scaler, model)
 

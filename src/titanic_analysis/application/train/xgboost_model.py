@@ -4,7 +4,6 @@ import sys
 from logging import Logger
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -25,14 +24,15 @@ from titanic_analysis.application.constants import (
     UTF_8,
     WRITE_ONLY,
     XGBOOST_CONFIG_PATH,
+    XGBOOST_TREE_PATH,
 )
 from titanic_analysis.application.preprocess import preprocess_load_data
 from titanic_analysis.application.train.utils import (
     generate_config_path,
     generate_model_save_path,
-    generate_next_case_id,
     generate_tree_save_path,
     get_case_id,
+    save_case_id,
 )
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_xgboost_config,
@@ -66,20 +66,23 @@ def train_xgboost_model(
     Raises:
         FalseComponentError: Raise when missing columns.
     """
-    # data loading
+    # Create dataset
     x_train, y_train, x_test, passenger_ids = create_dataset(
         logger,
         train_dataset_path,
         test_dataset_path,
     )
 
-    # training
+    # Train
     parameters, model = train(x_train, y_train)
 
-    # prediction(create submission file)
-    predict(logger, passenger_ids, x_test, model)
+    # Predict
+    y_pred = predict(logger, passenger_ids, x_test, model)
 
-    # model save
+    # Output submission file
+    CsvUtility.output_csv(y_pred, XGBOOST)
+
+    # Save model
     save_artifacts(parameters, model)
 
 
@@ -130,7 +133,7 @@ def validate_data_shapes(
 
 
 def train(x_train: np.ndarray, y_train: np.ndarray) -> tuple[dict, xgb.XGBClassifier]:
-    # Scaler
+    # Scaler setting
     scaler = MinMaxScaler()
 
     # Model setting
@@ -195,22 +198,25 @@ def predict(
     passenger_ids: Series,
     x_test: np.ndarray,
     model: xgb.XGBClassifier,
-) -> None:
+) -> pd.DataFrame:
     # Predict
     y_pred = model.predict(x_test)
 
-    # Create submission data
+    # Generate submission dataframe
+    y_pred_submission = generate_submission_dataframe(passenger_ids, y_pred)
+
+    # Log submission dataframe
+    logger.info("\n%s", y_pred_submission)
+
+    return y_pred_submission
+
+
+def generate_submission_dataframe(
+    passenger_ids: pd.Series,
+    y_pred: np.ndarray,
+) -> pd.DataFrame:
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat(
-        [passenger_ids, y_pred_df],
-        axis=CONCAT_WITH_COLUMN,
-    )
-
-    # Log submission data
-    logger.info(y_pred_df_submission)
-
-    # Output submission file
-    CsvUtility.output_csv(y_pred_df_submission, XGBOOST)
+    return pd.concat([passenger_ids, y_pred_df], axis=CONCAT_WITH_COLUMN)
 
 
 def save_artifacts(parameters: dict, model: xgb.XGBClassifier) -> None:
@@ -230,10 +236,6 @@ def save_artifacts(parameters: dict, model: xgb.XGBClassifier) -> None:
     save_case_id(case_id)
 
 
-def save_case_id(case_id: int, file_name_path: str = CASE_ID_PATH) -> None:
-    joblib.dump(generate_next_case_id(case_id), Path(file_name_path))
-
-
 def save_tree(model: xgb.XGBClassifier, case_id: int) -> None:
     # Get tree data
     dot_data = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
@@ -251,7 +253,9 @@ def tree_to_image(
     graph = Source(dot_data)
     # graph.format = "png"
     graph_folder_path, graph_file_path = generate_tree_save_path(
-        case_id, save_tree_index
+        XGBOOST_TREE_PATH,
+        case_id,
+        save_tree_index,
     )
 
     graph_folder_path.mkdir(parents=True, exist_ok=True)

@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-from titanic_analysis.application.constants import XGBOOST_TREE_PATH
+import joblib
+
+from titanic_analysis.application.constants import CASE_ID_PATH
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_PREFIX_XGBOOST,
@@ -11,8 +13,8 @@ from titanic_analysis.infrastructure.io.constants import (
     SAVE_MODEL_FILE_PARENT_XGBOOST,
     SAVE_MODEL_FILE_PREFIX_XGBOOST,
     SAVE_MODEL_ROOT_XGBOOST,
-    SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST,
-    SAVE_TREE_FILE_PREFIX_XGBOOST,
+    SAVE_TREE_FILE_INDEX_PREFIX,
+    SAVE_TREE_FILE_PREFIX,
     XGBOOST,
 )
 from titanic_analysis.infrastructure.logic.build.utils import load_case_id
@@ -23,6 +25,7 @@ __all__ = [
     "generate_next_case_id",
     "generate_tree_save_path",
     "get_case_id",
+    "save_case_id",
 ]
 
 
@@ -36,6 +39,19 @@ def generate_output_path(folder_path: Path, file_path: Path) -> Path:
 # ============
 # Save case id
 # ============
+
+
+def save_case_id(case_id: int, file_name_path: str = CASE_ID_PATH) -> None:
+    """Save case id.
+
+    Args:
+        case_id (int): Current case id.
+        file_name_path (str, optional):
+            File path saving case id. Defaults to CASE_ID_PATH.
+    """
+    joblib.dump(generate_next_case_id(case_id), Path(file_name_path))
+
+
 def generate_next_case_id(case_id: int) -> int:
     """Generate next case id.
 
@@ -66,17 +82,22 @@ def get_case_id(case_id_path_str: str) -> int:
 # ===============
 # Save tree graph
 # ===============
-def generate_tree_save_path(case_id: int, save_tree_index: int) -> tuple[Path, Path]:
+def generate_tree_save_path(
+    tree_folder_path_str: str,
+    case_id: int,
+    save_tree_index: int,
+) -> tuple[Path, Path]:
     """Generate file path saving tree data.
 
     Args:
+        tree_folder_path_str (str): tree folder path as `str`.
         case_id (int): case id.
         save_tree_index (int): tree number saving tree data.
 
     Returns:
         tuple[Path, Path]: folder path and file path.
     """
-    folder_path = get_tree_folder_path()
+    folder_path = get_tree_folder_path(tree_folder_path_str)
     file_name_path = get_tree_file_path(case_id, save_tree_index)
 
     file_path = generate_output_path(folder_path, file_name_path)
@@ -85,8 +106,8 @@ def generate_tree_save_path(case_id: int, save_tree_index: int) -> tuple[Path, P
 
 
 # Folder path
-def get_tree_folder_path(xgboost_tree_path: str = XGBOOST_TREE_PATH) -> Path:
-    return Path(xgboost_tree_path)
+def get_tree_folder_path(tree_folder_path: str) -> Path:
+    return Path(tree_folder_path)
 
 
 # File path
@@ -95,8 +116,8 @@ def get_tree_file_path(case_id: int, save_tree_index: int) -> Path:
 
 
 def generate_tree_file_name(case_id: int, save_tree_index: int) -> str:
-    file_prefix = SAVE_TREE_FILE_PREFIX_XGBOOST
-    index_prefix = SAVE_TREE_FILE_INDEX_PREFIX_XGBOOST
+    file_prefix = SAVE_TREE_FILE_PREFIX
+    index_prefix = SAVE_TREE_FILE_INDEX_PREFIX
 
     return f"{file_prefix}{case_id}{index_prefix}{save_tree_index}"
 

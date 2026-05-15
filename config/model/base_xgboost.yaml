@@ -1,3 +1,6 @@
+data:
+  scaler: MinMaxScaler
+
 model:
   random_state: 0
   n_estimators: 100

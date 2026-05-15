@@ -1,10 +1,20 @@
 """Utility module for model training."""
 
+import sys
+from logging import Logger
 from pathlib import Path
 
 import joblib
+import numpy as np
+import pandas as pd
+import xgboost as xgb
+from sklearn.pipeline import Pipeline
 
-from titanic_analysis.application.constants import CASE_ID_PATH
+from titanic_analysis.application.constants import (
+    CASE_ID_PATH,
+    CONCAT_WITH_COLUMN,
+    TARGET_COLUMN,
+)
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_PREFIX_XGBOOST,
@@ -34,6 +44,63 @@ __all__ = [
 # =======
 def generate_output_path(folder_path: Path, file_path: Path) -> Path:
     return folder_path.joinpath(file_path)
+
+
+def generate_submission_dataframe(
+    passenger_ids: pd.Series,
+    y_pred: np.ndarray,
+) -> pd.DataFrame:
+    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
+    return pd.concat([passenger_ids, y_pred_df], axis=CONCAT_WITH_COLUMN)
+
+
+def load_data_from_csv(
+    train_dataset_path: str,
+    test_dataset_path: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    df_train = pd.read_csv(train_dataset_path)
+    df_test = pd.read_csv(test_dataset_path)
+
+    return df_train, df_test
+
+
+def extract_target_column(df_train: pd.DataFrame) -> np.ndarray:
+    target_column_series = df_train.loc[:, TARGET_COLUMN]
+
+    return series_to_array(target_column_series)
+
+
+def extract_id_column(df_test: pd.DataFrame, id_column_name: str) -> pd.Series:
+    return df_test[id_column_name]
+
+
+def validate_data_shapes(
+    logger: Logger,
+    x_train: np.ndarray,
+    x_test: np.ndarray,
+) -> None:
+    if not (x_train.shape and x_test.shape):
+        logger.error("Not match datasets shape.")
+        sys.exit()
+
+
+def series_to_array(target_column: pd.Series) -> np.ndarray:
+    return np.array(target_column)
+
+
+def log_array_head(logger: Logger, array: np.ndarray, row_index: int = 5) -> None:
+    logger.info("\n%s", array[:row_index, :])
+
+
+def log_df_head(logger: Logger, dataframe: pd.DataFrame) -> None:
+    logger.info("\n%s", dataframe.head())
+
+
+def get_pipeline_model(
+    pipeline: Pipeline,
+    model_key_prefix: str,
+) -> xgb.XGBClassifier:
+    return pipeline.named_steps[model_key_prefix]
 
 
 # ============

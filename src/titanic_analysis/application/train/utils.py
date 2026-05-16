@@ -13,8 +13,10 @@ from sklearn.pipeline import Pipeline
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     CONCAT_WITH_COLUMN,
+    ID_COLUMN,
     TARGET_COLUMN,
 )
+from titanic_analysis.application.preprocess import preprocess_load_data
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_PREFIX_XGBOOST,
@@ -42,6 +44,43 @@ __all__ = [
 # =======
 # Utility
 # =======
+def create_dataset(
+    logger: Logger,
+    train_dataset_path: str,
+    test_dataset_path: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, pd.Series]:
+    # Data file loading
+    df_train, df_test = load_data_from_csv(train_dataset_path, test_dataset_path)
+
+    # Log dataframe head
+    log_df_head(logger, df_train)
+    log_df_head(logger, df_test)
+
+    # Preprocess
+    # Training data
+    x_train, x_test = preprocess_load_data(
+        logger,
+        df_train,
+        df_test,
+    )
+
+    # Log dataset head
+    log_array_head(logger, x_train)
+    log_array_head(logger, x_test)
+
+    # Training label
+    y_train = extract_target_column(df_train)
+
+    # Submission file column
+    passenger_ids = extract_id_column(df_test, ID_COLUMN)
+
+    # データセットのサイズが等しいことの確認
+    # TODO: Revise to be able to compare preprocessed data columns
+    validate_data_shapes(logger, x_train, x_test)
+
+    return x_train, y_train, x_test, passenger_ids
+
+
 def generate_output_path(folder_path: Path, file_path: Path) -> Path:
     return folder_path.joinpath(file_path)
 

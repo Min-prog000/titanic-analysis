@@ -15,7 +15,6 @@ from yaml import safe_dump
 from titanic_analysis.application.constants import (
     BOOSTER_DUMP_FORMAT_XGBOOST,
     CASE_ID_PATH,
-    ID_COLUMN,
     PIPELINE_PREFIX_XGBOOST,
     TREE_RENDER_FORMAT_XGBOOST,
     UTF_8,
@@ -23,21 +22,15 @@ from titanic_analysis.application.constants import (
     XGBOOST_CONFIG_PATH,
     XGBOOST_TREE_PATH,
 )
-from titanic_analysis.application.preprocess import preprocess_load_data
 from titanic_analysis.application.train.utils import (
-    extract_id_column,
-    extract_target_column,
+    create_dataset,
     generate_config_path,
     generate_model_save_path,
     generate_submission_dataframe,
     generate_tree_save_path,
     get_case_id,
     get_pipeline_model,
-    load_data_from_csv,
-    log_array_head,
-    log_df_head,
     save_case_id,
-    validate_data_shapes,
 )
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_xgboost_config,
@@ -89,43 +82,6 @@ def train_xgboost_model(
 
     # Save model
     save_artifacts(parameters, model)
-
-
-def create_dataset(
-    logger: Logger,
-    train_dataset_path: str,
-    test_dataset_path: str,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, Series]:
-    # Data file loading
-    df_train, df_test = load_data_from_csv(train_dataset_path, test_dataset_path)
-
-    # Log dataframe head
-    log_df_head(logger, df_train)
-    log_df_head(logger, df_test)
-
-    # Preprocess
-    # Training data
-    x_train, x_test = preprocess_load_data(
-        logger,
-        df_train,
-        df_test,
-    )
-
-    # Log dataset head
-    log_array_head(logger, x_train)
-    log_array_head(logger, x_test)
-
-    # Training label
-    y_train = extract_target_column(df_train)
-
-    # Submission file column
-    passenger_ids = extract_id_column(df_test, ID_COLUMN)
-
-    # データセットのサイズが等しいことの確認
-    # TODO: Revise to be able to compare preprocessed data columns
-    validate_data_shapes(logger, x_train, x_test)
-
-    return x_train, y_train, x_test, passenger_ids
 
 
 def train(x_train: np.ndarray, y_train: np.ndarray) -> tuple[dict, xgb.XGBClassifier]:

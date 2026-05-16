@@ -15,6 +15,8 @@ PATH_TEST = "data\\titanic\\test.csv"
 CONFIG_FILE_EXTENSION = ".yaml"
 CONFIG_FOLDER_PREFIX = ".\\output\\config\\case"
 
+MODEL_SAVE_PROTOCOL = 5
+
 CONFIG_FILE_PREFIX_XGBOOST = "config_case"
 
 SAVE_MODEL_FILE_PREFIX_XGBOOST = "case_"

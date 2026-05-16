@@ -1,6 +1,5 @@
 """Training use case using sklearn"""
 
-import sys
 from logging import Logger
 from pathlib import Path
 
@@ -12,20 +11,23 @@ from pandas import Series
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import export_graphviz
 
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     GBDT_CONFIG_PATH,
-    ID_COLUMN,
     LOGREG_CONFIG_PATH,
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
-    TARGET_COLUMN,
 )
-from titanic_analysis.application.preprocess import preprocess_load_data
+from titanic_analysis.application.train.utils import (
+    create_dataset,
+    generate_submission_dataframe,
+    get_case_id,
+    save_case_id,
+)
 from titanic_analysis.domain.model.types import SklearnModelTypes
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_gradient_boosting_classifier_config,
@@ -34,6 +36,7 @@ from titanic_analysis.infrastructure.io.analysis.config_loader import (
 from titanic_analysis.infrastructure.io.constants import (
     GRADIENT_BOOSTING_DECISION_TREE,
     LOGISTIC_REGRESSION,
+    MODEL_SAVE_PROTOCOL,
     PATH_TEST,
     PATH_TRAIN,
 )
@@ -42,7 +45,6 @@ from titanic_analysis.infrastructure.io.training_pipeline.dto import (
     LogisticRegressionConfigDTO,
 )
 from titanic_analysis.infrastructure.io.utils import CsvUtility
-from titanic_analysis.infrastructure.logic.build.utils import load_case_id
 from titanic_analysis.infrastructure.user.constants import TrainMethod
 
 __all__ = ["train_sklearn_model"]
@@ -76,7 +78,7 @@ def train_sklearn_model(
     )
 
     # training
-    csv_postfix, dump_folder_name, model_best = run_grid_search(
+    csv_postfix, dump_folder_name, best_model = run_grid_search(
         logger,
         method_id,
         x_train,
@@ -84,46 +86,28 @@ def train_sklearn_model(
     )
 
     # prediction(create submission file)
-    predict_with_sklearn_method(logger, passenger_ids, x_test, csv_postfix, model_best)
+    y_pred = predict(logger, passenger_ids, x_test, best_model)
 
-    # model save
-    # 1. save tree visualization
-    if isinstance(model_best, GradientBoostingClassifier):
-        save_tree_graph(model_best)
-    # 2. save model
-    save_model(dump_folder_name, model_best)
+    # output
+    CsvUtility.output_csv(y_pred, csv_postfix)
+
+    # Save experiment results and case id
+    save_artifacts(dump_folder_name, best_model)
 
 
-def create_dataset(
-    logger: Logger,
-    train_dataset_path: str,
-    test_dataset_path: str,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, Series]:
-    df_train = pd.read_csv(train_dataset_path)
-    df_test = pd.read_csv(test_dataset_path)
+def save_artifacts(dump_folder_name: str, best_model: SklearnModelTypes) -> None:
+    # 1. Get current case id
+    case_id = get_case_id(CASE_ID_PATH)
 
-    # Preprocess
-    # training data
-    x_train, x_test = preprocess_load_data(
-        logger,
-        df_train,
-        df_test,
-    )
+    # 2. Save tree visualization (if model is tree)
+    if isinstance(best_model, GradientBoostingClassifier):
+        save_tree_graph(best_model)
 
-    # label
-    y_train = np.array(df_train.loc[:, TARGET_COLUMN])
-    passenger_ids = df_test[ID_COLUMN]
+    # 3. Save model
+    save_model(dump_folder_name, case_id, best_model)
 
-    logger.info("\n%s", x_train)
-    logger.info("\n%s", x_test)
-
-    # データセットのサイズが等しいことの確認
-    # TODO: Revise to be able to compare preprocessed data columns
-    if not (x_train.shape and x_test.shape):
-        logger.info("Not match datasets shape.")
-        sys.exit()
-
-    return x_train, y_train, x_test, passenger_ids
+    # 4. Save next case id
+    save_case_id(case_id, CASE_ID_PATH)
 
 
 def run_grid_search(
@@ -168,19 +152,82 @@ def run_grid_search(
     search.fit(x_train, y_train)
 
     # グリッドサーチ結果の表示
-    result_search = search.cv_results_
-    result_search_df = pd.DataFrame(result_search).iloc[:, 4:]
-    result_search_df_rounded = result_search_df.round(3)
-    logger.info(result_search_df_rounded)
+    log_grid_search_result(logger, search)
 
     # グリッドサーチのベストスコア表示
-    logger.info("Grid search best score: %s", search.best_score_)
-    logger.info("Hyper parameters: %s", search.best_params_)
+    log_best_model_info(logger, search)
 
     # 最高精度のモデルによる推論
-    model_best: SklearnModelTypes = search.best_estimator_.named_steps[pipeline_prefix]
+    best_model: SklearnModelTypes = get_search_best_model(pipeline_prefix, search)
 
-    return csv_postfix, dump_folder_name, model_best
+    return csv_postfix, dump_folder_name, best_model
+
+
+def get_search_best_model(
+    pipeline_prefix: str,
+    search: GridSearchCV[Pipeline],
+) -> SklearnModelTypes:
+    return search.best_estimator_.named_steps[pipeline_prefix]
+
+
+def log_best_model_info(logger: Logger, search: GridSearchCV) -> None:
+    log_grid_search_best_score(logger, search)
+    log_grid_search_best_parameters(logger, search)
+
+
+def log_grid_search_best_parameters(logger: Logger, search: GridSearchCV) -> None:
+    best_params = get_search_best_params(search)
+
+    logger.info("Grid search Best hyper parameters: %s", best_params)
+
+
+def get_search_best_params(search: GridSearchCV) -> dict:
+    return search.best_params_
+
+
+def log_grid_search_best_score(logger: Logger, search: GridSearchCV) -> None:
+    best_score = get_search_best_score(search)
+
+    logger.info("Grid search best score: %s", best_score)
+
+
+def get_search_best_score(search: GridSearchCV) -> float:
+    return search.best_score_
+
+
+def log_grid_search_result(logger: Logger, search: GridSearchCV) -> None:
+    # Preprocess
+    result_rounded = generate_grid_search_result(search)
+
+    # Log grid search result
+    logger.info("\n%s", result_rounded)
+
+
+def generate_grid_search_result(search: GridSearchCV) -> pd.DataFrame:
+    result_dict = get_grid_search_result(search)
+    result_df = dict_to_df(result_dict)
+    result_without_execution_time = eliminate_execution_time(result_df)
+
+    return round_result_figure(result_without_execution_time)
+
+
+def round_result_figure(
+    result_search_df: pd.DataFrame,
+    figure: int = 3,
+) -> pd.DataFrame:
+    return result_search_df.round(figure)
+
+
+def eliminate_execution_time(search_result: pd.DataFrame) -> pd.DataFrame:
+    return search_result.iloc[:, 4:]
+
+
+def dict_to_df(result_search: dict) -> pd.DataFrame:
+    return pd.DataFrame(result_search)
+
+
+def get_grid_search_result(search: GridSearchCV) -> dict:
+    return search.cv_results_
 
 
 def get_params_grid_logreg(
@@ -221,36 +268,29 @@ def get_params_grid_gbdt(
     }
 
 
-def predict_with_sklearn_method(
+def predict(
     logger: Logger,
-    passenger_id: Series,
+    passenger_ids: Series,
     x_test: np.ndarray,
-    csv_postfix: str,
-    model_best: SklearnModelTypes,
-) -> None:
+    best_model: SklearnModelTypes,
+) -> pd.DataFrame:
     # predict
-    # TODO: Check type of `x_test` and remove type conversion using `np.array()`
-    y_pred = model_best.predict(np.array(x_test))
+    y_pred = best_model.predict(x_test)
 
     # create submission data
     # 提出用データの作成
-    y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
-    y_pred_df_submission = pd.concat(
-        [passenger_id, y_pred_df],
-        axis=1,
-    )
-
-    # output
-    CsvUtility.output_csv(y_pred_df_submission, csv_postfix)
+    y_pred_submission = generate_submission_dataframe(passenger_ids, y_pred)
 
     # 提出用データの表示
-    logger.info(y_pred_df_submission)
+    logger.info(y_pred_submission)
+
+    return y_pred_submission
 
 
-def save_tree_graph(model_best: GradientBoostingClassifier) -> None:
+def save_tree_graph(best_model: GradientBoostingClassifier) -> None:
     # graphviz, pydotplus使用
     dot_data = export_graphviz(
-        model_best.estimators_[0, 0],
+        best_model.estimators_[0, 0],
         out_file=None,
         filled=True,
         rounded=True,
@@ -274,13 +314,24 @@ def save_tree_graph(model_best: GradientBoostingClassifier) -> None:
     # viz.save(filename_dtreeviz)
 
 
-def save_model(dump_folder_name: str, model_best: SklearnModelTypes) -> None:
-    # case番号はPytorchと共有
-    case_id_path = Path(CASE_ID_PATH)
-    case_id = load_case_id(case_id_path)
-    dump_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
+def save_model(
+    dump_folder_name: str,
+    case_id: int,
+    best_model: SklearnModelTypes,
+) -> None:
+    # Generate save path
+    save_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
     model_file_name = Path(f"case_{case_id}.joblib")
-    dump_folder_path.mkdir(parents=True, exist_ok=True)
-    model_dump_path = dump_folder_path.joinpath(model_file_name)
-    joblib.dump(model_best, model_dump_path, protocol=5)
-    joblib.dump(case_id + 1, CASE_ID_PATH)
+    save_folder_path.mkdir(parents=True, exist_ok=True)
+    model_save_path = save_folder_path.joinpath(model_file_name)
+
+    # Save model information
+    save_model_data(best_model, model_save_path, MODEL_SAVE_PROTOCOL)
+
+
+def save_model_data(
+    best_model: SklearnModelTypes,
+    model_save_path: Path,
+    protocol: int,
+) -> None:
+    joblib.dump(best_model, model_save_path, protocol=protocol)

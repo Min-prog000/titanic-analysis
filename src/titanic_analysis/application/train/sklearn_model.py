@@ -1,7 +1,9 @@
 """Training use case using sklearn"""
 
+import sys
 from logging import Logger
 from pathlib import Path
+from typing import Never
 
 import joblib
 import numpy as np
@@ -18,7 +20,6 @@ from sklearn.tree import export_graphviz
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     GBDT_CONFIG_PATH,
-    LOGREG_CONFIG_PATH,
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
 )
@@ -28,7 +29,7 @@ from titanic_analysis.application.train.utils import (
     get_case_id,
     save_case_id,
 )
-from titanic_analysis.domain.model.types import SklearnModelTypes
+from titanic_analysis.domain.model.types import ConfigDtoTypes, SklearnModelTypes
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_gradient_boosting_classifier_config,
     load_logistic_regression_config,
@@ -78,7 +79,7 @@ def train_sklearn_model(
     )
 
     # training
-    csv_postfix, dump_folder_name, best_model = run_grid_search(
+    best_model = run_grid_search(
         logger,
         method_id,
         x_train,
@@ -89,13 +90,29 @@ def train_sklearn_model(
     y_pred = predict(logger, passenger_ids, x_test, best_model)
 
     # output
+    csv_postfix = get_csv_postfix(method_id, logger)
     CsvUtility.output_csv(y_pred, csv_postfix)
 
     # Save experiment results and case id
-    save_artifacts(dump_folder_name, best_model)
+    save_artifacts(logger, method_id, best_model)
 
 
-def save_artifacts(dump_folder_name: str, best_model: SklearnModelTypes) -> None:
+def get_csv_postfix(method_id: int, logger: Logger) -> str:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        return LOGISTIC_REGRESSION
+    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        return GRADIENT_BOOSTING_DECISION_TREE
+    logger.error("Not defined method was executed.")
+    sys.exit()
+
+
+def save_artifacts(
+    logger: Logger,
+    method_id: int,
+    best_model: SklearnModelTypes,
+) -> None:
+    save_folder_name = get_save_folder_name(logger, method_id)
+
     # 1. Get current case id
     case_id = get_case_id(CASE_ID_PATH)
 
@@ -104,10 +121,19 @@ def save_artifacts(dump_folder_name: str, best_model: SklearnModelTypes) -> None
         save_tree_graph(best_model)
 
     # 3. Save model
-    save_model(dump_folder_name, case_id, best_model)
+    save_model(save_folder_name, case_id, best_model)
 
     # 4. Save next case id
     save_case_id(case_id, CASE_ID_PATH)
+
+
+def get_save_folder_name(logger: Logger, method_id: int) -> str:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        return LOGISTIC_REGRESSION
+    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        return GRADIENT_BOOSTING_DECISION_TREE
+    exit_due_to_not_defined_method(logger)
+    return None
 
 
 def run_grid_search(
@@ -115,52 +141,94 @@ def run_grid_search(
     method_id: int,
     x_train: np.ndarray,
     y_train: np.ndarray,
-) -> tuple[str, str, SklearnModelTypes]:
-    # Scaling
+) -> SklearnModelTypes:
+    # Scaler
     scaler = MinMaxScaler()
 
     # Parameters
-    model = None
-    params_grid = {}
-    pipeline_prefix = ""
-    csv_postfix = ""
-    dump_folder_name = ""
+    config_loaded = load_config(method_id, logger)
+    num_x_train_col = x_train.shape[1]
+    params_grid = generate_grid_search_parameters(
+        num_x_train_col,
+        config_loaded,
+        logger,
+    )
 
-    # LogisticRegression
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        config_path = Path(LOGREG_CONFIG_PATH)
-        config_loaded = load_logistic_regression_config(config_path)
-        model = LogisticRegression(random_state=config_loaded.random_state)
-        params_grid: dict = get_params_grid_logreg(config_loaded)
-        pipeline_prefix = PIPELINE_PREFIX_LOGREG
-        csv_postfix = LOGISTIC_REGRESSION
-        dump_folder_name = LOGISTIC_REGRESSION
-    # GradientBoostingClassifier
-    elif method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        config_path = Path(GBDT_CONFIG_PATH)
-        config_loaded = load_gradient_boosting_classifier_config(config_path)
-        model = GradientBoostingClassifier(random_state=config_loaded.random_state)
-        params_grid: dict = get_params_grid_gbdt(x_train.shape[1], config_loaded)
-        pipeline_prefix = PIPELINE_PREFIX_GBDT
-        csv_postfix = GRADIENT_BOOSTING_DECISION_TREE
-        dump_folder_name = GRADIENT_BOOSTING_DECISION_TREE
-
+    # Model setting
+    model = generate_model(method_id, config_loaded.random_state, logger)
     pipeline = make_pipeline(scaler, model)
 
-    # グリッドサーチ
+    # Grid search setting
     search = GridSearchCV(pipeline, params_grid, n_jobs=2, verbose=10)
+
+    # Execute grid search
     search.fit(x_train, y_train)
 
-    # グリッドサーチ結果の表示
+    # Log grid search result
     log_grid_search_result(logger, search)
-
-    # グリッドサーチのベストスコア表示
     log_best_model_info(logger, search)
 
-    # 最高精度のモデルによる推論
+    # Predict with best model
+    pipeline_prefix = get_pipeline_prefix(method_id, logger)
     best_model: SklearnModelTypes = get_search_best_model(pipeline_prefix, search)
 
-    return csv_postfix, dump_folder_name, best_model
+    return best_model
+
+
+def generate_grid_search_parameters(
+    num_x_train_column: int,
+    config_loaded: ConfigDtoTypes,
+    logger: Logger,
+) -> dict:
+    # LogisticRegression
+    if isinstance(config_loaded, LogisticRegressionConfigDTO):
+        return get_params_grid_logreg(config_loaded)
+    # GradientBoostingClassifier
+    if isinstance(config_loaded, GradientBoostingClassifierConfigDTO):
+        return get_params_grid_gbdt(
+            num_x_train_column,
+            config_loaded,
+        )
+    exit_due_to_not_defined_method(logger)
+    return None
+
+
+def load_config(method_id: int, logger: Logger) -> ConfigDtoTypes:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        config_path = Path(LOGISTIC_REGRESSION)
+        return load_logistic_regression_config(config_path)
+    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        config_path = Path(GBDT_CONFIG_PATH)
+        return load_gradient_boosting_classifier_config(config_path)
+    exit_due_to_not_defined_method(logger)
+    return None
+
+
+def generate_model(
+    method_id: int,
+    random_state: int,
+    logger: Logger,
+) -> SklearnModelTypes:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        return LogisticRegression(random_state=random_state)
+    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        return GradientBoostingClassifier(random_state=random_state)
+    exit_due_to_not_defined_method(logger)
+    return None
+
+
+def get_pipeline_prefix(method_id: int, logger: Logger) -> str:
+    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
+        return PIPELINE_PREFIX_LOGREG
+    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
+        return PIPELINE_PREFIX_GBDT
+    exit_due_to_not_defined_method(logger)
+    return None
+
+
+def exit_due_to_not_defined_method(logger: Logger) -> Never:
+    logger.error("Not defined method was executed.")
+    sys.exit()
 
 
 def get_search_best_model(
@@ -315,12 +383,12 @@ def save_tree_graph(best_model: GradientBoostingClassifier) -> None:
 
 
 def save_model(
-    dump_folder_name: str,
+    save_folder_name: str,
     case_id: int,
     best_model: SklearnModelTypes,
 ) -> None:
     # Generate save path
-    save_folder_path = Path(f".\\model\\{dump_folder_name}\\case_{case_id}")
+    save_folder_path = Path(f".\\model\\{save_folder_name}\\case_{case_id}")
     model_file_name = Path(f"case_{case_id}.joblib")
     save_folder_path.mkdir(parents=True, exist_ok=True)
     model_save_path = save_folder_path.joinpath(model_file_name)

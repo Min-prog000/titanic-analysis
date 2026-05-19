@@ -19,8 +19,16 @@ class GradientBoostingClassifierConfigDTO(BaseModel):
     learning_rate: float
     n_estimators: int
     max_depth: int
-    max_features: int
+    max_features: dict[str, int]
     subsample: float
+
+
+class XGBoostConfigDTO(BaseModel):
+    """DTO for xgboost"""
+
+    random_state: int
+    n_estimators: int
+    max_depth: int
 
 
 class PytorchConfigDTO(BaseModel):

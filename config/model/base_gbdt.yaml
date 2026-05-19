@@ -3,7 +3,9 @@ model:
   learning_rate: 1e-2
   n_estimators: 100
   max_depth: 5
-  max_features: 7
+  max_features:
+    min: 7
+    max: 10  
   subsample: 0.1
 
 grid_search:

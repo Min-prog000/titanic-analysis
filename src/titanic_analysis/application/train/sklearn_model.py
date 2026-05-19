@@ -147,12 +147,14 @@ def run_grid_search(
 
     # Parameters
     config_loaded = load_config(method_id, logger)
-    num_x_train_col = x_train.shape[1]
-    params_grid = generate_grid_search_parameters(
-        num_x_train_col,
-        config_loaded,
-        logger,
-    )
+    col_num = x_train.shape[1]
+    if (
+        isinstance(config_loaded, GradientBoostingClassifierConfigDTO)
+        and config_loaded.max_features["max"] + 1 > col_num
+    ):
+        raise NotImplementedError
+
+    params_grid = generate_grid_search_parameters(config_loaded, logger)
 
     # Model setting
     model = generate_model(method_id, config_loaded.random_state, logger)
@@ -176,7 +178,6 @@ def run_grid_search(
 
 
 def generate_grid_search_parameters(
-    num_x_train_column: int,
     config_loaded: ConfigDtoTypes,
     logger: Logger,
 ) -> dict:
@@ -185,10 +186,7 @@ def generate_grid_search_parameters(
         return get_params_grid_logreg(config_loaded)
     # GradientBoostingClassifier
     if isinstance(config_loaded, GradientBoostingClassifierConfigDTO):
-        return get_params_grid_gbdt(
-            num_x_train_column,
-            config_loaded,
-        )
+        return get_params_grid_gbdt(config_loaded)
     exit_due_to_not_defined_method(logger)
     return None
 
@@ -316,10 +314,7 @@ def get_params_grid_logreg(
     }
 
 
-def get_params_grid_gbdt(
-    max_features_max: int,
-    config_loaded: GradientBoostingClassifierConfigDTO,
-) -> dict:
+def get_params_grid_gbdt(config_loaded: GradientBoostingClassifierConfigDTO) -> dict:
     return {
         f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
             config_loaded.learning_rate,
@@ -329,8 +324,8 @@ def get_params_grid_gbdt(
         # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
         f"{PIPELINE_PREFIX_GBDT}__max_depth": range(config_loaded.max_depth, 8),
         f"{PIPELINE_PREFIX_GBDT}__max_features": range(
-            config_loaded.max_features,
-            max_features_max,
+            config_loaded.max_features["min"],
+            config_loaded.max_features["max"],
         ),
         # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
     }

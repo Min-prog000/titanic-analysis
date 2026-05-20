@@ -102,8 +102,8 @@ def get_csv_postfix(method_id: int, logger: Logger) -> str:
         return LOGISTIC_REGRESSION
     if method_id == TrainMethod.GRADIENT_BOOSTING.value:
         return GRADIENT_BOOSTING_DECISION_TREE
-    logger.error("Not defined method was executed.")
-    sys.exit()
+    exit_due_to_not_defined_method(logger)
+    return None
 
 
 def save_artifacts(
@@ -147,7 +147,7 @@ def run_grid_search(
 
     # Parameters
     config_loaded = load_config(method_id, logger)
-    col_num = x_train.shape[1]
+    col_num = get_array_col_num(x_train)
     if (
         isinstance(config_loaded, GradientBoostingClassifierConfigDTO)
         and config_loaded.max_features["max"] + 1 > col_num
@@ -175,6 +175,10 @@ def run_grid_search(
     best_model: SklearnModelTypes = get_search_best_model(pipeline_prefix, search)
 
     return best_model
+
+
+def get_array_col_num(x_train: np.ndarray) -> int:
+    return x_train.shape[1]
 
 
 def generate_grid_search_parameters(

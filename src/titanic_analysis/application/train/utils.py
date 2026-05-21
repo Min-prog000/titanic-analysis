@@ -17,6 +17,11 @@ from titanic_analysis.application.constants import (
     TARGET_COLUMN,
 )
 from titanic_analysis.application.preprocess import preprocess_load_data
+from titanic_analysis.application.train.strategy import (
+    GradientBoostingStrategy,
+    LogisticRegressionStrategy,
+    ModelStrategy,
+)
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_PREFIX_XGBOOST,
@@ -30,6 +35,7 @@ from titanic_analysis.infrastructure.io.constants import (
     XGBOOST,
 )
 from titanic_analysis.infrastructure.logic.build.utils import load_case_id
+from titanic_analysis.infrastructure.user.constants import TrainMethod
 
 __all__ = [
     "generate_config_path",
@@ -44,6 +50,20 @@ __all__ = [
 # =======
 # Utility
 # =======
+STRATEGY_MAP = {
+    TrainMethod.LOGISTIC_REGRESSION.value: LogisticRegressionStrategy(),
+    TrainMethod.GRADIENT_BOOSTING.value: GradientBoostingStrategy(),
+}
+
+
+def get_strategy(method_id: int) -> ModelStrategy:
+    try:
+        return STRATEGY_MAP[method_id]
+    except KeyError:
+        msg = f"Unknown method_id: {method_id}"
+        raise ValueError(msg)
+
+
 def create_dataset(
     logger: Logger,
     train_dataset_path: str,

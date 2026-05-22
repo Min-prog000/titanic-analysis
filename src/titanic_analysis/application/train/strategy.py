@@ -28,6 +28,8 @@ M = TypeVar("M")
 
 
 class ModelStrategy[C, M]:
+    """Strategy interface"""
+
     def load_config(self) -> C:
         """Load config file.
 
@@ -40,12 +42,42 @@ class ModelStrategy[C, M]:
         raise NotImplementedError
 
     def create_model(self, random_state: int) -> M:
+        """Build model.
+
+        Args:
+            random_state (int): Parameter for model reproducibility
+
+        Raises:
+            NotImplementedError: Not implemented error
+
+        Returns:
+            M: Sklearn model
+        """
         raise NotImplementedError
 
     def generate_params(self, config: C) -> dict:
+        """Generate parameters dict for grid search.
+
+        Args:
+            config (C): Config DTO types
+
+        Raises:
+            NotImplementedError: Not implemented error
+
+        Returns:
+            dict: Parameters dict for grid search
+        """
         raise NotImplementedError
 
     def get_pipeline_prefix(self) -> str:
+        """Get model identifier prefix for pipeline.
+
+        Raises:
+            NotImplementedError: Not implemented error
+
+        Returns:
+            str: Prefix
+        """
         raise NotImplementedError
 
 

@@ -10,10 +10,6 @@ from titanic_analysis.application.constants import (
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
 )
-from titanic_analysis.infrastructure.io.analysis.config_loader import (
-    load_gradient_boosting_classifier_config,
-    load_logistic_regression_config,
-)
 from titanic_analysis.infrastructure.io.constants import (
     GRADIENT_BOOSTING_DECISION_TREE,
     LOGISTIC_REGRESSION,
@@ -84,40 +80,84 @@ class ModelStrategy[C, M]:
 class LogisticRegressionStrategy(
     ModelStrategy[LogisticRegressionConfigDTO, LogisticRegression],
 ):
-    def load_config(self) -> LogisticRegressionConfigDTO:
-        return load_logistic_regression_config(Path(LOGISTIC_REGRESSION))
+    """Strategy for logistic regression.
 
-    def load_logistic_regression_config(
-        self,
-        config_path: Path,
-    ) -> LogisticRegressionConfigDTO:
+    Args:
+        ModelStrategy (LogisticRegressionConfigDTO, LogisticRegression):
+            Strategy interface
+    """
+
+    def load_config(self) -> LogisticRegressionConfigDTO:
+        """Load config file for `LogisticRegression`.
+
+        Returns:
+            LogisticRegressionConfigDTO: Parameters DTO
+        """
+        config_path = Path("config/model/base_logreg.yaml")
+
         with config_path.open() as file:
             config = yaml.safe_load(file)
 
         return LogisticRegressionConfigDTO(**config["model"])
 
     def create_model(self, random_state: int) -> LogisticRegression:
+        """Build `LogisticRegression` model.
+
+        Args:
+            random_state (int): `random_state` for `LogisticRegression` argument
+
+        Returns:
+            LogisticRegression: Model instance
+        """
         return LogisticRegression(random_state=random_state)
 
     def generate_params(self, config: LogisticRegressionConfigDTO) -> dict:
+        """Generate parameters dict for `LogisticRegression`.
+
+        Args:
+            config (LogisticRegressionConfigDTO): Config DTO
+
+        Returns:
+            dict: Config dict
+        """
         # max_iterの範囲生成
-        max_iter_scope = [
-            np.int16(max_iter)
-            for max_iter in np.linspace(config.max_iter, 1000, num=10)
-        ]
         return {
             "logisticregression__C": np.logspace(config.C, 3, num=7),
             "logisticregression__class_weight": [
                 config.class_weight,
                 {0: 1.0, 1: 0.5},
             ],
-            "logisticregression__max_iter": max_iter_scope,
+            "logisticregression__max_iter": self.get_max_iter(config),
         }
 
+    def get_max_iter(self, config: LogisticRegressionConfigDTO) -> list:
+        """Get `max_iter` scope for grid search.
+
+        Args:
+            config (LogisticRegressionConfigDTO): Config DTO
+
+        Returns:
+            list: `max_iter` scope
+        """
+        return [
+            np.int16(max_iter)
+            for max_iter in np.linspace(config.max_iter, 1000, num=10)
+        ]
+
     def get_pipeline_prefix(self) -> str:
+        """Get prefix string for model identifier of `Pipeline`.
+
+        Returns:
+            str: Model prefix in `Pipeline`
+        """
         return PIPELINE_PREFIX_LOGREG
 
     def get_save_folder_name(self) -> str:
+        """Get folder name string for model saving.
+
+        Returns:
+            str: Folder name string
+        """
         return LOGISTIC_REGRESSION
 
 
@@ -125,14 +165,8 @@ class GradientBoostingStrategy(
     ModelStrategy[GradientBoostingClassifierConfigDTO, GradientBoostingClassifier],
 ):
     def load_config(self) -> GradientBoostingClassifierConfigDTO:
-        return load_gradient_boosting_classifier_config(
-            Path(GRADIENT_BOOSTING_DECISION_TREE),
-        )
+        config_path = Path("config/model/base_gbdt.yaml")
 
-    def load_gradient_boosting_classifier_config(
-        self,
-        config_path: Path,
-    ) -> GradientBoostingClassifierConfigDTO:
         with config_path.open() as file:
             config = yaml.safe_load(file)
 

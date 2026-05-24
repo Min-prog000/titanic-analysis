@@ -235,7 +235,7 @@ def exit_due_to_not_defined_method(logger: Logger) -> Never:
 
 def get_search_best_model(
     pipeline_prefix: str,
-    search: GridSearchCV[Pipeline],
+    search: GridSearchCV,
 ) -> SklearnModelTypes:
     return search.best_estimator_.named_steps[pipeline_prefix]
 

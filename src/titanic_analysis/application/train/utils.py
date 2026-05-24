@@ -59,9 +59,9 @@ STRATEGY_MAP = {
 def get_strategy(method_id: int) -> ModelStrategy:
     try:
         return STRATEGY_MAP[method_id]
-    except KeyError:
+    except KeyError as err:
         msg = f"Unknown method_id: {method_id}"
-        raise ValueError(msg)
+        raise ValueError(msg) from err
 
 
 def create_dataset(

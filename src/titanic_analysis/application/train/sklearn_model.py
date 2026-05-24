@@ -20,6 +20,7 @@ from sklearn.tree import export_graphviz
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     GBDT_CONFIG_PATH,
+    NOT_PIPELINE_INSTANCE_MESSAGE,
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
 )
@@ -27,6 +28,7 @@ from titanic_analysis.application.train.utils import (
     create_dataset,
     generate_submission_dataframe,
     get_case_id,
+    get_strategy,
     save_case_id,
 )
 from titanic_analysis.domain.model.types import ConfigDtoTypes, SklearnModelTypes
@@ -71,14 +73,17 @@ def train_sklearn_model(
     Raises:
         FalseComponentError: Raise when missing columns.
     """
-    # data loading
+    # Get strategy
+    strategy = get_strategy(method_id)
+
+    # Load data
     x_train, y_train, x_test, passenger_ids = create_dataset(
         logger,
         train_dataset_path,
         test_dataset_path,
     )
 
-    # training
+    # Train model
     best_model = run_grid_search(
         logger,
         method_id,
@@ -86,10 +91,10 @@ def train_sklearn_model(
         y_train,
     )
 
-    # prediction(create submission file)
+    # Predict
     y_pred = predict(logger, passenger_ids, x_test, best_model)
 
-    # output
+    # Generate submission file
     csv_postfix = get_csv_postfix(method_id, logger)
     CsvUtility.output_csv(y_pred, csv_postfix)
 
@@ -237,7 +242,17 @@ def get_search_best_model(
     pipeline_prefix: str,
     search: GridSearchCV,
 ) -> SklearnModelTypes:
-    return search.best_estimator_.named_steps[pipeline_prefix]
+    best_model = search.best_estimator_
+
+    if not isinstance(best_model, Pipeline):
+        raise TypeError(NOT_PIPELINE_INSTANCE_MESSAGE)
+
+    if pipeline_prefix not in best_model.named_steps:
+        keys = best_model.named_steps.keys()
+        msg = f"'{pipeline_prefix}' not found in pipeline steps: {list(keys)}"
+        raise KeyError(msg)
+
+    return best_model.named_steps[pipeline_prefix]
 
 
 def log_best_model_info(logger: Logger, search: GridSearchCV) -> None:

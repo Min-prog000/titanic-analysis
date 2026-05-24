@@ -20,7 +20,7 @@ def generate_parser() -> argparse.ArgumentParser:
         "--execution_mode",
         type=int,
         default=ExecutionMode.ANALYSIS.value,
-        choices=[execution_mode.name for execution_mode in ExecutionMode],
+        choices=[execution_mode.value for execution_mode in ExecutionMode],
         help="Type of the execution mode (default: 0, meaning ANALYSIS).",
     )
 
@@ -29,7 +29,7 @@ def generate_parser() -> argparse.ArgumentParser:
         "--train_method",
         type=int,
         default=TrainMethod.NEURAL_NETWORK.value,
-        choices=[train_method.name for train_method in TrainMethod],
+        choices=[train_method.value for train_method in TrainMethod],
         help="Type of the training method (default: 4, meaning NEURAL_NETWORK).",
     )
 

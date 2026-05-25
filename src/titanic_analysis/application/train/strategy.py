@@ -164,7 +164,20 @@ class LogisticRegressionStrategy(
 class GradientBoostingStrategy(
     ModelStrategy[GradientBoostingClassifierConfigDTO, GradientBoostingClassifier],
 ):
+    """Strategy class for managing configuration loading, model creation, and hyperparameter generation for a Gradient Boosting Classifier.
+
+    This class implements the ModelStrategy interface and provides utilities
+    specific to Gradient Boosting models.
+    """
+
     def load_config(self) -> GradientBoostingClassifierConfigDTO:
+        """Load the Gradient Boosting model configuration from a YAML file.
+
+        Returns:
+            GradientBoostingClassifierConfigDTO:
+                A configuration object containing model hyperparameters
+                loaded from the YAML file.
+        """
         config_path = Path("config/model/base_gbdt.yaml")
 
         with config_path.open() as file:
@@ -173,9 +186,30 @@ class GradientBoostingStrategy(
         return GradientBoostingClassifierConfigDTO(**config["model"])
 
     def create_model(self, random_state: int) -> GradientBoostingClassifier:
+        """Create a GradientBoostingClassifier instance using the provided random state.
+
+        Args:
+            random_state (int):
+                Seed value for ensuring reproducible model behavior.
+
+        Returns:
+            GradientBoostingClassifier:
+                A new instance of the Gradient Boosting classifier.
+        """
         return GradientBoostingClassifier(random_state=random_state)
 
     def generate_params(self, config: GradientBoostingClassifierConfigDTO) -> dict:
+        """Generate a dictionary of hyperparameter search ranges for use in grid search or randomized search.
+
+        Args:
+            config (GradientBoostingClassifierConfigDTO):
+                Configuration object containing parameter ranges.
+
+        Returns:
+            dict:
+                A mapping of pipeline-prefixed parameter names to iterable
+                ranges or distributions for hyperparameter tuning.
+        """
         return {
             f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
                 config.learning_rate,
@@ -192,7 +226,17 @@ class GradientBoostingStrategy(
         }
 
     def get_pipeline_prefix(self) -> str:
+        """Retrieve the pipeline prefix used for Gradient Boosting parameters.
+
+        Returns:
+            str: The pipeline prefix string.
+        """
         return PIPELINE_PREFIX_GBDT
 
     def get_save_folder_name(self) -> str:
+        """Get the folder name where model artifacts should be saved.
+
+        Returns:
+            str: The folder name associated with Gradient Boosting models.
+        """
         return GRADIENT_BOOSTING_DECISION_TREE

@@ -1,9 +1,7 @@
 """Training use case using sklearn"""
 
-import sys
 from logging import Logger
 from pathlib import Path
-from typing import Never
 
 import joblib
 import numpy as np
@@ -11,7 +9,6 @@ import pandas as pd
 import pydotplus
 from pandas import Series
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler
@@ -19,11 +16,9 @@ from sklearn.tree import export_graphviz
 
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
-    GBDT_CONFIG_PATH,
     NOT_PIPELINE_INSTANCE_MESSAGE,
-    PIPELINE_PREFIX_GBDT,
-    PIPELINE_PREFIX_LOGREG,
 )
+from titanic_analysis.application.train.strategy import ModelStrategy
 from titanic_analysis.application.train.utils import (
     create_dataset,
     generate_submission_dataframe,
@@ -31,24 +26,16 @@ from titanic_analysis.application.train.utils import (
     get_strategy,
     save_case_id,
 )
-from titanic_analysis.domain.model.types import ConfigDtoTypes, SklearnModelTypes
-from titanic_analysis.infrastructure.io.analysis.config_loader import (
-    load_gradient_boosting_classifier_config,
-    load_logistic_regression_config,
-)
+from titanic_analysis.domain.model.types import SklearnModelTypes
 from titanic_analysis.infrastructure.io.constants import (
-    GRADIENT_BOOSTING_DECISION_TREE,
-    LOGISTIC_REGRESSION,
     MODEL_SAVE_PROTOCOL,
     PATH_TEST,
     PATH_TRAIN,
 )
 from titanic_analysis.infrastructure.io.training_pipeline.dto import (
     GradientBoostingClassifierConfigDTO,
-    LogisticRegressionConfigDTO,
 )
 from titanic_analysis.infrastructure.io.utils import CsvUtility
-from titanic_analysis.infrastructure.user.constants import TrainMethod
 
 __all__ = ["train_sklearn_model"]
 
@@ -86,7 +73,7 @@ def train_sklearn_model(
     # Train model
     best_model = run_grid_search(
         logger,
-        method_id,
+        strategy,
         x_train,
         y_train,
     )
@@ -95,28 +82,15 @@ def train_sklearn_model(
     y_pred = predict(logger, passenger_ids, x_test, best_model)
 
     # Generate submission file
-    csv_postfix = get_csv_postfix(method_id, logger)
+    csv_postfix = strategy.get_csv_postfix()
     CsvUtility.output_csv(y_pred, csv_postfix)
 
     # Save experiment results and case id
-    save_artifacts(logger, method_id, best_model)
+    save_artifacts(strategy, best_model)
 
 
-def get_csv_postfix(method_id: int, logger: Logger) -> str:
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        return LOGISTIC_REGRESSION
-    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        return GRADIENT_BOOSTING_DECISION_TREE
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
-def save_artifacts(
-    logger: Logger,
-    method_id: int,
-    best_model: SklearnModelTypes,
-) -> None:
-    save_folder_name = get_save_folder_name(logger, method_id)
+def save_artifacts(strategy: ModelStrategy, best_model: SklearnModelTypes) -> None:
+    save_folder_name = strategy.get_save_folder_name()
 
     # 1. Get current case id
     case_id = get_case_id(CASE_ID_PATH)
@@ -132,18 +106,9 @@ def save_artifacts(
     save_case_id(case_id, CASE_ID_PATH)
 
 
-def get_save_folder_name(logger: Logger, method_id: int) -> str:
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        return LOGISTIC_REGRESSION
-    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        return GRADIENT_BOOSTING_DECISION_TREE
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
 def run_grid_search(
     logger: Logger,
-    method_id: int,
+    strategy: ModelStrategy,
     x_train: np.ndarray,
     y_train: np.ndarray,
 ) -> SklearnModelTypes:
@@ -151,7 +116,7 @@ def run_grid_search(
     scaler = MinMaxScaler()
 
     # Parameters
-    config_loaded = load_config(method_id, logger)
+    config_loaded = strategy.load_config()
     col_num = get_array_col_num(x_train)
     if (
         isinstance(config_loaded, GradientBoostingClassifierConfigDTO)
@@ -159,10 +124,10 @@ def run_grid_search(
     ):
         raise NotImplementedError
 
-    params_grid = generate_grid_search_parameters(config_loaded, logger)
+    params_grid = strategy.generate_params(config_loaded)
 
     # Model setting
-    model = generate_model(method_id, config_loaded.random_state, logger)
+    model = strategy.create_model(config_loaded.random_state)
     pipeline = make_pipeline(scaler, model)
 
     # Grid search setting
@@ -176,7 +141,7 @@ def run_grid_search(
     log_best_model_info(logger, search)
 
     # Predict with best model
-    pipeline_prefix = get_pipeline_prefix(method_id, logger)
+    pipeline_prefix = strategy.get_pipeline_prefix()
     best_model: SklearnModelTypes = get_search_best_model(pipeline_prefix, search)
 
     return best_model
@@ -184,58 +149,6 @@ def run_grid_search(
 
 def get_array_col_num(x_train: np.ndarray) -> int:
     return x_train.shape[1]
-
-
-def generate_grid_search_parameters(
-    config_loaded: ConfigDtoTypes,
-    logger: Logger,
-) -> dict:
-    # LogisticRegression
-    if isinstance(config_loaded, LogisticRegressionConfigDTO):
-        return get_params_grid_logreg(config_loaded)
-    # GradientBoostingClassifier
-    if isinstance(config_loaded, GradientBoostingClassifierConfigDTO):
-        return get_params_grid_gbdt(config_loaded)
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
-def load_config(method_id: int, logger: Logger) -> ConfigDtoTypes:
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        config_path = Path(LOGISTIC_REGRESSION)
-        return load_logistic_regression_config(config_path)
-    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        config_path = Path(GBDT_CONFIG_PATH)
-        return load_gradient_boosting_classifier_config(config_path)
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
-def generate_model(
-    method_id: int,
-    random_state: int,
-    logger: Logger,
-) -> SklearnModelTypes:
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        return LogisticRegression(random_state=random_state)
-    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        return GradientBoostingClassifier(random_state=random_state)
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
-def get_pipeline_prefix(method_id: int, logger: Logger) -> str:
-    if method_id == TrainMethod.LOGISTIC_REGRESSION.value:
-        return PIPELINE_PREFIX_LOGREG
-    if method_id == TrainMethod.GRADIENT_BOOSTING.value:
-        return PIPELINE_PREFIX_GBDT
-    exit_due_to_not_defined_method(logger)
-    return None
-
-
-def exit_due_to_not_defined_method(logger: Logger) -> Never:
-    logger.error("Not defined method was executed.")
-    sys.exit()
 
 
 def get_search_best_model(
@@ -313,41 +226,6 @@ def dict_to_df(result_search: dict) -> pd.DataFrame:
 
 def get_grid_search_result(search: GridSearchCV) -> dict:
     return search.cv_results_
-
-
-def get_params_grid_logreg(
-    config_loaded: LogisticRegressionConfigDTO,
-) -> dict:
-    # max_iterの範囲生成
-    max_iter_scope = [
-        np.int16(max_iter)
-        for max_iter in np.linspace(config_loaded.max_iter, 1000, num=10)
-    ]
-    return {
-        "logisticregression__C": np.logspace(config_loaded.C, 3, num=7),
-        "logisticregression__class_weight": [
-            config_loaded.class_weight,
-            {0: 1.0, 1: 0.5},
-        ],
-        "logisticregression__max_iter": max_iter_scope,
-    }
-
-
-def get_params_grid_gbdt(config_loaded: GradientBoostingClassifierConfigDTO) -> dict:
-    return {
-        f"{PIPELINE_PREFIX_GBDT}__learning_rate": np.logspace(
-            config_loaded.learning_rate,
-            -1,
-            num=2,
-        ),
-        # f"{PIPELINE_PREFIX_GBDT}__n_estimators": range(100, 201, 100),
-        f"{PIPELINE_PREFIX_GBDT}__max_depth": range(config_loaded.max_depth, 8),
-        f"{PIPELINE_PREFIX_GBDT}__max_features": range(
-            config_loaded.max_features["min"],
-            config_loaded.max_features["max"],
-        ),
-        # f"{PIPELINE_PREFIX_GBDT}__subsample": np.arange(0.1, 1.1, 0.1),
-    }
 
 
 def predict(

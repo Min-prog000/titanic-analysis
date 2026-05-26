@@ -76,6 +76,28 @@ class ModelStrategy[C, M]:
         """
         raise NotImplementedError
 
+    def get_save_folder_name(self) -> str:
+        """Get folder name string for model saving.
+
+        Raises:
+            NotImplementedError: Not implemented error
+
+        Returns:
+            str: Folder name string
+        """
+        raise NotImplementedError
+
+    def get_csv_postfix(self) -> str:
+        """Get csv name postfix string for submission.
+
+        Raises:
+            NotImplementedError: Not implemented error
+
+        Returns:
+            str: Csv output file name postfix
+        """
+        raise NotImplementedError
+
 
 class LogisticRegressionStrategy(
     ModelStrategy[LogisticRegressionConfigDTO, LogisticRegression],
@@ -160,6 +182,14 @@ class LogisticRegressionStrategy(
         """
         return LOGISTIC_REGRESSION
 
+    def get_csv_postfix(self) -> str:
+        """Return output csv file name postfix for submission.
+
+        Returns:
+            str: Csv file name postfix
+        """
+        return LOGISTIC_REGRESSION
+
 
 class GradientBoostingStrategy(
     ModelStrategy[GradientBoostingClassifierConfigDTO, GradientBoostingClassifier],
@@ -238,5 +268,13 @@ class GradientBoostingStrategy(
 
         Returns:
             str: The folder name associated with Gradient Boosting models.
+        """
+        return GRADIENT_BOOSTING_DECISION_TREE
+
+    def get_csv_postfix(self) -> str:
+        """Return output csv file name postfix for submission.
+
+        Returns:
+            str: Csv file name postfix
         """
         return GRADIENT_BOOSTING_DECISION_TREE

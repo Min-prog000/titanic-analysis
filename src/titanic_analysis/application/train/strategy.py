@@ -1,3 +1,13 @@
+"""Defines strategy abstractions for model configuration, creation, and tuning.
+
+This module provides a generic ModelStrategy interface and concrete strategies
+for Logistic Regression and Gradient Boosting models. Each strategy handles
+loading configuration from YAML files, constructing reproducible model
+instances, and generating hyperparameter search spaces for tuning. Centralizing
+these behaviors enables consistent and extensible model management across the
+training pipeline.
+"""
+
 from pathlib import Path
 from typing import TypeVar
 

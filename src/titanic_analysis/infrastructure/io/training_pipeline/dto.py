@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class LogisticRegressionConfigDTO(BaseModel):
-    """ロジスティック回帰用DTO"""
+    """DTO for LogisticRegression"""
 
     random_state: int
     C: float
@@ -13,7 +13,7 @@ class LogisticRegressionConfigDTO(BaseModel):
 
 
 class GradientBoostingClassifierConfigDTO(BaseModel):
-    """勾配ブースティング用DTO"""
+    """DTO for GradientBoostingClassifier"""
 
     random_state: int
     learning_rate: float
@@ -32,7 +32,7 @@ class XGBoostConfigDTO(BaseModel):
 
 
 class PytorchConfigDTO(BaseModel):
-    """訓練・テスト用configファイルの読み込み内容のためのDTO"""
+    """DTO for Pytorch"""
 
     batch_size: int
     learning_rate: float

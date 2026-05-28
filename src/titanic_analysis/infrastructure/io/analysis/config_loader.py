@@ -6,10 +6,10 @@ import yaml
 
 from titanic_analysis.infrastructure.io.analysis.dto import AnalysisDTO
 from titanic_analysis.infrastructure.io.training_pipeline.dto import (
-    GradientBoostingClassifierConfigDTO,
-    LogisticRegressionConfigDTO,
     PytorchConfigDTO,
 )
+
+__all__ = ["load_analysis_config", "load_pytorch_config", "load_xgboost_config"]
 
 
 def load_analysis_config(config_path: Path) -> AnalysisDTO:
@@ -27,41 +27,15 @@ def load_analysis_config(config_path: Path) -> AnalysisDTO:
     return AnalysisDTO(**config["option"]["display"])
 
 
-def load_logistic_regression_config(
-    config_path: Path,
-) -> LogisticRegressionConfigDTO:
-    """Load config file for training using logistic regression
-
-    Args:
-        config_path (Path): Config file path
-
-    Returns:
-        LogisticRegressionConfigDTO: DTO for config file
-    """
-    with config_path.open() as file:
-        config = yaml.safe_load(file)
-
-    return LogisticRegressionConfigDTO(**config["model"])
-
-
-def load_gradient_boosting_classifier_config(
-    config_path: Path,
-) -> GradientBoostingClassifierConfigDTO:
-    """Load config file for training using gradient boosting classifier
-
-    Args:
-        config_path (Path): Config file path
-
-    Returns:
-        GradientBoostingClassifierConfigDTO: DTO for config file
-    """
-    with config_path.open() as file:
-        config = yaml.safe_load(file)
-
-    return GradientBoostingClassifierConfigDTO(**config["model"])
-
-
 def load_xgboost_config(config_path: Path) -> dict:
+    """Load config file for training using xgboost.
+
+    Args:
+        config_path (Path): Config file path
+
+    Returns:
+        dict: Config data
+    """
     with config_path.open() as file:
         config = yaml.safe_load(file)
 

@@ -4,7 +4,9 @@ import random
 
 import joblib
 import torch
+from torch import Tensor
 
+__all__ = ["fix_seed", "load_case_id"]
 
 def fix_seed(seed: int) -> None:
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -23,3 +25,8 @@ def load_case_id(case_id_path: Path) -> int:
         case_id = 1
 
     return case_id
+
+def get_data_with_type_annotation(batch: list) -> tuple[Tensor, Tensor]:
+    data: Tensor = batch[0]
+    labels: Tensor = batch[1]
+    return data, labels

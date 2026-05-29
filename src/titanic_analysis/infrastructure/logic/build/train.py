@@ -9,6 +9,8 @@ from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
 
+__all__ = ["train_loop"]
+
 def train_loop(
     dataloader: DataLoader,
     model: NeuralNetwork,

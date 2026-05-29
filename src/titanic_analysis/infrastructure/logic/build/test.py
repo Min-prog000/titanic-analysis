@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
 
+__all__ = ["test_loop"]
 
 @torch.no_grad()
 def test_loop(

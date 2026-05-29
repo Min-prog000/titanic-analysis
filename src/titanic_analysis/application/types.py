@@ -1,3 +1,5 @@
+"""Types module for Pytorch prediction"""
+
 import numpy as np
 import onnxruntime as ort
 

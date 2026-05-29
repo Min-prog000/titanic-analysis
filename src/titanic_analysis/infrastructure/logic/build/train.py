@@ -3,10 +3,9 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from titanic_analysis.infrastructure.logic.build.common import get_data_with_type_annotation
-
 from titanic_analysis.domain.model.torch import NeuralNetwork
 from titanic_analysis.infrastructure.logic.build.constants import THRESHOLD
+from titanic_analysis.infrastructure.logic.build.utils import get_data_with_type_annotation
 
 
 __all__ = ["train_loop"]

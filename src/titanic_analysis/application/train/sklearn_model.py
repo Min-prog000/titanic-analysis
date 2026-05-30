@@ -260,19 +260,6 @@ def save_tree_graph(best_model: GradientBoostingClassifier) -> None:
     if isinstance(graph, pydotplus.graphviz.Dot):
         graph.write(path="test_graph.png", format="png")
 
-    # dtreeviz使用
-    # logger.debug(train_data.columns.tolist())
-    # viz = dtreeviz.dtreeviz(
-    #     best_gbdt.estimators_[0, 0],
-    #     x_train,
-    #     y_train,
-    #     target_name="titanic",
-    #     class_names=["not_survived", "survived"],
-    #     feature_names=train_data.columns.tolist(),
-    # )
-    # filename_dtreeviz = Path("test_graph_dtreeviz.png")
-    # viz.save(filename_dtreeviz)
-
 
 def save_model(
     save_folder_name: str,

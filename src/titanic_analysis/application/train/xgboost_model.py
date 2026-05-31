@@ -36,6 +36,7 @@ from titanic_analysis.infrastructure.io.analysis.config_loader import (
     load_xgboost_config,
 )
 from titanic_analysis.infrastructure.io.constants import (
+    CONFIG_FILE_PREFIX_XGBOOST,
     PATH_TEST,
     PATH_TRAIN,
     SAVE_TREE_INDEX,
@@ -216,7 +217,10 @@ def get_tree_data(model: xgb.XGBClassifier, index: int) -> str:
 
 def save_config(parameters: dict, case_id: int) -> None:
     # Generate path
-    config_folder_path, config_file_path = generate_config_path(case_id)
+    config_folder_path, config_file_path = generate_config_path(
+        case_id,
+        CONFIG_FILE_PREFIX_XGBOOST,
+    )
 
     # Make parent directory
     config_folder_path.mkdir(parents=True, exist_ok=True)

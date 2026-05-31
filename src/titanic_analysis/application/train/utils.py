@@ -24,7 +24,6 @@ from titanic_analysis.application.train.strategy import (
 )
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
-    CONFIG_FILE_PREFIX_XGBOOST,
     CONFIG_FOLDER_PREFIX,
     SAVE_MODEL_FILE_EXTENSION_XGBOOST,
     SAVE_MODEL_FILE_PARENT_XGBOOST,
@@ -251,17 +250,21 @@ def generate_tree_file_name(case_id: int, save_tree_index: int) -> str:
 # ================
 # Save config file
 # ================
-def generate_config_path(case_id: int) -> tuple[Path, Path]:
+def generate_config_path(
+    case_id: int,
+    config_file_name_prefix: str,
+) -> tuple[Path, Path]:
     """Generate path output config file.
 
     Args:
         case_id (int): case id.
+        config_file_name_prefix (str): config file prefix.
 
     Returns:
         tuple[Path, Path]: output folder path and file path.
     """
     folder_path = get_config_folder_path(case_id)
-    file_name_path = get_config_file_name_path(case_id)
+    file_name_path = get_config_file_name_path(case_id, config_file_name_prefix)
 
     file_path = generate_output_path(folder_path, file_name_path)
 
@@ -281,13 +284,13 @@ def generate_config_folder_name(
 
 
 # File path
-def get_config_file_name_path(case_id: int) -> Path:
-    return Path(generate_config_file_name(case_id))
+def get_config_file_name_path(case_id: int, config_file_name_prefix: str) -> Path:
+    return Path(generate_config_file_name(case_id, config_file_name_prefix))
 
 
 def generate_config_file_name(
     case_id: int,
-    prefix: str = CONFIG_FILE_PREFIX_XGBOOST,
+    prefix: str,
     extension: str = CONFIG_FILE_EXTENSION,
 ) -> str:
     return f"{prefix}{case_id}{extension}"
@@ -305,12 +308,12 @@ def generate_model_save_path(case_id: int) -> tuple[Path, Path]:
     Returns:
         tuple[Path, Path]: output folder path and file path.
     """
-    save_folder_path = get_model_folder_path(case_id)
-    save_file_name_path = get_model_file_name_path(case_id)
+    folder_path = get_model_folder_path(case_id)
+    file_name_path = get_model_file_name_path(case_id)
 
-    save_file_path = generate_output_path(save_folder_path, save_file_name_path)
+    file_path = generate_output_path(folder_path, file_name_path)
 
-    return save_folder_path, save_file_path
+    return folder_path, file_path
 
 
 # Folder path

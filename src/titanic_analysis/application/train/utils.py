@@ -68,6 +68,17 @@ def create_dataset(
     train_dataset_path: str,
     test_dataset_path: str,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, pd.Series]:
+    """Construct dataset as dataframe.
+
+    Args:
+        logger (Logger): Logger
+        train_dataset_path (str): Data file path for training
+        test_dataset_path (str): Data file path for test
+
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray, pd.Series]:
+            Train dataset(x, y), test dataset(x), and passenger id series
+    """
     # Data file loading
     df_train, df_test = load_data_from_csv(train_dataset_path, test_dataset_path)
 

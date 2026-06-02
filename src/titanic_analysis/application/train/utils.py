@@ -112,6 +112,15 @@ def create_dataset(
 
 
 def generate_output_path(folder_path: Path, file_path: Path) -> Path:
+    """Join folder path to file name.
+
+    Args:
+        folder_path (Path): Parent folder.
+        file_path (Path): File name as `Path`.
+
+    Returns:
+        Path: Joined path.
+    """
     return folder_path.joinpath(file_path)
 
 

@@ -56,6 +56,17 @@ STRATEGY_MAP = {
 
 
 def get_strategy(method_id: int) -> ModelStrategy:
+    """Return strategy instance.
+
+    Args:
+        method_id (int): ID for training method.
+
+    Raises:
+        ValueError: Not expected method id.
+
+    Returns:
+        ModelStrategy: Strategy instance.
+    """
     try:
         return STRATEGY_MAP[method_id]
     except KeyError as err:

@@ -139,6 +139,15 @@ def generate_submission_dataframe(
     passenger_ids: pd.Series,
     y_pred: np.ndarray,
 ) -> pd.DataFrame:
+    """Generate predict result dataframe for submission.
+
+    Args:
+        passenger_ids (pd.Series): ID data.
+        y_pred (np.ndarray): Predicted label data.
+
+    Returns:
+        pd.DataFrame: Result dataframe.
+    """
     y_pred_df = pd.DataFrame(y_pred, columns=[TARGET_COLUMN])
     return pd.concat([passenger_ids, y_pred_df], axis=CONCAT_WITH_COLUMN)
 

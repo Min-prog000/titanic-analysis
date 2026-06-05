@@ -156,6 +156,15 @@ def load_data_from_csv(
     train_dataset_path: str,
     test_dataset_path: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load data from csv file.
+
+    Args:
+        train_dataset_path (str): Train csv file path.
+        test_dataset_path (str): Test csv file path.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: Train and test dataframe.
+    """
     df_train = pd.read_csv(train_dataset_path)
     df_test = pd.read_csv(test_dataset_path)
 

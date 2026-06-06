@@ -172,6 +172,14 @@ def load_data_from_csv(
 
 
 def extract_target_column(df_train: pd.DataFrame) -> np.ndarray:
+    """Extract label column as `np.ndarray` from `pd.DataFrame`.
+
+    Args:
+        df_train (pd.DataFrame): Train dataframe.
+
+    Returns:
+        np.ndarray: Target data array.
+    """
     target_column_series = df_train.loc[:, TARGET_COLUMN]
 
     return series_to_array(target_column_series)

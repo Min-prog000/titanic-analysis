@@ -36,7 +36,7 @@ LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]
 COLUMN_NOT_MATCH_MESSAGE = (
     "NotMatchSizeError: either array has one or more false components."
 )
-NOT_PIPELINE_INSTANCE_MESSAGE = "best_estimator_ is not a Pipeline"
+NOT_PIPELINE_INSTANCE_MESSAGE = "`best_model` is not a Pipeline"
 
 PIPELINE_PREFIX_LOGREG = "logisticregression"
 PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"

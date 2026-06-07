@@ -118,6 +118,42 @@ def run_grid_search(
     x_train: np.ndarray,
     y_train: np.ndarray,
 ) -> SklearnModelTypes:
+    """Run a grid search to find the best model for the strategy and data.
+
+    This function loads model configuration from the given strategy, generates
+    a parameter grid, constructs a preprocessing-model pipeline, and performs
+    a grid search using `GridSearchCV`. After fitting, it logs the search
+    results and extracts the best estimator from the fitted pipeline.
+
+    Args:
+        logger (Logger):
+            Logger instance used to output grid search progress and results.
+        strategy (ModelStrategy):
+            Strategy object responsible for loading configuration, generating
+            parameter grids, creating model instances, and providing pipeline
+            prefixes.
+        x_train (np.ndarray):
+            Training feature matrix.
+        y_train (np.ndarray):
+            Training target vector.
+
+    Returns:
+        SklearnModelTypes:
+            The best model selected by grid search, extracted from the fitted
+            pipeline.
+
+    Raises:
+        NotImplementedError:
+            Raised when the configuration for `GradientBoostingClassifier`
+            specifies a `max_features` value that exceeds the number of
+            available columns in `x_train`.
+
+    Notes:
+        - A MinMaxScaler is always applied before the model.
+        - Grid search uses `n_jobs=2` and `verbose=10`.
+        - The best model is extracted using the strategy's pipeline prefix.
+
+    """
     # Scaler
     scaler = MinMaxScaler()
 

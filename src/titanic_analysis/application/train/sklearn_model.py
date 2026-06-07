@@ -90,6 +90,12 @@ def train_sklearn_model(
 
 
 def save_artifacts(strategy: ModelStrategy, best_model: SklearnModelTypes) -> None:
+    """Save artifacts such as model, case id, and tree graph.
+
+    Args:
+        strategy (ModelStrategy): Method strategy.
+        best_model (SklearnModelTypes): Best model in grid search.
+    """
     save_folder_name = strategy.get_save_folder_name()
 
     # 1. Get current case id

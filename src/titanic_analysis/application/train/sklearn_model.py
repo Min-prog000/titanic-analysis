@@ -197,6 +197,30 @@ def get_search_best_model(
     pipeline_prefix: str,
     search: GridSearchCV,
 ) -> SklearnModelTypes:
+    """Return a specific step from the best estimator in a GridSearchCV pipeline.
+
+    This function retrieves the best estimator from a fitted ``GridSearchCV``
+    instance and extracts the model associated with the specified pipeline step.
+    The best estimator is expected to be a ``Pipeline``; otherwise, an error is raised.
+
+    Args:
+        pipeline_prefix (str):
+            The name of the pipeline step to extract from the best estimator's
+            ``named_steps``.
+        search (GridSearchCV):
+            A fitted ``GridSearchCV`` object whose best estimator is expected
+            to be a ``Pipeline``.
+
+    Returns:
+        SklearnModelTypes:
+            The model object corresponding to the specified pipeline step.
+
+    Raises:
+        TypeError:
+            If the best estimator is not an instance of ``Pipeline``.
+        KeyError:
+            If the specified ``pipeline_prefix`` does not exist in the pipeline's steps.
+    """
     best_model = search.best_estimator_
 
     if not isinstance(best_model, Pipeline):

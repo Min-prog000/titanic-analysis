@@ -240,6 +240,16 @@ def log_best_model_info(logger: Logger, search: GridSearchCV) -> None:
 
 
 def log_grid_search_best_parameters(logger: Logger, search: GridSearchCV) -> None:
+    """Log the best hyperparameters obtained from a GridSearchCV run.
+
+    This function extracts the best parameter set found during the grid search
+    and outputs it using the provided logger. It is useful for tracking model
+    selection results and ensuring reproducibility of experiments.
+
+    Args:
+        logger (Logger): Logger instance used to output the best parameters.
+        search (GridSearchCV): Fitted GridSearchCV object containing search results.
+    """
     best_params = get_search_best_params(search)
 
     logger.info("Grid search Best hyper parameters: %s", best_params)

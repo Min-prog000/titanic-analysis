@@ -15,6 +15,7 @@ class TrainMethod(Enum):
     """Train methods"""
 
     LOGISTIC_REGRESSION = auto()  # 1
-    GRADIENT_BOOSTING = auto()  # 2
-    XGBOOST = auto()  # 3
-    NEURAL_NETWORK = auto()  # 4
+    RANDOM_FOREST = auto()  # 2
+    GRADIENT_BOOSTING = auto()  # 3
+    XGBOOST = auto()  # 4
+    NEURAL_NETWORK = auto()  # 5

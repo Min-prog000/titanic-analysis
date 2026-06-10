@@ -21,6 +21,7 @@ from titanic_analysis.application.train.strategy import (
     GradientBoostingStrategy,
     LogisticRegressionStrategy,
     ModelStrategy,
+    RandomForestStrategy,
 )
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
@@ -51,6 +52,7 @@ __all__ = [
 # =======
 STRATEGY_MAP = {
     TrainMethod.LOGISTIC_REGRESSION.value: LogisticRegressionStrategy(),
+    TrainMethod.RANDOM_FOREST.value: RandomForestStrategy(),
     TrainMethod.GRADIENT_BOOSTING.value: GradientBoostingStrategy(),
 }
 

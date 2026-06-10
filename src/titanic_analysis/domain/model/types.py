@@ -9,15 +9,24 @@ By centralizing these type definitions, the training pipeline can handle
 multiple model families in a consistent and type‑safe manner.
 """
 
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from torch import nn
 
 from titanic_analysis.infrastructure.io.training_pipeline.dto import (
     GradientBoostingClassifierConfigDTO,
     LogisticRegressionConfigDTO,
+    RandomForestClassifierConfigDTO,
 )
 
-ConfigDtoTypes = LogisticRegressionConfigDTO | GradientBoostingClassifierConfigDTO
-SklearnModelTypes = LogisticRegression | GradientBoostingClassifier
-ModelTypes = LogisticRegression | GradientBoostingClassifier | nn.Module
+ConfigDtoTypes = (
+    LogisticRegressionConfigDTO
+    | RandomForestClassifierConfigDTO
+    | GradientBoostingClassifierConfigDTO
+)
+SklearnModelTypes = (
+    LogisticRegression | RandomForestClassifier | GradientBoostingClassifier
+)
+ModelTypes = (
+    LogisticRegression | RandomForestClassifier | GradientBoostingClassifier | nn.Module
+)

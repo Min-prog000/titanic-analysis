@@ -86,6 +86,7 @@ def dispatch_training_model(
     """
     sklearn_methods = {
         TrainMethod.LOGISTIC_REGRESSION.value,
+        TrainMethod.RANDOM_FOREST.value,
         TrainMethod.GRADIENT_BOOSTING.value,
     }
 

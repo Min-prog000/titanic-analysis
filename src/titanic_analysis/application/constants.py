@@ -39,6 +39,7 @@ COLUMN_NOT_MATCH_MESSAGE = (
 NOT_PIPELINE_INSTANCE_MESSAGE = "`best_model` is not a Pipeline"
 
 PIPELINE_PREFIX_LOGREG = "logisticregression"
+PIPELINE_PREFIX_RF = "randomforestclassifier"
 PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"
 PIPELINE_PREFIX_XGBOOST = "xgbclassifier"
 

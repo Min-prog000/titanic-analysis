@@ -213,6 +213,7 @@ version.py
 id/
 tensorboard_log/
 model/logreg/
+model/rf/
 model/gbdt/
 model/xgboost
 model/onnx/

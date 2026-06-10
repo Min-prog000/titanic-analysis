@@ -13,20 +13,23 @@ from typing import TypeVar
 
 import numpy as np
 import yaml
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
 from titanic_analysis.application.constants import (
     PIPELINE_PREFIX_GBDT,
     PIPELINE_PREFIX_LOGREG,
+    PIPELINE_PREFIX_RF,
 )
 from titanic_analysis.infrastructure.io.constants import (
     GRADIENT_BOOSTING_DECISION_TREE,
     LOGISTIC_REGRESSION,
+    RANDOM_FOREST,
 )
 from titanic_analysis.infrastructure.io.training_pipeline.dto import (
     GradientBoostingClassifierConfigDTO,
     LogisticRegressionConfigDTO,
+    RandomForestClassifierConfigDTO,
 )
 
 C = TypeVar("C")
@@ -199,6 +202,116 @@ class LogisticRegressionStrategy(
             str: Csv file name postfix
         """
         return LOGISTIC_REGRESSION
+
+
+class RandomForestStrategy(
+    ModelStrategy[RandomForestClassifierConfigDTO, RandomForestClassifier],
+):
+    """Strategy for random forest.
+
+    Args:
+        ModelStrategy (RandomForestConfigDTO, RandomForestClassifier):
+            Strategy interface
+    """
+
+    def load_config(self) -> RandomForestClassifierConfigDTO:
+        """Load config file for `RandomForest`.
+
+        Returns:
+            RandomForestConfigDTO: Parameters DTO
+        """
+        config_path = Path("config/model/base_rf.yaml")
+
+        with config_path.open() as file:
+            config = yaml.safe_load(file)
+
+        return RandomForestClassifierConfigDTO(**config["model"])
+
+    def create_model(self, random_state: int) -> RandomForestClassifier:
+        """Build `RandomForestClassifier` model.
+
+        Args:
+            random_state (int): `random_state` for `RandomForest` argument
+
+        Returns:
+            RandomForestClassifier: Model instance
+        """
+        return RandomForestClassifier(random_state=random_state)
+
+    def generate_params(self, config: RandomForestClassifierConfigDTO) -> dict:
+        """Generate parameters dict for `RandomForest`.
+
+        Args:
+            config (RandomForestConfigDTO): Config DTO
+
+        Returns:
+            dict: Config dict
+        """
+        # max_iterの範囲生成
+        return {
+            "randomforestclassifier__n_estimators": self.get_n_estimators(
+                config.n_estimators["min"],
+                config.n_estimators["max"],
+                config.n_estimators["step"],
+            ),
+            "randomforestclassifier__max_depth": range(
+                config.max_depth["min"],
+                config.max_depth["max"],
+            ),
+            "randomforestclassifier__max_features": range(
+                config.max_features["min"],
+                config.max_features["max"],
+            ),
+        }
+
+    def get_n_estimators(
+        self,
+        n_estimators_min: int,
+        n_estimators_max: int,
+        n_estimators_step: int,
+    ) -> list:
+        """Get `n_estimators` scope for grid search.
+
+        Args:
+            n_estimators_min (int): Minimum value of `n_estimators`.
+            n_estimators_max (int): Maximum value of `n_estimators`.
+            n_estimators_step (int): Scope step value of `n_estimators`.
+
+        Returns:
+            list: `n_estimators` scope.
+        """
+        return [
+            np.int16(n_estimators)
+            for n_estimators in np.linspace(
+                n_estimators_min,
+                n_estimators_max,
+                num=n_estimators_step,
+            )
+        ]
+
+    def get_pipeline_prefix(self) -> str:
+        """Get prefix string for model identifier of `Pipeline`.
+
+        Returns:
+            str: Model prefix in `Pipeline`
+        """
+        return PIPELINE_PREFIX_RF
+
+    def get_save_folder_name(self) -> str:
+        """Get folder name string for model saving.
+
+        Returns:
+            str: Folder name string
+        """
+        return RANDOM_FOREST
+
+    def get_csv_postfix(self) -> str:
+        """Return output csv file name postfix for submission.
+
+        Returns:
+            str: Csv file name postfix
+        """
+        return RANDOM_FOREST
 
 
 class GradientBoostingStrategy(

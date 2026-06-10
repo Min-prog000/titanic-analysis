@@ -1,0 +1,12 @@
+model:
+  random_state: 0
+  n_estimators:
+    min: 400
+    max: 700
+    step: 4
+  max_depth:
+    min: 2
+    max: 7
+  max_features:
+    min: 8
+    max: 11

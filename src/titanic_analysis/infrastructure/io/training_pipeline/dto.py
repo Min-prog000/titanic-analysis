@@ -12,6 +12,15 @@ class LogisticRegressionConfigDTO(BaseModel):
     max_iter: int
 
 
+class RandomForestClassifierConfigDTO(BaseModel):
+    """DTO for RandomForestClassifier"""
+
+    random_state: int
+    n_estimators: dict[str, int]
+    max_depth: dict[str, int]
+    max_features: dict[str, int]
+
+
 class GradientBoostingClassifierConfigDTO(BaseModel):
     """DTO for GradientBoostingClassifier"""
 

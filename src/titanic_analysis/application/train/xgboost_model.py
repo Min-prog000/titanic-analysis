@@ -73,7 +73,9 @@ def train_xgboost_model(
     )
 
     # Train
-    parameters, model = train(x_train, y_train)
+    config_path = Path(XGBOOST_CONFIG_PATH)
+    parameters = load_xgboost_config(config_path)
+    model = train(x_train, y_train, parameters)
 
     # Predict
     y_pred = predict(logger, passenger_ids, x_test, model)
@@ -85,13 +87,15 @@ def train_xgboost_model(
     save_artifacts(parameters, model)
 
 
-def train(x_train: np.ndarray, y_train: np.ndarray) -> tuple[dict, xgb.XGBClassifier]:
+def train(
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    parameters: dict,
+) -> xgb.XGBClassifier:
     # Scaler setting
     scaler = MinMaxScaler()
 
     # Model setting
-    config_path = Path(XGBOOST_CONFIG_PATH)
-    parameters = load_xgboost_config(config_path)
     model = xgb.XGBClassifier(**parameters)
 
     # Pipeline setting
@@ -99,10 +103,9 @@ def train(x_train: np.ndarray, y_train: np.ndarray) -> tuple[dict, xgb.XGBClassi
 
     # Training
     pipeline.fit(x_train, y_train)
-    model = get_pipeline_model(pipeline, PIPELINE_PREFIX_XGBOOST)
 
     # Return model
-    return parameters, model
+    return get_pipeline_model(pipeline, PIPELINE_PREFIX_XGBOOST)
 
 
 # def run_grid_search(

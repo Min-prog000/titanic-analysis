@@ -10,3 +10,5 @@ model:
   max_features:
     min: 8
     max: 11
+  class_weight:
+    [{0: 1, 1: 1}, {0: 1, 1: 2}, {0: 2, 1: 1}, {0: 2, 1: 2}]

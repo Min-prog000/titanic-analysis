@@ -19,6 +19,7 @@ class RandomForestClassifierConfigDTO(BaseModel):
     n_estimators: dict[str, int]
     max_depth: dict[str, int]
     max_features: dict[str, int]
+    class_weight: list[dict[int, int]]
 
 
 class GradientBoostingClassifierConfigDTO(BaseModel):

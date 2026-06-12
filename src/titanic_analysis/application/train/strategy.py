@@ -262,6 +262,7 @@ class RandomForestStrategy(
                 config.max_features["min"],
                 config.max_features["max"],
             ),
+            "randomforestclassifier__class_weight": config.class_weight,
         }
 
     def get_n_estimators(

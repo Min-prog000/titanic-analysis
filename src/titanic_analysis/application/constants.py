@@ -22,7 +22,7 @@ ID_COLUMN = "PassengerId"
 TARGET_COLUMN = "Survived"
 ADDITIONAL_ENCODING_COLUMN = "Embarked"
 
-CASE_ID_PATH = "./config/id/case.joblib"
+CASE_ID_PATH = "./config/case_id/case.joblib"
 LOGREG_CONFIG_PATH = "./config/model/base_logreg.yaml"
 GBDT_CONFIG_PATH = "./config/model/base_gbdt.yaml"
 XGBOOST_CONFIG_PATH = "./config/model/base_xgboost.yaml"

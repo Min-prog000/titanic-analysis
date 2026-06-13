@@ -210,7 +210,7 @@ __marimo__/
 data/
 output/
 version.py
-id/
+case_id/
 tensorboard_log/
 model/logreg/
 model/rf/

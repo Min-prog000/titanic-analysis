@@ -28,7 +28,7 @@ GBDT_CONFIG_PATH = "./config/model/base_gbdt.yaml"
 XGBOOST_CONFIG_PATH = "./config/model/base_xgboost.yaml"
 PYTORCH_CONFIG_PATH = "./config/model/base_pytorch.yaml"
 
-XGBOOST_TREE_PATH = "./output/xgboost"
+XGBOOST_TREE_PATH = "./output/tree/xgboost"
 PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]

@@ -212,11 +212,7 @@ output/
 version.py
 case_id/
 tensorboard_log/
-model/logreg/
-model/rf/
-model/gbdt/
-model/xgboost
-model/onnx/
+model/*
 notebooks/*
 !main_notebook.ipynb
 *.png

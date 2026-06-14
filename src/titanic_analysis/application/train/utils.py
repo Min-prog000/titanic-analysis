@@ -26,13 +26,8 @@ from titanic_analysis.application.train.strategy import (
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FOLDER_PREFIX,
-    SAVE_MODEL_FILE_EXTENSION_XGBOOST,
-    SAVE_MODEL_FILE_PARENT_XGBOOST,
-    SAVE_MODEL_FILE_PREFIX_XGBOOST,
-    SAVE_MODEL_ROOT_XGBOOST,
     SAVE_TREE_FILE_INDEX_PREFIX,
     SAVE_TREE_FILE_PREFIX,
-    XGBOOST,
 )
 from titanic_analysis.infrastructure.logic.build.utils import load_case_id
 from titanic_analysis.infrastructure.user.constants import TrainMethod
@@ -358,17 +353,30 @@ def generate_config_file_name(
 # ==========
 # Save model
 # ==========
-def generate_model_save_path(case_id: int) -> tuple[Path, Path]:
+def generate_model_save_path(
+    case_id: int,
+    path_parts: dict[str, str],
+) -> tuple[Path, Path]:
     """Generate path output model definition.
 
     Args:
         case_id (int): case id.
+        path_parts (dict[str, str]): Path string dict.
 
     Returns:
         tuple[Path, Path]: output folder path and file path.
     """
-    folder_path = get_model_folder_path(case_id)
-    file_name_path = get_model_file_name_path(case_id)
+    folder_path = get_model_folder_path(
+        case_id,
+        path_parts["folder_root_name"],
+        path_parts["model_code"],
+        path_parts["folder_parent_name"],
+    )
+    file_name_path = get_model_file_name_path(
+        case_id,
+        path_parts["file_prefix"],
+        path_parts["file_extension"],
+    )
 
     file_path = generate_output_path(folder_path, file_name_path)
 
@@ -376,26 +384,39 @@ def generate_model_save_path(case_id: int) -> tuple[Path, Path]:
 
 
 # Folder path
-def get_model_folder_path(case_id: int) -> Path:
-    return Path(generate_model_folder_name(case_id))
+def get_model_folder_path(
+    case_id: int,
+    folder_root_name: str,
+    model_code: str,
+    folder_parent_name: str,
+) -> Path:
+    return Path(
+        generate_model_folder_name(
+            case_id,
+            folder_root_name,
+            model_code,
+            folder_parent_name,
+        ),
+    )
 
 
 def generate_model_folder_name(
     case_id: int,
-    root: str = SAVE_MODEL_ROOT_XGBOOST,
-    file_parent: str = SAVE_MODEL_FILE_PARENT_XGBOOST,
+    root: str,
+    model_code: str,
+    file_parent: str,
 ) -> str:
-    return f"{root}{XGBOOST}{file_parent}{case_id}"
+    return f"{root}{model_code}{file_parent}{case_id}"
 
 
 # File path
-def get_model_file_name_path(case_id: int) -> Path:
-    return Path(generate_model_file_name(case_id))
-
-
-def generate_model_file_name(
+def get_model_file_name_path(
     case_id: int,
-    prefix: str = SAVE_MODEL_FILE_PREFIX_XGBOOST,
-    extension: str = SAVE_MODEL_FILE_EXTENSION_XGBOOST,
-) -> str:
+    file_prefix: str,
+    file_extension: str,
+) -> Path:
+    return Path(generate_model_file_name(case_id, file_prefix, file_extension))
+
+
+def generate_model_file_name(case_id: int, prefix: str, extension: str) -> str:
     return f"{prefix}{case_id}{extension}"

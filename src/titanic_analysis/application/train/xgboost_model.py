@@ -39,6 +39,10 @@ from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_PREFIX_XGBOOST,
     PATH_TEST,
     PATH_TRAIN,
+    SAVE_MODEL_FILE_EXTENSION_XGBOOST,
+    SAVE_MODEL_FILE_PARENT_XGBOOST,
+    SAVE_MODEL_FILE_PREFIX_XGBOOST,
+    SAVE_MODEL_ROOT_XGBOOST,
     SAVE_TREE_INDEX,
     XGBOOST,
 )
@@ -235,7 +239,17 @@ def save_config(parameters: dict, case_id: int) -> None:
 
 def save_model(model: xgb.XGBClassifier, case_id: int) -> None:
     # Generate path
-    save_folder_path, save_file_path = generate_model_save_path(case_id)
+    path_parts = {
+        "folder_root_name": SAVE_MODEL_ROOT_XGBOOST,
+        "model_code": XGBOOST,
+        "folder_parent_name": SAVE_MODEL_FILE_PARENT_XGBOOST,
+        "file_prefix": SAVE_MODEL_FILE_PREFIX_XGBOOST,
+        "file_extension": SAVE_MODEL_FILE_EXTENSION_XGBOOST,
+    }
+    save_folder_path, save_file_path = generate_model_save_path(
+        case_id,
+        path_parts,
+    )
 
     # Make parent directory
     save_folder_path.mkdir(parents=True, exist_ok=True)

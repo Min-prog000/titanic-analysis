@@ -26,9 +26,11 @@ CASE_ID_PATH = "./config/case_id/case.joblib"
 LOGREG_CONFIG_PATH = "./config/model/base_logreg.yaml"
 GBDT_CONFIG_PATH = "./config/model/base_gbdt.yaml"
 XGBOOST_CONFIG_PATH = "./config/model/base_xgboost.yaml"
+LIGHTGBM_CONFIG_PATH = "./config/model/base_lightgbm.yaml"
 PYTORCH_CONFIG_PATH = "./config/model/base_pytorch.yaml"
 
 XGBOOST_TREE_PATH = "./output/tree/xgboost"
+LIGHTGBM_TREE_PATH = "./output/tree/lightgbm"
 PYTORCH_TENSORBOARD_PATH = "./tensorboard_log"
 
 LOGGING_LEVEL_LITERALS = Literal[10, 20, 30, 40, 50]
@@ -42,6 +44,7 @@ PIPELINE_PREFIX_LOGREG = "logisticregression"
 PIPELINE_PREFIX_RF = "randomforestclassifier"
 PIPELINE_PREFIX_GBDT = "gradientboostingclassifier"
 PIPELINE_PREFIX_XGBOOST = "xgbclassifier"
+PIPELINE_PREFIX_LIGHTGBM = "lgbmclassifier"
 
 PREDICT_SUBMISSION_FORMAT = "%Y%m%d%H%M%S"
 JST = timezone(timedelta(hours=+9), "JST")

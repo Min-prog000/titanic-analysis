@@ -5,6 +5,7 @@ LOGISTIC_REGRESSION = "logreg"
 RANDOM_FOREST = "rf"
 GRADIENT_BOOSTING_DECISION_TREE = "gbdt"
 XGBOOST = "xgboost"
+LIGHTGBM = "lightgbm"
 
 # データセットのパス
 PATH_TRAIN = "data\\titanic\\train.csv"
@@ -18,6 +19,7 @@ CONFIG_FOLDER_PREFIX = ".\\output\\config\\case"
 MODEL_SAVE_PROTOCOL = 5
 
 CONFIG_FILE_PREFIX_XGBOOST = "config_case"
+CONFIG_FILE_PREFIX_LIGHTGBM = "config_case"
 
 SAVE_MODEL_FILE_PREFIX_XGBOOST = "case_"
 SAVE_MODEL_FILE_EXTENSION_XGBOOST = ".json"

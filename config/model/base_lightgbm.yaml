@@ -1,0 +1,9 @@
+data:
+  scaler: MinMaxScaler
+
+model:
+  random_state: 0
+  n_estimators: 400 # num_iterations
+  max_depth: 7
+  learning_rate: 0.1
+  verbosity: 2

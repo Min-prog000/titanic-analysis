@@ -347,6 +347,16 @@ def generate_config_file_name(
     prefix: str,
     extension: str = CONFIG_FILE_EXTENSION,
 ) -> str:
+    """Generate config file path.
+
+    Args:
+        case_id (int): Case ID.
+        prefix (str): Prefix string setting.
+        extension (str, optional): Extension of config file. Defaults to CONFIG_FILE_EXTENSION.
+
+    Returns:
+        str: Config file name.
+    """
     return f"{prefix}{case_id}{extension}"
 
 

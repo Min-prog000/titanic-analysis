@@ -16,11 +16,11 @@ from yaml import safe_dump
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     LIGHTGBM_CONFIG_PATH,
+    LIGHTGBM_TREE_PATH,
     PIPELINE_PREFIX_LIGHTGBM,
-    TREE_RENDER_FORMAT_XGBOOST,
+    TREE_RENDER_FORMAT,
     UTF_8,
     WRITE_ONLY,
-    XGBOOST_TREE_PATH,
 )
 from titanic_analysis.application.train.utils import (
     create_dataset,
@@ -39,12 +39,11 @@ from titanic_analysis.infrastructure.io.constants import (
     LIGHTGBM,
     PATH_TEST,
     PATH_TRAIN,
-    SAVE_MODEL_FILE_EXTENSION_XGBOOST,
-    SAVE_MODEL_FILE_PARENT_XGBOOST,
-    SAVE_MODEL_FILE_PREFIX_XGBOOST,
-    SAVE_MODEL_ROOT_XGBOOST,
+    SAVE_MODEL_FILE_EXTENSION_LIGHTGBM,
+    SAVE_MODEL_FILE_PARENT_LIGHTGBM,
+    SAVE_MODEL_FILE_PREFIX_LIGHTGBM,
+    SAVE_MODEL_ROOT_LIGHTGBM,
     SAVE_TREE_INDEX,
-    XGBOOST,
 )
 from titanic_analysis.infrastructure.io.utils import CsvUtility
 
@@ -202,7 +201,7 @@ def save_tree(model: lgb.LGBMClassifier, case_id: int) -> None:
     dot_data = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
 
     # Save as "PNG"
-    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT_XGBOOST)
+    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT)
 
 
 def tree_to_image(
@@ -214,7 +213,7 @@ def tree_to_image(
     graph = Source(dot_data)
     # graph.format = "png"
     graph_folder_path, graph_file_path = generate_tree_save_path(
-        XGBOOST_TREE_PATH,
+        LIGHTGBM_TREE_PATH,
         case_id,
         save_tree_index,
     )
@@ -246,11 +245,11 @@ def save_config(parameters: dict, case_id: int) -> None:
 def save_model(model: lgb.LGBMClassifier, case_id: int) -> None:
     # Generate path
     path_parts = {
-        "folder_root_name": SAVE_MODEL_ROOT_XGBOOST,
-        "model_code": XGBOOST,
-        "folder_parent_name": SAVE_MODEL_FILE_PARENT_XGBOOST,
-        "file_prefix": SAVE_MODEL_FILE_PREFIX_XGBOOST,
-        "file_extension": SAVE_MODEL_FILE_EXTENSION_XGBOOST,
+        "folder_root_name": SAVE_MODEL_ROOT_LIGHTGBM,
+        "model_code": LIGHTGBM,
+        "folder_parent_name": SAVE_MODEL_FILE_PARENT_LIGHTGBM,
+        "file_prefix": SAVE_MODEL_FILE_PREFIX_LIGHTGBM,
+        "file_extension": SAVE_MODEL_FILE_EXTENSION_LIGHTGBM,
     }
     save_folder_path, save_file_path = generate_model_save_path(
         case_id,

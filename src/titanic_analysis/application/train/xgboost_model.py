@@ -16,7 +16,7 @@ from titanic_analysis.application.constants import (
     BOOSTER_DUMP_FORMAT_XGBOOST,
     CASE_ID_PATH,
     PIPELINE_PREFIX_XGBOOST,
-    TREE_RENDER_FORMAT_XGBOOST,
+    TREE_RENDER_FORMAT,
     UTF_8,
     WRITE_ONLY,
     XGBOOST_CONFIG_PATH,
@@ -193,7 +193,7 @@ def save_tree(model: xgb.XGBClassifier, case_id: int) -> None:
     dot_data = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
 
     # Save as "PNG"
-    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT_XGBOOST)
+    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT)
 
 
 def tree_to_image(

@@ -7,7 +7,7 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from graphviz import Source
+from graphviz import Digraph
 from pandas import Series
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler
@@ -32,7 +32,7 @@ from titanic_analysis.application.train.utils import (
     save_case_id,
 )
 from titanic_analysis.infrastructure.io.analysis.config_loader import (
-    load_xgboost_config,
+    load_lightgbm_config,
 )
 from titanic_analysis.infrastructure.io.constants import (
     CONFIG_FILE_PREFIX_LIGHTGBM,
@@ -77,7 +77,7 @@ def train_lightgbm_model(
 
     # Train
     config_path = Path(LIGHTGBM_CONFIG_PATH)
-    parameters = load_xgboost_config(config_path)
+    parameters = load_lightgbm_config(config_path)
     model = train(x_train, y_train, parameters)
 
     # Predict
@@ -198,20 +198,18 @@ def save_artifacts(parameters: dict, model: lgb.LGBMClassifier) -> None:
 
 def save_tree(model: lgb.LGBMClassifier, case_id: int) -> None:
     # Get tree data
-    dot_data = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
+    graph = get_tree_data(model, SAVE_TREE_INDEX)  # Initial tree (index 0)
 
     # Save as "PNG"
-    tree_to_image(case_id, dot_data, SAVE_TREE_INDEX, TREE_RENDER_FORMAT)
+    tree_to_image(case_id, graph, SAVE_TREE_INDEX, TREE_RENDER_FORMAT)
 
 
 def tree_to_image(
     case_id: int,
-    dot_data: str,
+    graph: Digraph,
     save_tree_index: int,
     render_format: str,
 ) -> None:
-    graph = Source(dot_data)
-    # graph.format = "png"
     graph_folder_path, graph_file_path = generate_tree_save_path(
         LIGHTGBM_TREE_PATH,
         case_id,
@@ -223,7 +221,7 @@ def tree_to_image(
     graph.render(graph_file_path, cleanup=True, format=render_format)
 
 
-def get_tree_data(model: lgb.LGBMClassifier, index: int) -> str:
+def get_tree_data(model: lgb.LGBMClassifier, index: int) -> Digraph:
     return lgb.create_tree_digraph(model, tree_index=index, format="png")
 
 

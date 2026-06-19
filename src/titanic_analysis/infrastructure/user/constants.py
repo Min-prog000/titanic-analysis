@@ -18,4 +18,5 @@ class TrainMethod(Enum):
     RANDOM_FOREST = auto()  # 2
     GRADIENT_BOOSTING = auto()  # 3
     XGBOOST = auto()  # 4
-    NEURAL_NETWORK = auto()  # 5
+    LIGHTGBM = auto()  # 5
+    NEURAL_NETWORK = auto()  # 6

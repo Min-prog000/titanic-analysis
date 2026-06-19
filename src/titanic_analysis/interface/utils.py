@@ -4,6 +4,7 @@ from logging import Logger
 
 from titanic_analysis.application.analysis import analyze
 from titanic_analysis.application.prediction import predict
+from titanic_analysis.application.train.lightgbm import train_lightgbm_model
 from titanic_analysis.application.train.sklearn_model import train_sklearn_model
 from titanic_analysis.application.train.torch_model import train_neural_network
 from titanic_analysis.application.train.xgboost_model import train_xgboost_model
@@ -94,6 +95,8 @@ def dispatch_training_model(
         train_sklearn_model(logger, execution_mode)
     elif train_method == TrainMethod.XGBOOST.value:
         train_xgboost_model(logger)
+    elif train_method == TrainMethod.LIGHTGBM.value:
+        train_lightgbm_model(logger)
     elif train_method == TrainMethod.NEURAL_NETWORK.value:
         train_neural_network(logger)
     else:

@@ -30,7 +30,7 @@ def generate_parser() -> argparse.ArgumentParser:
         type=int,
         default=TrainMethod.NEURAL_NETWORK.value,
         choices=[train_method.value for train_method in TrainMethod],
-        help="Type of the training method (default: 5, meaning NEURAL_NETWORK).",
+        help="Type of the training method (default: 6, meaning NEURAL_NETWORK).",
     )
 
     parser.add_argument(

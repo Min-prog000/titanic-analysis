@@ -3,6 +3,6 @@ model:
   batch_size: 128
   learning_rate: 9e-5
   gamma: 0.99
-  epochs: 400
+  epochs: 100
   pos_weight: 1.5
-  weight_decay: 0.1
+  weight_decay: 0.01

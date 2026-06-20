@@ -1,5 +1,8 @@
+# fromとimportの間に書けるのはモジュール名だけ
+# -> chainはimportの後に書く
 from itertools import chain
 
+import numpy as np
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -21,23 +24,24 @@ def test_loop(
         outputs: Tensor = model(x)
         print(outputs)
 
-        # BCEWithLogitsLoss
+        # Loss function: BCEWithLogitsLoss
         # model側のnn.Sigmoidを削除したためスケーリングが必要
         scaled_outputs = torch.sigmoid(outputs)
         print(scaled_outputs)
         pred = scaled_outputs >= THRESHOLD
         # print(pred)
 
-
-        # BCELoss
+        # Loss function: BCELoss
         # threshold = 0.5
         # pred = int(outputs >= threshold)
 
-        # CrossEntropyLoss
+        # Loss function: CrossEntropyLoss
         # pred = int(torch.argmax(outputs))
 
-        print(list(chain.from_iterable(pred.cpu().numpy().astype(int))))
-        pred_list.extend(list(chain.from_iterable(pred.cpu().numpy().astype(int))))
+        pred_as_int = pred.cpu().numpy().astype(dtype=np.int8)
+        pred_as_int_flatten = list(chain.from_iterable(pred_as_int))
+        print(pred_as_int_flatten)
+        pred_list.extend(pred_as_int_flatten)
 
         # print(pred.cpu().numpy().astype(int))
         # pred_list.extend(pred.cpu().numpy().astype(int))

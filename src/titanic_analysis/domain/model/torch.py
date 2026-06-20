@@ -52,6 +52,8 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             # nn.Linear(in_features=8, out_features=1),
             nn.Linear(in_features=4, out_features=1),
+            # Unnecessary layer
+            # when loss function is `BCEWithLogitsLoss` because it include Sigmoid.
             # nn.Sigmoid(),
         )
 

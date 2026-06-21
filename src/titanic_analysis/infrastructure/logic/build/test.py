@@ -43,7 +43,5 @@ def test_loop(
         print(pred_as_int_flatten)
         pred_list.extend(pred_as_int_flatten)
 
-        # print(pred.cpu().numpy().astype(int))
-        # pred_list.extend(pred.cpu().numpy().astype(int))
 
     return pred_list

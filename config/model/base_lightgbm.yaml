@@ -3,7 +3,7 @@ data:
 
 model:
   random_state: 0
-  n_estimators: 100 # num_iterations
+  n_estimators: 200 # num_iterations
   max_depth: 11
-  learning_rate: 1
+  learning_rate: 0.01
   verbosity: 2

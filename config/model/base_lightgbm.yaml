@@ -2,8 +2,10 @@ data:
   scaler: MinMaxScaler
 
 model:
-  random_state: 0
-  n_estimators: 100 # num_iterations
+  # num_leaves: 20
   max_depth: 5
-  learning_rate: 0.001
+  learning_rate: 0.01
+  n_estimators: 100 # num_iterations
+  colsample_bytree: 0.8
+  random_state: 0
   verbosity: 2

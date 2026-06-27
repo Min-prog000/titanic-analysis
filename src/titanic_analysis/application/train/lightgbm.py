@@ -9,15 +9,13 @@ import numpy as np
 import pandas as pd
 from graphviz import Digraph
 from pandas import Series
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.pipeline import Pipeline
 from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
     CASE_ID_PATH,
     LIGHTGBM_CONFIG_PATH,
     LIGHTGBM_TREE_PATH,
-    PIPELINE_PREFIX_LIGHTGBM,
     TREE_RENDER_FORMAT,
     UTF_8,
     WRITE_ONLY,
@@ -96,19 +94,31 @@ def train(
     parameters: dict,
 ) -> lgb.LGBMClassifier:
     # Scaler setting
-    scaler = MinMaxScaler()
+    # scaler = MinMaxScaler()
+
+    # Model setting
+    # model = lgb.LGBMClassifier(**parameters)
+
+    # Pipeline setting
+    # pipeline = make_pipeline(scaler, model)
+
+    # Training
+    # pipeline.fit(x_train, y_train)
+
+    # Return model
+    # return get_pipeline_model(pipeline, PIPELINE_PREFIX_LIGHTGBM)
 
     # Model setting
     model = lgb.LGBMClassifier(**parameters)
 
-    # Pipeline setting
-    pipeline = make_pipeline(scaler, model)
+    model.fit(
+        x_train,
+        y_train,
+        # NOTE: early_stoppingを使うには検証データが必要
+        # callbacks=[lgb.early_stopping(stopping_rounds=10, verbose=True)],
+    )
 
-    # Training
-    pipeline.fit(x_train, y_train)
-
-    # Return model
-    return get_pipeline_model(pipeline, PIPELINE_PREFIX_LIGHTGBM)
+    return model
 
 
 def get_pipeline_model(

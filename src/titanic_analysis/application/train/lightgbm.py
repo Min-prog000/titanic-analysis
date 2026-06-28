@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from graphviz import Digraph
 from pandas import Series
-from sklearn.pipeline import Pipeline
 from yaml import safe_dump
 
 from titanic_analysis.application.constants import (
@@ -93,24 +92,10 @@ def train(
     y_train: np.ndarray,
     parameters: dict,
 ) -> lgb.LGBMClassifier:
-    # Scaler setting
-    # scaler = MinMaxScaler()
-
-    # Model setting
-    # model = lgb.LGBMClassifier(**parameters)
-
-    # Pipeline setting
-    # pipeline = make_pipeline(scaler, model)
-
-    # Training
-    # pipeline.fit(x_train, y_train)
-
-    # Return model
-    # return get_pipeline_model(pipeline, PIPELINE_PREFIX_LIGHTGBM)
-
     # Model setting
     model = lgb.LGBMClassifier(**parameters)
 
+    # Training
     model.fit(
         x_train,
         y_train,
@@ -119,13 +104,6 @@ def train(
     )
 
     return model
-
-
-def get_pipeline_model(
-    pipeline: Pipeline,
-    model_key_prefix: str,
-) -> lgb.LGBMClassifier:
-    return pipeline.named_steps[model_key_prefix]
 
 
 # def run_grid_search(

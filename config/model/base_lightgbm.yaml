@@ -2,11 +2,11 @@ data:
   scaler: MinMaxScaler
 
 model:
-  # num_leaves: 10
+  num_leaves: 10
   max_depth: 5
-  learning_rate: 0.001
+  learning_rate: 0.0005
   # subsample: 0.5
-  n_estimators: 1000 # num_iterations
+  n_estimators: 2000 # num_iterations
   colsample_bytree: 0.9
   # reg_alpha: 0.1
   # reg_lambda: 5

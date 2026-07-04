@@ -7,9 +7,11 @@ model:
   learning_rate: 0.0005
   # subsample: 0.5
   n_estimators: 2000 # num_iterations
+  objective: "binary"
   colsample_bytree: 0.9
   # reg_alpha: 0.1
   # reg_lambda: 5
   random_state: 0
   # early_stopping_round: 10
   verbosity: -1
+  metric: "logloss"

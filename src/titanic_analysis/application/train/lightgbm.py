@@ -77,6 +77,8 @@ def train_lightgbm_model(
     parameters = load_lightgbm_config(config_path)
     model = train(x_train, y_train, parameters)
 
+    logger.debug("params:\n%s", model.get_params())
+
     # Predict
     y_pred = predict(logger, passenger_ids, x_test, model)
 

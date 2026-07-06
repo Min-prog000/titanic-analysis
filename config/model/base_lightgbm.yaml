@@ -8,7 +8,7 @@ model:
   # subsample: 0.5
   n_estimators: 3000 # num_iterations
   objective: "binary"
-  colsample_bytree: 0.9
+  # colsample_bytree: 0.5
   # reg_alpha: 0.1
   # reg_lambda: 5
   random_state: 0

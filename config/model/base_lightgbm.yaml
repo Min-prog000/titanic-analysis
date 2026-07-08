@@ -6,7 +6,7 @@ model:
   max_depth: 5
   learning_rate: 0.0005
   # subsample: 0.5
-  n_estimators: 5000 # num_iterations
+  n_estimators: 500 # num_iterations
   objective: "binary"
   # colsample_bytree: 0.5
   # reg_alpha: 0.1

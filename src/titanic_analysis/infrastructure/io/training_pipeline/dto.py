@@ -2,6 +2,15 @@
 
 from pydantic import BaseModel
 
+from titanic_analysis.infrastructure.io.training_pipeline.types import DTOs
+
+
+class ConfigDTO(BaseModel):
+    """General DTO"""
+
+    scaler: str
+    parameter: DTOs
+
 
 class LogisticRegressionConfigDTO(BaseModel):
     """DTO for LogisticRegression"""

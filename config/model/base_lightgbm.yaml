@@ -10,7 +10,7 @@ model:
   n_estimators: 2000 # num_iterations
   objective: "binary"
   colsample_bytree: 0.8
-  reg_alpha: 2.3
+  reg_alpha: 2.275
   # reg_lambda: 1.55
   random_state: 0
   # early_stopping_round: 10

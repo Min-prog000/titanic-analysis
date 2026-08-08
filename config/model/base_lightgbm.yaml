@@ -2,7 +2,7 @@ data:
   scaler: MinMaxScaler
 
 model:
-  # num_leaves: 20
+  num_leaves: 10
   max_depth: 5
   learning_rate: 0.001
   min_child_samples: 25
@@ -10,7 +10,7 @@ model:
   n_estimators: 2000 # num_iterations
   objective: "binary"
   colsample_bytree: 0.8
-  reg_alpha: 2.49
+  reg_alpha: 2.5
   # reg_lambda: 1.55
   random_state: 0
   # early_stopping_round: 10

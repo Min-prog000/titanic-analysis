@@ -7,7 +7,7 @@ model:
   learning_rate: 0.01
   min_child_samples: 25
   subsample: 0.9
-  subsample_freq: 17
+  subsample_freq: 19
   n_estimators: 2000 # num_iterations
   objective: "binary"
   colsample_bytree: 0.8
@@ -17,3 +17,4 @@ model:
   # early_stopping_round: 10
   verbosity: -1
   metric: "logloss"
+  n_jobs: -1

@@ -7,7 +7,7 @@ model:
   learning_rate: 0.01
   min_child_samples: 26
   subsample: 0.9
-  subsample_freq: 23
+  subsample_freq: 25
   n_estimators: 2000 # num_iterations
   objective: "binary"
   colsample_bytree: 0.8

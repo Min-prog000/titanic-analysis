@@ -10,7 +10,7 @@ model:
   subsample_freq: 10
   n_estimators: 2000 # num_iterations
   objective: "binary"
-  colsample_bytree: 0.9
+  colsample_bytree: 0.6
   reg_alpha: 2.5
   # reg_lambda: 1.55
   random_state: 0

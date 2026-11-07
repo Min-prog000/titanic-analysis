@@ -7,11 +7,11 @@ model:
   learning_rate: 0.001
   min_child_samples: 13
   subsample: 0.9
-  subsample_freq: 10
+  subsample_freq: 1
   n_estimators: 2000 # num_iterations
   objective: "binary"
   colsample_bytree: 0.8
-  reg_alpha: 2.275
+  reg_alpha: 2.0
   # reg_lambda: 1.55
   random_state: 0
   # early_stopping_round: 10

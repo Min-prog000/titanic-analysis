@@ -12,7 +12,7 @@ model:
   objective: "binary"
   colsample_bytree: 0.8
   # reg_alpha: 2.0
-  reg_lambda: 0.8
+  reg_lambda: 0.85
   random_state: 0
   # early_stopping_round: 10
   verbosity: -1
